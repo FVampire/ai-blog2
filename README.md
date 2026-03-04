@@ -1,114 +1,250 @@
-# Blog Website Implementation
+# Pencil Blog - Full-Featured Blogging Platform
 
-This is a Next.js implementation of the blog website design we created using Pencil. The implementation follows the editorial-inspired design system with a focus on typography and a monochrome color palette.
+A complete, production-ready blogging platform built with Next.js, TypeScript, and PostgreSQL. Features a modern admin dashboard, Markdown editor, image management, tag system, and view tracking.
 
-## Features Implemented
+![Blog Dashboard](./public/screenshots/dashboard.png)
 
-1. **Homepage** - Displays a list of blog posts with excerpts
-2. **Blog Post Pages** - Individual pages for each blog post
-3. **Tags Page** - Displays all tags with post counts
-4. **About Page** - Information about the author
-5. **Articles Page** - Lists all articles
-6. **Responsive Design** - Adapts to different screen sizes
-7. **Multi-Database Support** - Supports PostgreSQL (default), MySQL, SQLite, and Supabase
+## 🌟 Key Features
 
-## Design System
+### 🔧 Administration Panel
+- Secure JWT-based authentication
+- Role-based access control (admin/editor/author)
+- Dashboard with content statistics
+- User management with status controls
 
-The implementation follows a sophisticated editorial design system with:
-- **Typography**: Combination of Instrument Serif (italic) for headlines and Inter for body text
-- **Color Scheme**: Monochrome palette with black, white, and grays
-- **Layout**: Clean, structured layout with proper spacing and visual hierarchy
-- **Components**: Card-based design with consistent padding and styling
+### 📝 Content Management
+- Full-featured Markdown editor with live preview
+- Draft/published/archived post workflow
+- Tag management system with post association
+- SEO-friendly URL slugs
+- Featured image uploads
 
-## Getting Started
+### 🖼️ Media Management
+- Drag-and-drop image uploader
+- Media library with preview thumbnails
+- File validation and size limits
+- Direct filesystem storage
 
-First, install the dependencies:
+### 📊 Analytics & Tracking
+- Automatic view counting with deduplication
+- Post popularity metrics
+- Content performance overview
 
+### 🎨 Design System
+- Responsive layout for all devices
+- Modern UI with gradient accents
+- Consistent component library
+- Dark mode support in admin
+
+### 🛠️ Technical Features
+- Multi-database support (PostgreSQL, MySQL, SQLite)
+- Environment-based configuration
+- API route protection
+- Server-side rendering for SEO
+- TypeScript type safety
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 16+
+- PostgreSQL (or MySQL/SQLite)
+- pnpm (recommended) or npm
+
+### Installation
+
+1. **Clone the repository**
 ```bash
-npm install
-# or
-yarn install
+git clone <repository-url>
+cd pencil-blog
 ```
 
-Then, run the development server:
-
+2. **Install dependencies**
 ```bash
-npm run dev
-# or
-yarn dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. **Environment Setup**
+Create a `.env.local` file in the root directory:
+```env
+# Database Configuration
+DATABASE_URL=postgresql://user:password@localhost:5432/blog_db
+# Or for other databases:
+# DATABASE_URL=mysql://user:password@localhost:3306/blog_db
+# DATABASE_URL=sqlite:///./db.sqlite
 
-## Project Structure
+# JWT Secret (use a strong random string)
+JWT_SECRET=your-super-secret-jwt-key
 
-```
-blog-website/
-├── components/
-│   ├── Header.tsx
-│   ├── Footer.tsx
-│   ├── BlogPostCard.tsx
-│   ├── TagCloud.tsx
-│   ├── AuthorBio.tsx
-│   └── SearchWidget.tsx
-├── pages/
-│   ├── index.tsx (homepage)
-│   ├── about.tsx
-│   ├── articles.tsx
-│   ├── tags.tsx
-│   ├── posts/
-│   │   └── [slug].tsx (individual post pages)
-├── styles/
-│   └── globals.css
-├── public/
-│   └── (static assets if any)
-├── package.json
-├── tsconfig.json
-└── next.config.js
+# Optional: Supabase (if using)
+# NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
-## Database Configuration
+4. **Database Setup**
+```bash
+# Create database
+createdb blog_db
 
-This project supports multiple databases:
-- PostgreSQL (default)
-- MySQL
-- SQLite
-- Supabase (uses dedicated Supabase client)
-
-To configure your database, set the following environment variables in your `.env` file:
-
-### For PostgreSQL/MySQL/SQLite:
-```
-DATABASE_TYPE=postgresql  # or mysql, sqlite
-DATABASE_URL=your_database_connection_string
+# Run initial schema
+psql -d blog_db -f db/schema.sql
 ```
 
-### For Supabase:
-```
-DATABASE_TYPE=supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+5. **Run Development Server**
+```bash
+pnpm dev
 ```
 
-For detailed database configuration instructions, see [MULTI_DB_GUIDE.md](MULTI_DB_GUIDE.md).
+Visit [http://localhost:3000](http://localhost:3000) for the frontend and [http://localhost:3000/admin](http://localhost:3000/admin) for the admin panel.
 
-## Customization
+### Default Admin Credentials
+- **Username**: admin
+- **Password**: admin123
+
+> ⚠️ Change the default password immediately after first login
+
+## 🏗️ Project Structure
+
+```
+pencil-blog/
+├── components/          # Reusable React components
+│   ├── admin/           # Admin-specific components
+│   ├── BlogPostCard.tsx # Post display component
+│   ├── MarkdownEditor.tsx # Rich text editor
+│   └── ImageUpload.tsx  # File upload component
+├── pages/               # Next.js pages and API routes
+│   ├── api/             # Backend API endpoints
+│   ├── admin/           # Admin dashboard pages
+│   ├── posts/           # Blog post pages
+│   └── index.tsx        # Homepage
+├── lib/                 # Utility functions and clients
+├── db/                  # Database schema and migrations
+├── styles/              # Global CSS and design tokens
+└── public/              # Static assets and uploads
+```
+
+## 🗄️ Database Schema
+
+The platform uses a normalized relational database structure:
+
+### Core Tables
+- **users**: User accounts with roles and authentication
+- **posts**: Blog posts with content, status, and metadata
+- **tags**: Content categorization system
+- **post_tags**: Many-to-many relationship between posts and tags
+- **comments**: Reader feedback (optional feature)
+
+### Key Relationships
+- Users can author multiple posts (1:N)
+- Posts can have multiple tags (N:M)
+- Posts can receive comments (1:N)
+
+## 🔌 API Endpoints
+
+### Authentication
+- `POST /api/auth/login` - User authentication
+- `POST /api/auth/logout` - Session termination
+
+### Posts
+- `GET /api/posts` - List public posts (supports pagination)
+- `POST /api/posts` - Create new post (admin only)
+- `GET /api/posts/[id]` - Retrieve specific post
+- `PUT /api/posts/[id]` - Update post (admin only)
+- `DELETE /api/posts/[id]` - Delete post (admin only)
+- `POST /api/posts/track-view` - Increment view counter
+
+### Tags
+- `GET /api/tags` - List all tags with usage counts
+- `POST /api/tags` - Create new tag (admin only)
+- `PUT /api/tags/[id]` - Update tag (admin only)
+- `DELETE /api/tags/[id]` - Delete tag (admin only)
+
+### Media
+- `POST /api/upload` - Upload image file (admin only)
+- `GET /api/media/list` - List uploaded media (admin only)
+- `DELETE /api/media/delete` - Remove media file (admin only)
+
+## 🎨 Design & Styling
+
+### Technology Stack
+- **Tailwind CSS** v4 - Utility-first CSS framework
+- **CSS Variables** - Design token system for consistent theming
+- **Google Fonts** - Instrument Serif (headlines) and Inter (body)
+
+### Color Palette
+The design uses a dual-palette approach:
+- **Tech Palette**: Cyans, purples, and pinks for article elements
+- **Warm Palette**: Corals, oranges, and peaches for tags and sidebar
 
 ### Typography
-The design uses two primary fonts:
-- **Instrument Serif** for headlines (italic)
-- **Inter** for body text
+- **Headings**: Instrument Serif, italicized for editorial feel
+- **Body Text**: Inter, clean and highly readable
+- **Code Blocks**: Monospace with syntax highlighting
 
-These are loaded from Google Fonts in `styles/globals.css`.
+## 🚢 Deployment
 
-### Color Scheme
-The color scheme is defined as CSS variables in `styles/globals.css`. You can easily customize the colors by modifying these variables.
+### Vercel (Recommended)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone)
 
-### Components
-All UI components are built as reusable React components in the `components/` directory. Each component follows the design system principles.
+### Manual Deployment
+```bash
+# Build for production
+pnpm build
 
-## Deployment
+# Start production server
+pnpm start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Environment Variables for Production
+```env
+# Database connection
+DATABASE_URL=your-production-database-url
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+# Security
+JWT_SECRET=your-production-jwt-secret
+
+# Optional features
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+## 🛡️ Security Features
+
+- Password hashing with bcrypt (10+ rounds)
+- JWT token authentication with expiration
+- SQL injection prevention through parameterized queries
+- XSS protection via React's automatic escaping
+- File upload validation and sanitization
+- Role-based access controls for admin features
+
+## 🧪 Development
+
+### Available Scripts
+- `pnpm dev` - Start development server
+- `pnpm build` - Create production build
+- `pnpm start` - Start production server
+- `pnpm lint` - Run code quality checks
+
+### Recommended VS Code Extensions
+- **ESLint** - JavaScript/TypeScript linting
+- **Prettier** - Code formatting
+- **Tailwind CSS IntelliSense** - CSS class suggestions
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/) - React framework
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [PostgreSQL](https://www.postgresql.org/) - Open-source database
+- [bcrypt.js](https://github.com/dcodeIO/bcrypt.js) - Password hashing
+- [react-markdown](https://github.com/remarkjs/react-markdown) - Markdown rendering
