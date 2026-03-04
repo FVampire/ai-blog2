@@ -1,0 +1,123 @@
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
+
+interface AdminLayoutProps {
+  children: React.ReactNode;
+}
+
+const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+  const router = useRouter();
+  const [user, setUser] = useState<{ username: string; role: string } | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    // 检查是否已登录
+    const token = localStorage.getItem('adminToken');
+    const userStr = localStorage.getItem('adminUser');
+
+    if (!token || !userStr) {
+      router.push('/admin/login');
+      return;
+    }
+
+    setUser(JSON.parse(userStr));
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    router.push('/admin/login');
+  };
+
+  const isActive = (path: string) => router.pathname === path;
+
+  if (!user) {
+    return <div className="admin-loading">加载中...</div>;
+  }
+
+  return (
+    <div className="admin-layout">
+      {/* 侧边栏 */}
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+        <div className="sidebar-header">
+          <h2 className="sidebar-logo">Blog Admin</h2>
+        </div>
+
+        <nav className="sidebar-nav">
+          <Link href="/admin" className={`sidebar-link ${isActive('/admin') ? 'active' : ''}`}>
+            <span className="sidebar-icon">📊</span>
+            <span className="sidebar-text">仪表盘</span>
+          </Link>
+
+          <Link href="/admin/posts" className={`sidebar-link ${isActive('/admin/posts') ? 'active' : ''}`}>
+            <span className="sidebar-icon">📝</span>
+            <span className="sidebar-text">文章管理</span>
+          </Link>
+
+          <Link href="/admin/users" className={`sidebar-link ${isActive('/admin/users') ? 'active' : ''}`}>
+            <span className="sidebar-icon">👥</span>
+            <span className="sidebar-text">用户管理</span>
+          </Link>
+
+          <Link href="/admin/media" className={`sidebar-link ${isActive('/admin/media') ? 'active' : ''}`}>
+            <span className="sidebar-icon">🖼️</span>
+            <span className="sidebar-text">图片管理</span>
+          </Link>
+
+          <Link href="/admin/tags" className={`sidebar-link ${isActive('/admin/tags') ? 'active' : ''}`}>
+            <span className="sidebar-icon">🏷️</span>
+            <span className="sidebar-text">标签管理</span>
+          </Link>
+
+          <Link href="/admin/comments" className={`sidebar-link ${isActive('/admin/comments') ? 'active' : ''}`}>
+            <span className="sidebar-icon">💬</span>
+            <span className="sidebar-text">评论管理</span>
+          </Link>
+
+          <Link href="/admin/settings" className={`sidebar-link ${isActive('/admin/settings') ? 'active' : ''}`}>
+            <span className="sidebar-icon">⚙️</span>
+            <span className="sidebar-text">系统设置</span>
+          </Link>
+        </nav>
+
+        <div className="sidebar-footer">
+          <Link href="/" className="sidebar-link">
+            <span className="sidebar-icon">🏠</span>
+            <span className="sidebar-text">返回前台</span>
+          </Link>
+        </div>
+      </aside>
+
+      {/* 主内容区 */}
+      <div className="admin-main">
+        {/* 顶部栏 */}
+        <header className="admin-header">
+          <button
+            className="sidebar-toggle"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            ☰
+          </button>
+
+          <div className="header-right">
+            <div className="user-info">
+              <span className="user-name">{user.username}</span>
+              <span className="user-role">{user.role}</span>
+            </div>
+            <button className="logout-button" onClick={handleLogout}>
+              退出登录
+            </button>
+          </div>
+        </header>
+
+        {/* 内容区域 */}
+        <main className="admin-content">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default AdminLayout;

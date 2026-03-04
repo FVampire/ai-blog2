@@ -1,0 +1,2502 @@
+{
+  "version": "2.7",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 0,
+      "y": 0,
+      "name": "Frame",
+      "clip": true,
+      "width": 800,
+      "height": 600,
+      "fill": "#FFFFFF",
+      "layout": "none"
+    },
+    {
+      "type": "frame",
+      "id": "DorT3",
+      "x": 0,
+      "y": 0,
+      "name": "记账主屏幕",
+      "clip": true,
+      "width": 402,
+      "fill": "#F5F4F1",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "ZIrUs",
+          "name": "statusBar",
+          "width": "fill_container",
+          "height": 62,
+          "padding": [
+            21,
+            24,
+            19,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "IEqhu",
+              "name": "timeText",
+              "fill": "#000000",
+              "content": "9:41",
+              "fontFamily": "Inter",
+              "fontSize": 17,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "2KAKS",
+              "name": "levelsContainer",
+              "gap": 6,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "3Dpa8",
+                  "name": "signalIcon",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "signal",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "lntB0",
+                  "name": "wifiIcon",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "wifi",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "NXvhu",
+                  "name": "batteryIcon",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "battery",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "hyoJn",
+          "name": "contentWrapper",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            0,
+            24
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "YFnUG",
+              "name": "header",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "FELB6",
+                  "name": "greeting",
+                  "fill": "#1A1918",
+                  "content": "我的账本",
+                  "fontFamily": "Outfit",
+                  "fontSize": 26,
+                  "fontWeight": "600",
+                  "letterSpacing": -0.5
+                },
+                {
+                  "type": "frame",
+                  "id": "oYy62",
+                  "name": "notifButton",
+                  "width": 44,
+                  "height": 44,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": [
+                    100,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "KV0te",
+                      "name": "bellIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "bell",
+                      "iconFontFamily": "lucide",
+                      "fill": "#1A1918"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mZG3W",
+              "name": "scrollContent",
+              "clip": true,
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "j7OVf",
+                  "name": "balanceCard",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": [
+                    16,
+                    0,
+                    0,
+                    0
+                  ],
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "abUxZ",
+                      "name": "balanceLabel",
+                      "fill": "#6D6C6A",
+                      "content": "当前余额",
+                      "fontFamily": "Outfit",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "8TmTH",
+                      "name": "balanceAmount",
+                      "fill": "#1A1918",
+                      "content": "¥12,458.50",
+                      "fontFamily": "Outfit",
+                      "fontSize": 36,
+                      "fontWeight": "700",
+                      "letterSpacing": -1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "2M2Bk",
+                      "name": "balanceRow",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "NVnng",
+                          "name": "incomeCard",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ewbSu",
+                              "name": "incomeLabel",
+                              "fill": "#6D6C6A",
+                              "content": "本月收入",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Xd0Sa",
+                              "name": "incomeAmount",
+                              "fill": "#3D8A5A",
+                              "content": "¥8,560",
+                              "fontFamily": "Outfit",
+                              "fontSize": 18,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "RSOsN",
+                          "name": "expenseCard",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "GEQKz",
+                              "name": "expenseLabel",
+                              "fill": "#6D6C6A",
+                              "content": "本月支出",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "fIGSs",
+                              "name": "expenseAmount",
+                              "fill": "#D08068",
+                              "content": "¥3,245",
+                              "fontFamily": "Outfit",
+                              "fontSize": 18,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Kx3pJ",
+                  "name": "sectionHeader1",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "uq9wL",
+                      "name": "sectionTitle1",
+                      "fill": "#1A1918",
+                      "content": "快速统计",
+                      "fontFamily": "Outfit",
+                      "fontSize": 18,
+                      "fontWeight": "600",
+                      "letterSpacing": -0.2
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "TX2sR",
+                  "name": "metricsRow",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "1FnMx",
+                      "name": "metric1",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": [
+                        16,
+                        0,
+                        0,
+                        0
+                      ],
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 18,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "1DZYG",
+                          "name": "metric1Value",
+                          "fill": "#1A1918",
+                          "content": "152",
+                          "fontFamily": "Outfit",
+                          "fontSize": 28,
+                          "fontWeight": "700",
+                          "letterSpacing": -1
+                        },
+                        {
+                          "type": "text",
+                          "id": "e9Nd9",
+                          "name": "metric1Label",
+                          "fill": "#6D6C6A",
+                          "content": "总交易数",
+                          "fontFamily": "Outfit",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jC4lO",
+                          "name": "metric1Status",
+                          "gap": 4,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "C514G",
+                              "name": "trendIcon1",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "trending-up",
+                              "iconFontFamily": "lucide",
+                              "fill": "#4D9B6A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "JgV3n",
+                              "name": "trendText1",
+                              "fill": "#4D9B6A",
+                              "content": "+12%",
+                              "fontFamily": "Outfit",
+                              "fontSize": 11,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "a3zND",
+                      "name": "metric2",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": [
+                        16,
+                        0,
+                        0,
+                        0
+                      ],
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 18,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "CqDXS",
+                          "name": "metric2Value",
+                          "fill": "#1A1918",
+                          "content": "8",
+                          "fontFamily": "Outfit",
+                          "fontSize": 28,
+                          "fontWeight": "700",
+                          "letterSpacing": -1
+                        },
+                        {
+                          "type": "text",
+                          "id": "N2cQv",
+                          "name": "metric2Label",
+                          "fill": "#6D6C6A",
+                          "content": "分类数",
+                          "fontFamily": "Outfit",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "zJJaG",
+                          "name": "metric2Status",
+                          "gap": 4,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "uQP1p",
+                              "name": "trendIcon2",
+                              "width": 14,
+                              "height": 14,
+                              "iconFontName": "minus",
+                              "iconFontFamily": "lucide",
+                              "fill": "#9C9B99"
+                            },
+                            {
+                              "type": "text",
+                              "id": "sxHn5",
+                              "name": "trendText2",
+                              "fill": "#9C9B99",
+                              "content": "0%",
+                              "fontFamily": "Outfit",
+                              "fontSize": 11,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wLKTH",
+                  "name": "sectionHeader2",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "HnRMC",
+                      "name": "sectionTitle2",
+                      "fill": "#1A1918",
+                      "content": "最近交易",
+                      "fontFamily": "Outfit",
+                      "fontSize": 18,
+                      "fontWeight": "600",
+                      "letterSpacing": -0.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "RaFcV",
+                      "name": "viewAllLink",
+                      "fill": "#3D8A5A",
+                      "content": "查看全部",
+                      "fontFamily": "Outfit",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "bh9tB",
+                  "name": "transactionCard",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": [
+                    16,
+                    0,
+                    0,
+                    0
+                  ],
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "d8qUm",
+                      "name": "transaction1",
+                      "width": "fill_container",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": {
+                          "bottom": 1
+                        },
+                        "fill": "#E5E4E1"
+                      },
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "HRamb",
+                          "name": "txIcon1",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#C8F0D8",
+                          "cornerRadius": [
+                            100,
+                            0,
+                            0,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "4szS0",
+                              "name": "txIconInner1",
+                              "width": 20,
+                              "height": 20,
+                              "iconFontName": "shopping-cart",
+                              "iconFontFamily": "lucide",
+                              "fill": "#3D8A5A"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "nBDOt",
+                          "name": "txContent1",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "FosGW",
+                              "name": "txTitle1",
+                              "fill": "#1A1918",
+                              "content": "超市购物",
+                              "fontFamily": "Outfit",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "RqnXM",
+                              "name": "txDate1",
+                              "fill": "#9C9B99",
+                              "content": "今天 14:30",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "OhcOZ",
+                          "name": "txAmount1",
+                          "fill": "#D08068",
+                          "content": "-¥258.00",
+                          "fontFamily": "Outfit",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "7sQ0W",
+                      "name": "transaction2",
+                      "width": "fill_container",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": {
+                          "bottom": 1
+                        },
+                        "fill": "#E5E4E1"
+                      },
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "nlUDC",
+                          "name": "txIcon2",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#FFF3E0",
+                          "cornerRadius": [
+                            100,
+                            0,
+                            0,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "TYt9H",
+                              "name": "txIconInner2",
+                              "width": 20,
+                              "height": 20,
+                              "iconFontName": "coffee",
+                              "iconFontFamily": "lucide",
+                              "fill": "#D89575"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "669b7",
+                          "name": "txContent2",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "VodxC",
+                              "name": "txTitle2",
+                              "fill": "#1A1918",
+                              "content": "咖啡店",
+                              "fontFamily": "Outfit",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "hp42n",
+                              "name": "txDate2",
+                              "fill": "#9C9B99",
+                              "content": "今天 10:15",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "q79Q5",
+                          "name": "txAmount2",
+                          "fill": "#D08068",
+                          "content": "-¥35.00",
+                          "fontFamily": "Outfit",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "9FaWv",
+                      "name": "transaction3",
+                      "width": "fill_container",
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "6OQOf",
+                          "name": "txIcon3",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#E8F5E9",
+                          "cornerRadius": [
+                            100,
+                            0,
+                            0,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "uc0OS",
+                              "name": "txIconInner3",
+                              "width": 20,
+                              "height": 20,
+                              "iconFontName": "trending-up",
+                              "iconFontFamily": "lucide",
+                              "fill": "#3D8A5A"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "27AgA",
+                          "name": "txContent3",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "tmMfx",
+                              "name": "txTitle3",
+                              "fill": "#1A1918",
+                              "content": "工资收入",
+                              "fontFamily": "Outfit",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "AljE5",
+                              "name": "txDate3",
+                              "fill": "#9C9B99",
+                              "content": "昨天",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "P14l0",
+                          "name": "txAmount3",
+                          "fill": "#3D8A5A",
+                          "content": "+¥8,500.00",
+                          "fontFamily": "Outfit",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Zera9",
+          "name": "tabBar",
+          "width": "fill_container",
+          "height": 84,
+          "fill": "#FFFFFF",
+          "padding": [
+            12,
+            0,
+            34,
+            0
+          ],
+          "justifyContent": "space_around",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Rz6xd",
+              "name": "tab1",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "TpnW1",
+                  "name": "tab1Icon",
+                  "width": 22,
+                  "height": 22,
+                  "iconFontName": "house",
+                  "iconFontFamily": "lucide",
+                  "fill": "#3D8A5A"
+                },
+                {
+                  "type": "text",
+                  "id": "rs5Xm",
+                  "name": "tab1Label",
+                  "fill": "#3D8A5A",
+                  "content": "首页",
+                  "fontFamily": "Outfit",
+                  "fontSize": 10,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CwYnf",
+              "name": "tab2",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "F06dV",
+                  "name": "tab2Icon",
+                  "width": 22,
+                  "height": 22,
+                  "iconFontName": "chart-bar",
+                  "iconFontFamily": "lucide",
+                  "fill": "#A8A7A5"
+                },
+                {
+                  "type": "text",
+                  "id": "rrF8H",
+                  "name": "tab2Label",
+                  "fill": "#A8A7A5",
+                  "content": "统计",
+                  "fontFamily": "Outfit",
+                  "fontSize": 10,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TOZYI",
+              "name": "addButtonContainer",
+              "width": "fill_container",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "9Z9ua",
+                  "name": "addButton",
+                  "width": 56,
+                  "height": 56,
+                  "fill": "#3D8A5A",
+                  "cornerRadius": [
+                    100,
+                    0,
+                    0,
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "ccEu4",
+                      "name": "addIcon",
+                      "width": 28,
+                      "height": 28,
+                      "iconFontName": "plus",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "n77GO",
+              "name": "tab3",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "CzOqv",
+                  "name": "tab3Icon",
+                  "width": 22,
+                  "height": 22,
+                  "iconFontName": "tag",
+                  "iconFontFamily": "lucide",
+                  "fill": "#A8A7A5"
+                },
+                {
+                  "type": "text",
+                  "id": "Kzt1C",
+                  "name": "tab3Label",
+                  "fill": "#A8A7A5",
+                  "content": "分类",
+                  "fontFamily": "Outfit",
+                  "fontSize": 10,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "QNyS8",
+              "name": "tab4",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "fhUgF",
+                  "name": "tab4Icon",
+                  "width": 22,
+                  "height": 22,
+                  "iconFontName": "settings",
+                  "iconFontFamily": "lucide",
+                  "fill": "#A8A7A5"
+                },
+                {
+                  "type": "text",
+                  "id": "W6DJe",
+                  "name": "tab4Label",
+                  "fill": "#A8A7A5",
+                  "content": "设置",
+                  "fontFamily": "Outfit",
+                  "fontSize": 10,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "GqRZ2",
+      "x": 0,
+      "y": 0,
+      "name": "添加交易",
+      "clip": true,
+      "width": 402,
+      "fill": "#F5F4F1",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "Tw1ZN",
+          "name": "addStatusBar",
+          "width": "fill_container",
+          "height": 62,
+          "padding": [
+            21,
+            24,
+            19,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "bmMRU",
+              "name": "addTime",
+              "fill": "#000000",
+              "content": "9:41",
+              "fontFamily": "Inter",
+              "fontSize": 17,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "uRNFQ",
+              "name": "addLevels",
+              "gap": 6,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "fJUiN",
+                  "name": "addSignal",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "signal",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "8nr2N",
+                  "name": "addWifi",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "wifi",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "DrQwA",
+                  "name": "addBattery",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "battery",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "IhMvZ",
+          "name": "addHeader",
+          "width": "fill_container",
+          "height": 56,
+          "gap": 16,
+          "padding": [
+            0,
+            24
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "jHNRd",
+              "name": "backButton",
+              "width": 40,
+              "height": 40,
+              "fill": "#FFFFFF",
+              "cornerRadius": [
+                100,
+                0,
+                0,
+                0
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "Pvp3t",
+                  "name": "backIcon",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "chevron-left",
+                  "iconFontFamily": "lucide",
+                  "fill": "#1A1918"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "GyUf0",
+              "name": "addTitle",
+              "fill": "#1A1918",
+              "content": "添加交易",
+              "fontFamily": "Outfit",
+              "fontSize": 20,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "7N5Pg",
+          "name": "addContent",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            0,
+            24
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "f2JgH",
+              "name": "amountCard",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": [
+                16,
+                0,
+                0,
+                0
+              ],
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 32,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "6F29O",
+                  "name": "amountLabel",
+                  "fill": "#6D6C6A",
+                  "content": "输入金额",
+                  "fontFamily": "Outfit",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "text",
+                  "id": "b0zUM",
+                  "name": "amountInput",
+                  "fill": "#1A1918",
+                  "content": "¥0.00",
+                  "fontFamily": "Outfit",
+                  "fontSize": 48,
+                  "fontWeight": "700",
+                  "letterSpacing": -1.5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "uSVGX",
+              "name": "typeSegment",
+              "width": "fill_container",
+              "height": 48,
+              "fill": "#EDECEA",
+              "cornerRadius": [
+                12,
+                0,
+                0,
+                0
+              ],
+              "gap": 4,
+              "padding": 4,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "kiZrf",
+                  "name": "typeExpense",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": [
+                    8,
+                    0,
+                    0,
+                    0
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "1Sfk8",
+                      "name": "typeExpenseText",
+                      "fill": "#1A1918",
+                      "content": "支出",
+                      "fontFamily": "Outfit",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "NoOVD",
+                  "name": "typeIncome",
+                  "width": "fill_container",
+                  "height": 40,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "n3dei",
+                      "name": "typeIncomeText",
+                      "fill": "#6D6C6A",
+                      "content": "收入",
+                      "fontFamily": "Outfit",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "b15F7",
+              "name": "categorySection",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "e9rLe",
+                  "name": "categoryTitle",
+                  "fill": "#1A1918",
+                  "content": "选择分类",
+                  "fontFamily": "Outfit",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "hCj7O",
+                  "name": "categoryGrid",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "CLvqr",
+                      "name": "catCol1",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "kgdVy",
+                          "name": "cat1",
+                          "width": "fill_container",
+                          "height": 80,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": [
+                            12,
+                            0,
+                            0,
+                            0
+                          ],
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 2,
+                            "fill": "#3D8A5A"
+                          },
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "KX25S",
+                              "name": "cat1Icon",
+                              "width": 24,
+                              "height": 24,
+                              "iconFontName": "utensils",
+                              "iconFontFamily": "lucide",
+                              "fill": "#3D8A5A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "8HxlP",
+                              "name": "cat1Label",
+                              "fill": "#1A1918",
+                              "content": "餐饮",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "tqXmG",
+                          "name": "cat2",
+                          "width": "fill_container",
+                          "height": 80,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": [
+                            12,
+                            0,
+                            0,
+                            0
+                          ],
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "yMZQ4",
+                              "name": "cat2Icon",
+                              "width": 24,
+                              "height": 24,
+                              "iconFontName": "car",
+                              "iconFontFamily": "lucide",
+                              "fill": "#6D6C6A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "HWmoy",
+                              "name": "cat2Label",
+                              "fill": "#6D6C6A",
+                              "content": "交通",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "c2ZC7",
+                      "name": "catCol2",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "cvbQX",
+                          "name": "cat3",
+                          "width": "fill_container",
+                          "height": 80,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": [
+                            12,
+                            0,
+                            0,
+                            0
+                          ],
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "diq2Y",
+                              "name": "cat3Icon",
+                              "width": 24,
+                              "height": 24,
+                              "iconFontName": "shopping-bag",
+                              "iconFontFamily": "lucide",
+                              "fill": "#6D6C6A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Sk3fg",
+                              "name": "cat3Label",
+                              "fill": "#6D6C6A",
+                              "content": "购物",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "U9odk",
+                          "name": "cat4",
+                          "width": "fill_container",
+                          "height": 80,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": [
+                            12,
+                            0,
+                            0,
+                            0
+                          ],
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "cVPvs",
+                              "name": "cat4Icon",
+                              "width": 24,
+                              "height": 24,
+                              "iconFontName": "house",
+                              "iconFontFamily": "lucide",
+                              "fill": "#6D6C6A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "0THze",
+                              "name": "cat4Label",
+                              "fill": "#6D6C6A",
+                              "content": "居家",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "JDgHd",
+                      "name": "catCol3",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Qd5DZ",
+                          "name": "cat5",
+                          "width": "fill_container",
+                          "height": 80,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": [
+                            12,
+                            0,
+                            0,
+                            0
+                          ],
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "LM43L",
+                              "name": "cat5Icon",
+                              "width": 24,
+                              "height": 24,
+                              "iconFontName": "heart",
+                              "iconFontFamily": "lucide",
+                              "fill": "#6D6C6A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "D3z4p",
+                              "name": "cat5Label",
+                              "fill": "#6D6C6A",
+                              "content": "医疗",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wUe3s",
+                          "name": "cat6",
+                          "width": "fill_container",
+                          "height": 80,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": [
+                            12,
+                            0,
+                            0,
+                            0
+                          ],
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "22Uhg",
+                              "name": "cat6Icon",
+                              "width": 24,
+                              "height": 24,
+                              "iconFontName": "ellipsis",
+                              "iconFontFamily": "lucide",
+                              "fill": "#6D6C6A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "bWSEm",
+                              "name": "cat6Label",
+                              "fill": "#6D6C6A",
+                              "content": "其他",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "uXboC",
+              "name": "noteSection",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "AVkRp",
+                  "name": "noteLabel",
+                  "fill": "#6D6C6A",
+                  "content": "备注",
+                  "fontFamily": "Outfit",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "22Yt6",
+                  "name": "noteInput",
+                  "width": "fill_container",
+                  "height": 100,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": [
+                    12,
+                    0,
+                    0,
+                    0
+                  ],
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#E5E4E1"
+                  },
+                  "layout": "vertical",
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "RPhBl",
+                      "name": "notePlaceholder",
+                      "fill": "#9C9B99",
+                      "content": "添加备注信息...",
+                      "fontFamily": "Outfit",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qP6Hy",
+              "name": "dateSection",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "HzJ8Z",
+                  "name": "dateLabel",
+                  "fill": "#6D6C6A",
+                  "content": "日期时间",
+                  "fontFamily": "Outfit",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "OnJGn",
+                  "name": "dateCard",
+                  "width": "fill_container",
+                  "height": 56,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": [
+                    12,
+                    0,
+                    0,
+                    0
+                  ],
+                  "gap": 12,
+                  "padding": [
+                    0,
+                    16
+                  ],
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Dizk2",
+                      "name": "dateIconText",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "G7GyI",
+                          "name": "dateIcon",
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "calendar",
+                          "iconFontFamily": "lucide",
+                          "fill": "#3D8A5A"
+                        },
+                        {
+                          "type": "text",
+                          "id": "h8nbf",
+                          "name": "dateText",
+                          "fill": "#1A1918",
+                          "content": "2024年2月12日 15:30",
+                          "fontFamily": "Outfit",
+                          "fontSize": 15,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "23ztN",
+                      "name": "chevronRight",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "chevron-right",
+                      "iconFontFamily": "lucide",
+                      "fill": "#9C9B99"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "doxx1",
+              "name": "spacer",
+              "width": "fill_container",
+              "height": 20
+            },
+            {
+              "type": "frame",
+              "id": "IhPt0",
+              "name": "saveButton",
+              "width": "fill_container",
+              "height": 56,
+              "fill": "#3D8A5A",
+              "cornerRadius": [
+                12,
+                0,
+                0,
+                0
+              ],
+              "gap": 8,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "EP2ZV",
+                  "name": "saveIcon",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "check",
+                  "iconFontFamily": "lucide",
+                  "fill": "#FFFFFF"
+                },
+                {
+                  "type": "text",
+                  "id": "Rhm5H",
+                  "name": "saveText",
+                  "fill": "#FFFFFF",
+                  "content": "保存交易",
+                  "fontFamily": "Outfit",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "5vmdF",
+      "x": 0,
+      "y": 0,
+      "name": "交易历史",
+      "clip": true,
+      "width": 402,
+      "fill": "#F5F4F1",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "O9AOL",
+          "name": "historyStatusBar",
+          "width": "fill_container",
+          "height": 62,
+          "padding": [
+            21,
+            24,
+            19,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "Ywt6c",
+              "name": "historyTime",
+              "fill": "#000000",
+              "content": "9:41",
+              "fontFamily": "Inter",
+              "fontSize": 17,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "JW1IV",
+              "name": "historyLevels",
+              "gap": 6,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "xyGa2",
+                  "name": "historySignal",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "signal",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "lBTcI",
+                  "name": "historyWifi",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "wifi",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "NlZRG",
+                  "name": "historyBattery",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "battery",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "rOim4",
+          "name": "historyHeader",
+          "width": "fill_container",
+          "height": 56,
+          "padding": [
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "aLhNZ",
+              "name": "historyTitle",
+              "fill": "#1A1918",
+              "content": "交易历史",
+              "fontFamily": "Outfit",
+              "fontSize": 26,
+              "fontWeight": "600",
+              "letterSpacing": -0.5
+            },
+            {
+              "type": "frame",
+              "id": "wGyds",
+              "name": "filterButton",
+              "width": 44,
+              "height": 44,
+              "fill": "#FFFFFF",
+              "cornerRadius": [
+                100,
+                0,
+                0,
+                0
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "nfXqa",
+                  "name": "filterIcon",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "sliders-horizontal",
+                  "iconFontFamily": "lucide",
+                  "fill": "#1A1918"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "53XE4",
+          "name": "historyContent",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            0,
+            24
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "mT9F1",
+              "name": "filterChips",
+              "width": "fill_container",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "43dZO",
+                  "name": "chip1",
+                  "height": 36,
+                  "fill": "#3D8A5A",
+                  "cornerRadius": [
+                    100,
+                    0,
+                    0,
+                    0
+                  ],
+                  "gap": 6,
+                  "padding": [
+                    0,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "gTws5",
+                      "name": "chip1Text",
+                      "fill": "#FFFFFF",
+                      "content": "全部",
+                      "fontFamily": "Outfit",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "G4qOU",
+                  "name": "chip2",
+                  "height": 36,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": [
+                    100,
+                    0,
+                    0,
+                    0
+                  ],
+                  "gap": 6,
+                  "padding": [
+                    0,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "NDhQT",
+                      "name": "chip2Text",
+                      "fill": "#6D6C6A",
+                      "content": "本月",
+                      "fontFamily": "Outfit",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "F651W",
+                  "name": "chip3",
+                  "height": 36,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": [
+                    100,
+                    0,
+                    0,
+                    0
+                  ],
+                  "gap": 6,
+                  "padding": [
+                    0,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "LT7NO",
+                      "name": "chip3Text",
+                      "fill": "#6D6C6A",
+                      "content": "支出",
+                      "fontFamily": "Outfit",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "atTsc",
+                  "name": "chip4",
+                  "height": 36,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": [
+                    100,
+                    0,
+                    0,
+                    0
+                  ],
+                  "gap": 6,
+                  "padding": [
+                    0,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "BQBep",
+                      "name": "chip4Text",
+                      "fill": "#6D6C6A",
+                      "content": "收入",
+                      "fontFamily": "Outfit",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "oY9ko",
+              "name": "dateGroup1",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "L4YTn",
+                  "name": "dateHeader1",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "qUbko",
+                      "name": "dateTitle1",
+                      "fill": "#1A1918",
+                      "content": "今天",
+                      "fontFamily": "Outfit",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fBhfz",
+                      "name": "dateTotal1",
+                      "fill": "#D08068",
+                      "content": "-¥293.00",
+                      "fontFamily": "Outfit",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "BIZI8",
+                  "name": "transactionList1",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": [
+                    16,
+                    0,
+                    0,
+                    0
+                  ],
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "kfRpU",
+                      "name": "txRow1",
+                      "width": "fill_container",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": {
+                          "bottom": 1
+                        },
+                        "fill": "#E5E4E1"
+                      },
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "k9CPi",
+                          "name": "txIcon1a",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#C8F0D8",
+                          "cornerRadius": [
+                            100,
+                            0,
+                            0,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "n97y3",
+                              "name": "txIconInner1a",
+                              "width": 20,
+                              "height": 20,
+                              "iconFontName": "shopping-cart",
+                              "iconFontFamily": "lucide",
+                              "fill": "#3D8A5A"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "IqnLS",
+                          "name": "txContent1a",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "EZ5Ry",
+                              "name": "txTitle1a",
+                              "fill": "#1A1918",
+                              "content": "超市购物",
+                              "fontFamily": "Outfit",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "BaZLD",
+                              "name": "txMeta1a",
+                              "fill": "#9C9B99",
+                              "content": "餐饮 · 14:30",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "Lawix",
+                          "name": "txAmount1a",
+                          "fill": "#D08068",
+                          "content": "-¥258.00",
+                          "fontFamily": "Outfit",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "koqOr",
+                      "name": "txRow2",
+                      "width": "fill_container",
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "MXs81",
+                          "name": "txIcon2a",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#FFF3E0",
+                          "cornerRadius": [
+                            100,
+                            0,
+                            0,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "DIR9P",
+                              "name": "txIconInner2a",
+                              "width": 20,
+                              "height": 20,
+                              "iconFontName": "coffee",
+                              "iconFontFamily": "lucide",
+                              "fill": "#D89575"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "aAEB9",
+                          "name": "txContent2a",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "OoyoL",
+                              "name": "txTitle2a",
+                              "fill": "#1A1918",
+                              "content": "咖啡店",
+                              "fontFamily": "Outfit",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "dHHmP",
+                              "name": "txMeta2a",
+                              "fill": "#9C9B99",
+                              "content": "餐饮 · 10:15",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "jB0At",
+                          "name": "txAmount2a",
+                          "fill": "#D08068",
+                          "content": "-¥35.00",
+                          "fontFamily": "Outfit",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "hrxs3",
+              "name": "dateGroup2",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "yzpPL",
+                  "name": "dateHeader2",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "nuJ7y",
+                      "name": "dateTitle2",
+                      "fill": "#1A1918",
+                      "content": "昨天",
+                      "fontFamily": "Outfit",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "yzJvn",
+                      "name": "dateTotal2",
+                      "fill": "#3D8A5A",
+                      "content": "+¥8,320.00",
+                      "fontFamily": "Outfit",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ObOUW",
+                  "name": "transactionList2",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": [
+                    16,
+                    0,
+                    0,
+                    0
+                  ],
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "6Bd67",
+                      "name": "txRow3",
+                      "width": "fill_container",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": {
+                          "bottom": 1
+                        },
+                        "fill": "#E5E4E1"
+                      },
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "BNipj",
+                          "name": "txIcon3a",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#E8F5E9",
+                          "cornerRadius": [
+                            100,
+                            0,
+                            0,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "daZYc",
+                              "name": "txIconInner3a",
+                              "width": 20,
+                              "height": 20,
+                              "iconFontName": "trending-up",
+                              "iconFontFamily": "lucide",
+                              "fill": "#3D8A5A"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ChDf1",
+                          "name": "txContent3a",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zTJLx",
+                              "name": "txTitle3a",
+                              "fill": "#1A1918",
+                              "content": "工资收入",
+                              "fontFamily": "Outfit",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "0IMcp",
+                              "name": "txMeta3a",
+                              "fill": "#9C9B99",
+                              "content": "收入 · 09:00",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "MZxA5",
+                          "name": "txAmount3a",
+                          "fill": "#3D8A5A",
+                          "content": "+¥8,500.00",
+                          "fontFamily": "Outfit",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mP9sL",
+                      "name": "txRow4",
+                      "width": "fill_container",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": {
+                          "bottom": 1
+                        },
+                        "fill": "#E5E4E1"
+                      },
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "PNGZz",
+                          "name": "txIcon4a",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#FFE8E8",
+                          "cornerRadius": [
+                            100,
+                            0,
+                            0,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "4Y9L4",
+                              "name": "txIconInner4a",
+                              "width": 20,
+                              "height": 20,
+                              "iconFontName": "car",
+                              "iconFontFamily": "lucide",
+                              "fill": "#D08068"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Yr3Xh",
+                          "name": "txContent4a",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "7BgnS",
+                              "name": "txTitle4a",
+                              "fill": "#1A1918",
+                              "content": "加油",
+                              "fontFamily": "Outfit",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "4UydV",
+                              "name": "txMeta4a",
+                              "fill": "#9C9B99",
+                              "content": "交通 · 18:20",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "Pe9DD",
+                          "name": "txAmount4a",
+                          "fill": "#D08068",
+                          "content": "-¥180.00",
+                          "fontFamily": "Outfit",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "0m5xR",
+                      "name": "txRow5",
+                      "width": "fill_container",
+                      "gap": 14,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "EAvc7",
+                          "name": "txIcon5a",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#FFF0E6",
+                          "cornerRadius": [
+                            100,
+                            0,
+                            0,
+                            0
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "Q0Y8v",
+                              "name": "txIconInner5a",
+                              "width": 20,
+                              "height": 20,
+                              "iconFontName": "film",
+                              "iconFontFamily": "lucide",
+                              "fill": "#D89575"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "hLtAK",
+                          "name": "txContent5a",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YxeDX",
+                              "name": "txTitle5a",
+                              "fill": "#1A1918",
+                              "content": "电影票",
+                              "fontFamily": "Outfit",
+                              "fontSize": 15,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "sOCae",
+                              "name": "txMeta5a",
+                              "fill": "#9C9B99",
+                              "content": "娱乐 · 20:30",
+                              "fontFamily": "Outfit",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "CdDTq",
+                          "name": "txAmount5a",
+                          "fill": "#D08068",
+                          "content": "-¥80.00",
+                          "fontFamily": "Outfit",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
