@@ -50,7 +50,7 @@ const HomePage: React.FC<HomePageProps> = ({ posts, currentPage, totalPages }) =
       } else if (currentPage >= totalPages - 2) {
         pages.push(1, '...', totalPages - 2, totalPages - 1, totalPages);
       } else {
-        pages.push(1, '...', currentPage, '...', totalPages);
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
       }
     }
 
