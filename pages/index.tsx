@@ -60,7 +60,7 @@ const HomePage: React.FC<HomePageProps> = ({ posts, currentPage, totalPages }) =
   return (
     <div>
       <Head>
-        <title>My Blog</title>
+        <title>五月的火</title>
         <meta name="description" content="A blog about technology, design, and development" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

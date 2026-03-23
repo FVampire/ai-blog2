@@ -66,8 +66,8 @@ const PreviewPost: React.FC<PreviewPostProps> = ({ post }) => {
   return (
     <div>
       <Head>
-        <title>[预览] {post.title} - My Blog</title>
-        <meta name="description" content={post.excerpt || `Preview ${post.title} on My Blog`} />
+        <title>[预览] {post.title} - 五月的火</title>
+        <meta name="description" content={post.excerpt || `Preview ${post.title} on 五月的火`} />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 

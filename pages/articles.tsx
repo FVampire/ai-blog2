@@ -73,7 +73,7 @@ const ArticlesPage: React.FC = () => {
   return (
     <div>
       <Head>
-        <title>Articles - My Blog</title>
+        <title>Articles - 五月的火</title>
         <meta name="description" content="All blog articles" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

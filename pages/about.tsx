@@ -8,7 +8,7 @@ const AboutPage: React.FC = () => {
   return (
     <div>
       <Head>
-        <title>About - My Blog</title>
+        <title>About - 五月的火</title>
         <meta name="description" content="About the author" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

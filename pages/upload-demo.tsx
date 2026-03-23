@@ -19,7 +19,7 @@ const ImageUploadDemo: React.FC = () => {
   return (
     <div>
       <Head>
-        <title>图片上传演示 - My Blog</title>
+        <title>图片上传演示 - 五月的火</title>
         <meta name="description" content="测试图片上传功能" />
       </Head>
 

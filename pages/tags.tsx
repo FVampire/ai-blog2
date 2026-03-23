@@ -8,8 +8,8 @@ import PopularTags from '../components/PopularTags';
 const TagsPage: React.FC = () => {
   return (
     <div>
-      <Head>
-        <title>Tags - My Blog</title>
+      <Head>  
+        <title>Tags - 五月的火</title>
         <meta name="description" content="All tags" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

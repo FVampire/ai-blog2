@@ -84,7 +84,7 @@ const TagPage: React.FC<TagPageProps> = ({ tag, posts, currentPage, totalPages }
   return (
     <div>
       <Head>
-        <title>{tag.name} - My Blog</title>
+        <title>{tag.name} - 五月的火</title>
         <meta name="description" content={`浏览标签为 ${tag.name} 的所有文章`} />
         <link rel="icon" href="/favicon.ico" />
       </Head>

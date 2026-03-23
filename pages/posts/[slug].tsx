@@ -127,8 +127,8 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, relatedPosts, prevPost, nextP
   return (
     <div>
       <Head>
-        <title>{post.title} - My Blog</title>
-        <meta name="description" content={post.excerpt || `Read ${post.title} on My Blog`} />
+        <title>{post.title} - 五月的火</title>
+        <meta name="description" content={post.excerpt || `Read ${post.title} on 五月的火`} />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
