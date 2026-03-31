@@ -1,4 +1,4 @@
-import { NextRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs';
 import path from 'path';
 import { BaseRepository } from './BaseRepository';
@@ -70,7 +70,7 @@ export class MediaRepository extends BaseRepository {
     page?: number;
     limit?: number;
     search?: string;
-    request?: NextRequest;
+    request?: NextApiRequest;
     response?: NextApiResponse;
   } = {}): Promise<MediaPaginationResult> {
     const { page = 1, limit = 20, search } = options;
@@ -138,7 +138,7 @@ export class MediaRepository extends BaseRepository {
   /**
    * 删除媒体文件
    */
-  static async deleteMediaFile(filename: string, request?: NextRequest, response?: NextApiResponse): Promise<boolean> {
+  static async deleteMediaFile(filename: string, request?: NextApiRequest, response?: NextApiResponse): Promise<boolean> {
     try {
       // 安全检查：防止路径遍历攻击
       const safeFilename = this.sanitizeFilename(filename);
@@ -171,7 +171,7 @@ export class MediaRepository extends BaseRepository {
   /**
    * 获取媒体文件信息
    */
-  static async getMediaFileInfo(filename: string, request?: NextRequest, response?: NextApiResponse): Promise<MediaFile | null> {
+  static async getMediaFileInfo(filename: string, request?: NextApiRequest, response?: NextApiResponse): Promise<MediaFile | null> {
     try {
       // 安全检查：防止路径遍历攻击
       const safeFilename = this.sanitizeFilename(filename);
@@ -213,7 +213,7 @@ export class MediaRepository extends BaseRepository {
   /**
    * 检查文件是否存在
    */
-  static async mediaFileExists(filename: string, request?: NextRequest, response?: NextApiResponse): Promise<boolean> {
+  static async mediaFileExists(filename: string, request?: NextApiRequest, response?: NextApiResponse): Promise<boolean> {
     try {
       const safeFilename = this.sanitizeFilename(filename);
       const filePath = path.join(this.getUploadsDir(), safeFilename);

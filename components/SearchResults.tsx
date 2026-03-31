@@ -1,0 +1,503 @@
+/**
+ * SearchResults 组件
+ * 展示搜索结果，包括匹配率、命中文字片段等
+ */
+
+import React from 'react';
+import Link from 'next/link';
+
+interface SearchResult {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string;
+  image?: string;
+  author: string;
+  date: string;
+  tags: string[];
+  views: number;
+  similarity: number;
+  matchedSnippets: string[];
+}
+
+interface SearchResultsProps {
+  results: SearchResult[];
+  query: string;
+  searchType: 'vector' | 'text';
+  isLoading: boolean;
+}
+
+/**
+ * 获取匹配率的颜色
+ */
+function getSimilarityColor(similarity: number): string {
+  if (similarity >= 0.8) return '#10b981'; // 绿色 - 高匹配
+  if (similarity >= 0.6) return '#3b82f6'; // 蓝色 - 中匹配
+  if (similarity >= 0.4) return '#f59e0b'; // 橙色 - 低匹配
+  return '#6b7280'; // 灰色 - 弱匹配
+}
+
+/**
+ * 获取匹配率标签
+ */
+function getSimilarityLabel(similarity: number): string {
+  if (similarity >= 0.8) return '非常相关';
+  if (similarity >= 0.6) return '相关';
+  if (similarity >= 0.4) return '可能相关';
+  return '弱相关';
+}
+
+/**
+ * 高亮匹配的文本
+ */
+function HighlightedText({ text, query }: { text: string; query: string }) {
+  if (!query || !text) return <>{text}</>;
+
+  const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase() ? (
+          <mark
+            key={i}
+            style={{
+              backgroundColor: '#fef3c7',
+              color: '#92400e',
+              padding: '2px 4px',
+              borderRadius: '4px',
+              fontWeight: 500,
+            }}
+          >
+            {part}
+          </mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
+export const SearchResults: React.FC<SearchResultsProps> = ({
+  results,
+  query,
+  searchType,
+  isLoading,
+}) => {
+  if (isLoading) {
+    return (
+      <div className="search-loading">
+        <div className="loading-spinner"></div>
+        <p>正在搜索...</p>
+
+        <style jsx>{`
+          .search-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+          }
+          .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+          }
+          @keyframes spin {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (!results) {
+    results = [];
+  }
+  if (results?.length === 0) {
+    return (
+      <div className="search-empty">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="64"
+          height="64"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <h3>未找到相关结果</h3>
+        <p>尝试使用不同的关键词或检查拼写</p>
+
+        <style jsx>{`
+          .search-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            text-align: center;
+          }
+          .search-empty svg {
+            margin-bottom: 20px;
+            opacity: 0.5;
+          }
+          .search-empty h3 {
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+            color: var(--text-color);
+          }
+          .search-empty p {
+            font-size: 0.9rem;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  return (
+    <div className="search-results">
+      <div className="search-header">
+        <span className="search-type-badge" data-type={searchType}>
+          {searchType === 'vector' ? 'AI 智能搜索' : '普通搜索'}
+        </span>
+        <span className="result-count">找到 {results.length} 个结果</span>
+      </div>
+
+      <div className="results-list">
+        {results.map((result) => (
+          <article key={result.id} className="result-card">
+            {/* 匹配率指示器 */}
+            <div className="similarity-badge">
+              <div
+                className="similarity-ring"
+                style={{
+                  background: `conic-gradient(${getSimilarityColor(result.similarity)} ${
+                    result.similarity * 360
+                  }deg, #e5e7eb 0deg)`,
+                }}
+              >
+                <div className="similarity-inner">
+                  <span className="similarity-value">{Math.round(result.similarity * 100)}%</span>
+                </div>
+              </div>
+              <span
+                className="similarity-label"
+                style={{ color: getSimilarityColor(result.similarity) }}
+              >
+                {getSimilarityLabel(result.similarity)}
+              </span>
+            </div>
+
+            {/* 文章内容 */}
+            <div className="result-content">
+              <Link href={`/posts/${result.slug}`} className="result-title">
+                <HighlightedText text={result.title} query={query} />
+              </Link>
+
+              {/* 命中文字片段 */}
+              {result.matchedSnippets.length > 0 && (
+                <div className="matched-snippets">
+                  <span className="snippet-label">匹配内容：</span>
+                  {result.matchedSnippets.map((snippet, idx) => (
+                    <p key={idx} className="snippet-text">
+                      "<HighlightedText text={snippet} query={query} />"
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              <p className="result-excerpt">
+                <HighlightedText text={result.excerpt} query={query} />
+              </p>
+
+              <div className="result-meta">
+                <span className="meta-item">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  {result.author}
+                </span>
+                <span className="meta-item">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  {result.date}
+                </span>
+                <span className="meta-item">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  {result.views} 阅读
+                </span>
+              </div>
+            </div>
+
+            {result.image && (
+              <div className="result-image">
+                <img src={result.image} alt={result.title} />
+              </div>
+            )}
+          </article>
+        ))}
+      </div>
+
+      <style jsx>{`
+        .search-results {
+          width: 100%;
+        }
+
+        .search-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 24px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-type-badge {
+          font-size: 0.75rem;
+          font-weight: 600;
+          padding: 4px 12px;
+          border-radius: 20px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .search-type-badge[data-type='vector'] {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+        }
+
+        .search-type-badge[data-type='text'] {
+          background: var(--bg-secondary);
+          color: var(--text-muted);
+        }
+
+        .result-count {
+          font-size: 0.9rem;
+          color: var(--text-muted);
+        }
+
+        .results-list {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .result-card {
+          display: flex;
+          gap: 20px;
+          padding: 24px;
+          background: var(--card-bg);
+          border-radius: 12px;
+          border: 1px solid var(--border-color);
+          transition: all 0.2s ease;
+        }
+
+        .result-card:hover {
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          transform: translateY(-2px);
+        }
+
+        .similarity-badge {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
+        }
+
+        .similarity-ring {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          padding: 4px;
+        }
+
+        .similarity-inner {
+          width: 100%;
+          height: 100%;
+          background: var(--card-bg);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .similarity-value {
+          font-size: 0.875rem;
+          font-weight: 700;
+          color: var(--text-color);
+        }
+
+        .similarity-label {
+          font-size: 0.7rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .result-content {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .result-title {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: var(--text-color);
+          text-decoration: none;
+          display: block;
+          margin-bottom: 12px;
+          line-height: 1.4;
+        }
+
+        .result-title:hover {
+          color: var(--primary-color);
+        }
+
+        .matched-snippets {
+          background: #fefce8;
+          border-left: 3px solid #f59e0b;
+          padding: 12px 16px;
+          margin-bottom: 12px;
+          border-radius: 0 8px 8px 0;
+        }
+
+        .snippet-label {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #92400e;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          display: block;
+          margin-bottom: 8px;
+        }
+
+        .snippet-text {
+          font-size: 0.875rem;
+          color: #78350f;
+          line-height: 1.6;
+          margin: 0;
+          font-style: italic;
+        }
+
+        .result-excerpt {
+          font-size: 0.95rem;
+          color: var(--text-muted);
+          line-height: 1.7;
+          margin: 0 0 16px 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .result-meta {
+          display: flex;
+          gap: 20px;
+          flex-wrap: wrap;
+        }
+
+        .meta-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 0.85rem;
+          color: var(--text-muted);
+        }
+
+        .meta-item svg {
+          opacity: 0.6;
+        }
+
+        .result-image {
+          width: 160px;
+          height: 120px;
+          flex-shrink: 0;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .result-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        @media (max-width: 640px) {
+          .result-card {
+            flex-direction: column;
+            gap: 16px;
+          }
+
+          .similarity-badge {
+            flex-direction: row;
+            justify-content: flex-start;
+          }
+
+          .similarity-ring {
+            width: 48px;
+            height: 48px;
+          }
+
+          .result-image {
+            width: 100%;
+            height: 180px;
+          }
+
+          .search-header {
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default SearchResults;

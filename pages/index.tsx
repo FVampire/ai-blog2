@@ -1,14 +1,14 @@
-import React from 'react';
-import Head from 'next/head';
-import { GetServerSideProps } from 'next';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import BlogPostCard from '../components/BlogPostCard';
-import TagCloud from '../components/TagCloud';
-import AuthorBio from '../components/AuthorBio';
-import SearchWidget from '../components/SearchWidget';
-import { query } from '../lib/db';
-import { useRouter } from 'next/router';
+import React from "react";
+import Head from "next/head";
+import { GetServerSideProps } from "next";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import BlogPostCard from "../components/BlogPostCard";
+import TagCloud from "../components/TagCloud";
+import AuthorBio from "../components/AuthorBio";
+import SearchWidget from "../components/SearchWidget";
+import { query } from "../lib/db";
+import { useRouter } from "next/router";
 
 interface Post {
   id: number;
@@ -34,7 +34,7 @@ const HomePage: React.FC<HomePageProps> = ({ posts, currentPage, totalPages }) =
   const handlePageChange = (page: number) => {
     // 更新URL参数并刷新页面
     router.push(`/?page=${page}`, undefined, { scroll: true });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const getPageNumbers = () => {
@@ -46,11 +46,11 @@ const HomePage: React.FC<HomePageProps> = ({ posts, currentPage, totalPages }) =
       }
     } else {
       if (currentPage <= 3) {
-        pages.push(1, 2, 3, '...', totalPages);
+        pages.push(1, 2, 3, 4, "...", totalPages);
       } else if (currentPage >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 2, totalPages - 1, totalPages);
+        pages.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
       } else {
-        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+        pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
       }
     }
 
@@ -88,33 +88,27 @@ const HomePage: React.FC<HomePageProps> = ({ posts, currentPage, totalPages }) =
                   ))}
 
                   <div className="pagination">
-                    <button
-                      className="pagination-btn"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                    >
+                    <button className="pagination-btn" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
                       <span className="pagination-arrow">←</span>
                     </button>
 
-                    {getPageNumbers().map((page, index) => (
-                      page === '...' ? (
-                        <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                    {getPageNumbers().map((page, index) =>
+                      page === "..." ? (
+                        <span key={`ellipsis-${index}`} className="pagination-ellipsis">
+                          ...
+                        </span>
                       ) : (
                         <button
                           key={page}
-                          className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                          className={`pagination-btn ${currentPage === page ? "active" : ""}`}
                           onClick={() => handlePageChange(page as number)}
                         >
                           {page}
                         </button>
-                      )
-                    ))}
+                      ),
+                    )}
 
-                    <button
-                      className="pagination-btn"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                    >
+                    <button className="pagination-btn" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
                       <span className="pagination-arrow">→</span>
                     </button>
                   </div>
@@ -142,7 +136,7 @@ const HomePage: React.FC<HomePageProps> = ({ posts, currentPage, totalPages }) =
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
-    console.log('🔵 [HomePage] Starting database query...');
+    console.log("🔵 [HomePage] Starting database query...");
     const page = parseInt(context.query.page as string) || 1;
     const postsPerPage = 4;
     const offset = (page - 1) * postsPerPage;
@@ -170,31 +164,28 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       ORDER BY p.published_at DESC
       LIMIT $1 OFFSET $2
       `,
-      [postsPerPage, offset]
+      [postsPerPage, offset],
     );
 
     // 获取总数
-    const countResult = await query(
-      'SELECT COUNT(*) FROM posts WHERE status = $1',
-      ['published']
-    );
+    const countResult = await query("SELECT COUNT(*) FROM posts WHERE status = $1", ["published"]);
 
     const totalPosts = parseInt(countResult.rows[0].count);
     const totalPages = Math.ceil(totalPosts / postsPerPage);
 
     // 格式化数据
-    const posts: Post[] = result.rows.map(row => ({
+    const posts: Post[] = result.rows.map((row) => ({
       id: row.id,
       title: row.title,
-      date: new Date(row.published_at).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
+      date: new Date(row.published_at).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       }),
       author: row.author_name,
       excerpt: row.excerpt,
       slug: row.slug,
-      image: row.image_url || '',
+      image: row.image_url || "",
       tags: row.tags,
     }));
 
@@ -207,7 +198,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     };
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    console.error("Error fetching posts:", error);
 
     // 返回空数据以防止错误
     return {

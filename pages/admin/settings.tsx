@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AdminLayout from '../../components/admin/AdminLayout';
+import VectorManager from '../../components/admin/VectorManager';
+import MCPManager from '../../components/admin/MCPManager';
 
 interface SettingDetail {
   value: any;
@@ -176,6 +178,8 @@ const AdminSettings: React.FC = () => {
     { id: 'upload', name: '上传设置', icon: '📤' },
     { id: 'social', name: '社交媒体', icon: '🔗' },
     { id: 'ai', name: 'AI 设置', icon: '🤖' },
+    { id: 'vector', name: '向量搜索', icon: '🔍' },
+    { id: 'mcp', name: 'MCP 设置', icon: '🔌' },
     { id: 'other', name: '其他设置', icon: '⚙️' },
   ];
 
@@ -188,7 +192,15 @@ const AdminSettings: React.FC = () => {
     social: ['social_github', 'social_twitter', 'social_weibo'],
     ai: [
       'ai_enabled', 'ai_provider', 'ai_api_key', 'ai_api_base_url', 'ai_model',
+      'ai_model_light', 'ai_embedding_model',
       'ai_assistant_enabled', 'ai_assistant_name', 'ai_assistant_welcome', 'ai_assistant_system_prompt',
+    ],
+    vector: [
+      'ai_vector_search_enabled', 'ai_vector_search_threshold',
+      'ai_vector_search_weight_title', 'ai_vector_search_weight_content', 'ai_vector_search_weight_excerpt',
+    ],
+    mcp: [
+      'mcp_enabled', 'mcp_allow_user_select'
     ],
     other: ['footer_text', 'analytics_code'],
   };
@@ -220,10 +232,21 @@ const AdminSettings: React.FC = () => {
     ai_api_key: 'API密钥',
     ai_api_base_url: 'API地址(可选)',
     ai_model: '模型名称',
+    ai_model_light: '轻量模型名称',
+    ai_embedding_model: 'Embedding模型名称',
     ai_assistant_enabled: '启用AI助手',
     ai_assistant_name: '助手名称',
     ai_assistant_welcome: '欢迎语',
     ai_assistant_system_prompt: '系统提示词',
+    // 向量搜索设置
+    ai_vector_search_enabled: '启用向量搜索',
+    ai_vector_search_threshold: '相似度阈值 (0-1)',
+    ai_vector_search_weight_title: '标题权重 (0-1)',
+    ai_vector_search_weight_content: '内容权重 (0-1)',
+    ai_vector_search_weight_excerpt: '摘要权重 (0-1)',
+    // MCP 设置
+    mcp_enabled: '启用MCP功能',
+    mcp_allow_user_select: '允许用户选择MCP服务器',
   };
 
   if (loading) {
@@ -280,22 +303,32 @@ const AdminSettings: React.FC = () => {
 
           {/* 设置内容 */}
           <div className="settings-content">
-            {settingGroups[activeTab]?.map(key => {
-              const detail = details[key];
-              if (!detail) return null;
+            {activeTab === 'vector' ? (
+              <VectorManager />
+            ) : activeTab === 'mcp' ? (
+              <MCPManager
+                settings={settings}
+                details={details}
+                onChange={handleChange}
+              />
+            ) : (
+              settingGroups[activeTab]?.map(key => {
+                const detail = details[key];
+                if (!detail) return null;
 
-              return (
-                <div key={key} className="setting-item">
-                  <div className="setting-label">
-                    <span className="label-text">{settingLabels[key] || key}</span>
-                    <span className="label-desc">{detail.description}</span>
+                return (
+                  <div key={key} className="setting-item">
+                    <div className="setting-label">
+                      <span className="label-text">{settingLabels[key] || key}</span>
+                      <span className="label-desc">{detail.description}</span>
+                    </div>
+                    <div className="setting-control">
+                      {renderInput(key, detail)}
+                    </div>
                   </div>
-                  <div className="setting-control">
-                    {renderInput(key, detail)}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>

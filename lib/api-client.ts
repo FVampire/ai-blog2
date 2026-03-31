@@ -162,6 +162,11 @@ class ApiClient {
       method: 'DELETE',
     }, true);
   }
+
+  // Generic GET method
+  async get<T = any>(endpoint: string, requiresAuth: boolean = false): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {}, requiresAuth);
+  }
 }
 
 export const apiClient = new ApiClient();

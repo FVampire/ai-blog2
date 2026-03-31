@@ -9,6 +9,8 @@ INSERT INTO settings (key, value, type, description) VALUES
   ('ai_api_key', '', 'string', 'AI API密钥'),
   ('ai_api_base_url', '', 'string', 'AI API基础URL(可选,用于自定义端点)'),
   ('ai_model', 'gpt-3.5-turbo', 'string', 'AI模型名称'),
+  ('ai_model_light', '', 'string', '轻量级AI模型名称(用于快速响应任务)'),
+  ('ai_embedding_model', '', 'string', 'Embedding模型名称(用于文本向量化)'),
 
   -- AI 聊天助手配置
   ('ai_assistant_enabled', 'true', 'boolean', '是否启用AI聊天助手'),

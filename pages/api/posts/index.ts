@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { AuthenticatedRequest, authMiddleware } from '../../../lib/auth-middleware';
 import { query, getClient } from '../../../lib/db';
+import { generateEmbedding } from '../../../lib/embedding';
+import { VectorRepository } from '../../../lib/repositories/VectorRepository';
 
 // 公开的 GET 请求处理函数（不需要鉴权）
 async function publicGetHandler(req: NextApiRequest, res: NextApiResponse) {
@@ -255,6 +257,21 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         }
 
         await client.query('COMMIT');
+
+        // 如果是发布状态，异步生成向量（不阻塞响应）
+        if (status === 'published') {
+          setTimeout(async () => {
+            try {
+              const vectors = await generateEmbedding(title, content || '', excerpt || '');
+              if (vectors) {
+                await VectorRepository.saveVectors(newPost.id, vectors);
+                console.log(`[Vector] Generated embedding for new post: ${newPost.id}`);
+              }
+            } catch (vectorError) {
+              console.error(`[Vector] Failed to generate embedding for post ${newPost.id}:`, vectorError);
+            }
+          }, 0);
+        }
 
         return res.status(201).json({
           success: true,

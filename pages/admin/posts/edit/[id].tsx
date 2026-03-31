@@ -23,6 +23,9 @@ const EditPost: React.FC = () => {
   const [pageLoading, setPageLoading] = useState(true);
   const [tags, setTags] = useState<Tag[]>([]);
   const [availablePosts, setAvailablePosts] = useState<PostOption[]>([]);
+  const [vectorInfo, setVectorInfo] = useState<{ hasVectors: boolean; model?: string } | null>(null);
+  const [generatingVector, setGeneratingVector] = useState(false);
+  const [vectorMessage, setVectorMessage] = useState({ type: '', text: '' });
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -109,8 +112,83 @@ const EditPost: React.FC = () => {
       loadPost();
       loadTags();
       loadAvailablePosts();
+      loadVectorInfo();
     }
   }, [id]);
+
+  const loadVectorInfo = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`/api/admin/vector/${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (data.success) {
+        setVectorInfo({
+          hasVectors: data.data.hasVectors,
+          model: data.data.vectors?.model,
+        });
+      }
+    } catch (error) {
+      console.error('Load vector info error:', error);
+    }
+  };
+
+  const handleGenerateVector = async () => {
+    if (!confirm('确定要为此文章生成向量吗？这将用于向量搜索功能。')) {
+      return;
+    }
+
+    setGeneratingVector(true);
+    setVectorMessage({ type: '', text: '' });
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`/api/admin/vector/${id}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setVectorInfo({
+          hasVectors: true,
+          model: data.data.model,
+        });
+        setVectorMessage({ type: 'success', text: data.message });
+      } else {
+        setVectorMessage({ type: 'error', text: data.message });
+      }
+    } catch (error: any) {
+      setVectorMessage({ type: 'error', text: error.message || '生成向量失败' });
+    } finally {
+      setGeneratingVector(false);
+    }
+  };
+
+  const handleDeleteVector = async () => {
+    if (!confirm('确定要删除此文章的向量吗？删除后向量搜索将无法找到这篇文章。')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`/api/admin/vector/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setVectorInfo({ hasVectors: false });
+        setVectorMessage({ type: 'success', text: data.message });
+      } else {
+        setVectorMessage({ type: 'error', text: data.message });
+      }
+    } catch (error: any) {
+      setVectorMessage({ type: 'error', text: error.message || '删除向量失败' });
+    }
+  };
 
   
 
@@ -320,6 +398,52 @@ const EditPost: React.FC = () => {
             </div>
           </div>
 
+          {/* 向量管理 */}
+          <div className="form-group">
+            <label>向量搜索</label>
+            <div className="vector-section">
+              {vectorInfo === null ? (
+                <p className="vector-status loading">加载中...</p>
+              ) : vectorInfo.hasVectors ? (
+                <div className="vector-status has-vectors">
+                  <span className="vector-icon">✓</span>
+                  <span className="vector-text">
+                    已生成向量 {vectorInfo.model && <small>({vectorInfo.model})</small>}
+                  </span>
+                </div>
+              ) : (
+                <div className="vector-status no-vectors">
+                  <span className="vector-icon">✗</span>
+                  <span className="vector-text">未生成向量</span>
+                </div>
+              )}
+              <div className="vector-actions">
+                <button
+                  type="button"
+                  className="btn-vector"
+                  onClick={handleGenerateVector}
+                  disabled={generatingVector}
+                >
+                  {generatingVector ? '生成中...' : (vectorInfo?.hasVectors ? '重新生成' : '生成向量')}
+                </button>
+                {vectorInfo?.hasVectors && (
+                  <button
+                    type="button"
+                    className="btn-vector-delete"
+                    onClick={handleDeleteVector}
+                  >
+                    删除向量
+                  </button>
+                )}
+              </div>
+              {vectorMessage.text && (
+                <div className={`vector-message ${vectorMessage.type}`}>
+                  {vectorMessage.text}
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="form-actions">
             <button
               type="button"
@@ -339,6 +463,124 @@ const EditPost: React.FC = () => {
           </div>
         </form>
       </div>
+
+      <style jsx>{`
+        .vector-section {
+          background: #f9fafb;
+          border-radius: 8px;
+          padding: 16px;
+          border: 1px solid #e5e7eb;
+        }
+
+        .vector-status {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 12px;
+          font-size: 14px;
+        }
+
+        .vector-status.loading {
+          color: #6b7280;
+        }
+
+        .vector-status.has-vectors {
+          color: #059669;
+        }
+
+        .vector-status.has-vectors .vector-icon {
+          width: 20px;
+          height: 20px;
+          background: #10b981;
+          color: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+        }
+
+        .vector-status.no-vectors {
+          color: #dc2626;
+        }
+
+        .vector-status.no-vectors .vector-icon {
+          width: 20px;
+          height: 20px;
+          background: #ef4444;
+          color: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+        }
+
+        .vector-text small {
+          color: #6b7280;
+          font-size: 12px;
+        }
+
+        .vector-actions {
+          display: flex;
+          gap: 8px;
+        }
+
+        .btn-vector {
+          padding: 8px 16px;
+          background: #3b82f6;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+
+        .btn-vector:hover:not(:disabled) {
+          background: #2563eb;
+        }
+
+        .btn-vector:disabled {
+          background: #93c5fd;
+          cursor: not-allowed;
+        }
+
+        .btn-vector-delete {
+          padding: 8px 16px;
+          background: white;
+          color: #dc2626;
+          border: 1px solid #fca5a5;
+          border-radius: 6px;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-vector-delete:hover {
+          background: #fef2f2;
+          border-color: #dc2626;
+        }
+
+        .vector-message {
+          margin-top: 12px;
+          padding: 10px 12px;
+          border-radius: 6px;
+          font-size: 13px;
+        }
+
+        .vector-message.success {
+          background: #d1fae5;
+          color: #065f46;
+        }
+
+        .vector-message.error {
+          background: #fee2e2;
+          color: #991b1b;
+        }
+      `}</style>
     </AdminLayout>
   );
 };

@@ -1,6 +1,8 @@
 import { NextApiResponse } from 'next';
 import { authMiddleware, AuthenticatedRequest } from '../../../lib/auth-middleware';
 import { query, getClient } from '../../../lib/db';
+import { generateEmbedding } from '../../../lib/embedding';
+import { VectorRepository } from '../../../lib/repositories/VectorRepository';
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { id } = req.query;
@@ -278,6 +280,43 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
         await client.query('COMMIT');
 
+        // 异步更新向量（不阻塞响应）
+        setTimeout(async () => {
+          try {
+            // 获取更新后的完整文章信息
+            const postResult = await query(
+              'SELECT title, content, excerpt, status FROM posts WHERE id = $1',
+              [id]
+            );
+
+            if (postResult.rows.length > 0) {
+              const post = postResult.rows[0];
+
+              if (post.status === 'published') {
+                // 发布状态：生成或更新向量
+                const vectors = await generateEmbedding(
+                  post.title,
+                  post.content || '',
+                  post.excerpt || ''
+                );
+                if (vectors) {
+                  await VectorRepository.saveVectors(parseInt(id as string), vectors);
+                  console.log(`[Vector] Updated embedding for post: ${id}`);
+                }
+              } else {
+                // 非发布状态：删除向量（如果存在）
+                const hasVectors = await VectorRepository.hasVectors(parseInt(id as string));
+                if (hasVectors) {
+                  await VectorRepository.deleteVectors(parseInt(id as string));
+                  console.log(`[Vector] Removed embedding for unpublished post: ${id}`);
+                }
+              }
+            }
+          } catch (vectorError) {
+            console.error(`[Vector] Failed to update embedding for post ${id}:`, vectorError);
+          }
+        }, 0);
+
         return res.status(200).json({
           success: true,
           message: '文章更新成功',
@@ -301,6 +340,16 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           message: '文章不存在',
         });
       }
+
+      // 删除文章的向量（异步）
+      setTimeout(async () => {
+        try {
+          await VectorRepository.deleteVectors(parseInt(id as string));
+          console.log(`[Vector] Deleted embedding for removed post: ${id}`);
+        } catch (vectorError) {
+          console.error(`[Vector] Failed to delete embedding for post ${id}:`, vectorError);
+        }
+      }, 0);
 
       return res.status(200).json({
         success: true,
