@@ -24,22 +24,56 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   // 创建 MCP 服务器 (POST /api/admin/mcp)
   if (req.method === 'POST') {
     try {
-      const { name, description, command, script_path, args, env_vars, is_enabled, timeout_seconds } = req.body;
+      const {
+        name,
+        description,
+        transport,
+        command,
+        script_path,
+        args,
+        env_vars,
+        url,
+        headers,
+        is_enabled,
+        timeout_seconds
+      } = req.body;
 
-      if (!name || !command || !script_path) {
+      // 根据传输类型验证必填字段
+      if (!name) {
         return res.status(400).json({
           success: false,
-          message: '名称、命令和脚本路径不能为空',
+          message: '名称不能为空',
+        });
+      }
+
+      const transportType = transport || 'stdio';
+
+      // STDIO 类型需要 command 和 script_path
+      if (transportType === 'stdio' && (!command || !script_path)) {
+        return res.status(400).json({
+          success: false,
+          message: 'STDIO 类型需要命令和脚本路径',
+        });
+      }
+
+      // SSE/HTTP 类型需要 url
+      if ((transportType === 'sse' || transportType === 'http') && !url) {
+        return res.status(400).json({
+          success: false,
+          message: 'SSE/HTTP 类型需要服务器 URL',
         });
       }
 
       const server = await mcpRepository.create({
         name,
         description: description || '',
-        command,
-        script_path,
+        transport: transportType,
+        command: command || '',
+        script_path: script_path || '',
         args: args || [],
         env_vars: env_vars || {},
+        url: url || '',
+        headers: headers || {},
         is_enabled: is_enabled ?? true,
         timeout_seconds: timeout_seconds || 30,
       });
@@ -69,10 +103,13 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             await mcpRepository.update(server.id, {
               name: server.name,
               description: server.description,
+              transport: server.transport,
               command: server.command,
               script_path: server.script_path,
               args: server.args,
               env_vars: server.env_vars,
+              url: server.url,
+              headers: server.headers,
               is_enabled: server.is_enabled,
               timeout_seconds: server.timeout_seconds,
             });

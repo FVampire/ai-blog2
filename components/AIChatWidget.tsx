@@ -100,9 +100,9 @@ const AIChatWidget: React.FC = () => {
   // 知识库列表（可以从 API 获取，这里先使用示例数据）
   const knowledgeBases: KnowledgeBase[] = [
     { id: '', name: '默认知识库', description: '使用博客文章作为知识来源' },
-    { id: 'tech', name: '技术文档', description: '技术相关文档和教程' },
-    { id: 'product', name: '产品手册', description: '产品使用说明和FAQ' },
-    { id: 'company', name: '公司知识库', description: '公司内部文档和流程' },
+    // { id: 'tech', name: '技术文档', description: '技术相关文档和教程' },
+    // { id: 'product', name: '产品手册', description: '产品使用说明和FAQ' },
+    // { id: 'company', name: '公司知识库', description: '公司内部文档和流程' },
   ];
 
   // Get current article context
@@ -274,9 +274,6 @@ const AIChatWidget: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: allMessages,
-          provider: config?.ai_provider || 'anthropic',
-          model: config?.ai_model || 'claude-3-sonnet',
-          systemPrompt: systemPrompt || undefined,
           mcpServers: selectedMCPNames,
           stream: true,
         }),
@@ -340,7 +337,7 @@ const AIChatWidget: React.FC = () => {
                 }
                 break;
               }
-
+              console.log(parsed);
               if (parsed.content) {
                 fullContent += parsed.content;
                 // 更新最后一条消息的内容

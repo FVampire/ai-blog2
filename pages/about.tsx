@@ -1,10 +1,30 @@
 import React from 'react';
 import Head from 'next/head';
+import { GetServerSideProps } from 'next';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import SkillsList from '../components/SkillsList';
+import { SettingsRepository } from '../lib/repositories/SettingsRepository';
 
-const AboutPage: React.FC = () => {
+interface SocialLink {
+  platform: string;
+  name: string;
+  url: string;
+}
+
+interface AboutSettings {
+  authorName: string;
+  authorBio: string;
+  authorBio2: string;
+  authorBio3: string;
+  socialLinks: SocialLink[];
+}
+
+interface AboutPageProps {
+  settings: AboutSettings;
+}
+
+const AboutPage: React.FC<AboutPageProps> = ({ settings }) => {
   return (
     <div>
       <Head>
@@ -22,26 +42,19 @@ const AboutPage: React.FC = () => {
               <h1 className="section-title">About Me</h1>
               <div className="card">
                 <div className="avatar" style={{ margin: '0 auto 20px' }}></div>
-                <h2 className="author-name">John Doe</h2>
-                <p className="author-bio">
-                  I'm a full-stack developer with over 10 years of experience building web applications.
-                  My passion lies in creating beautiful, functional, and user-friendly digital experiences.
-                </p>
-                <p className="author-bio">
-                  Throughout my career, I've worked with startups and enterprises alike, helping them
-                  transform their ideas into successful products. I specialize in modern JavaScript
-                  frameworks like React and Node.js, and I'm always excited to learn about new technologies.
-                </p>
-                <p className="author-bio">
-                  When I'm not coding, you can find me hiking in the mountains, reading science fiction
-                  novels, or experimenting with new cooking recipes. I believe in continuous learning
-                  and sharing knowledge with the community through writing and mentoring.
-                </p>
-                <div className="social-links" style={{ justifyContent: 'center', marginTop: '20px' }}>
-                  <a href="#" className="social-link">Twitter</a>
-                  <a href="#" className="social-link">GitHub</a>
-                  <a href="#" className="social-link">LinkedIn</a>
-                </div>
+                <h2 className="author-name">{settings.authorName}</h2>
+                <p className="author-bio">{settings.authorBio}</p>
+                <p className="author-bio">{settings.authorBio2}</p>
+                <p className="author-bio">{settings.authorBio3}</p>
+                {settings.socialLinks && settings.socialLinks.length > 0 && (
+                  <div className="social-links" style={{ justifyContent: 'center', marginTop: '20px' }}>
+                    {settings.socialLinks.map((link) => (
+                      <a key={link.platform} href={link.url} className="social-link" target="_blank" rel="noopener noreferrer">
+                        {link.name}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -55,6 +68,33 @@ const AboutPage: React.FC = () => {
       <Footer />
     </div>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  try {
+    const settings = await SettingsRepository.getAboutSettings();
+
+    return {
+      props: {
+        settings,
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching about settings:', error);
+
+    // 返回默认数据以防止错误
+    return {
+      props: {
+        settings: {
+          authorName: 'John Doe',
+          authorBio: "I'm a full-stack developer with over 10 years of experience building web applications.",
+          authorBio2: "I specialize in modern JavaScript frameworks like React and Node.js.",
+          authorBio3: "I believe in continuous learning and sharing knowledge with the community.",
+          socialLinks: [],
+        },
+      },
+    };
+  }
 };
 
 export default AboutPage;

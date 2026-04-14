@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MCPServer } from '../../lib/repositories/MCPRepository';
+import { MCPServer, MCPTransportType } from '../../lib/repositories/MCPRepository';
 
 interface MCPManagerProps {
   settings: Record<string, any>;
@@ -16,9 +16,13 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    transport: 'stdio' as MCPTransportType,
     command: 'npx',
     script_path: '',
     args: '',
+    env_vars: '{}',
+    url: '',
+    headers: '',
     is_enabled: true,
     is_default: false,
     timeout_seconds: 30,
@@ -83,7 +87,9 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
         },
         body: JSON.stringify({
           ...formData,
-          args: formData.args ? JSON.parse(formData.args) : []
+          args: formData.args ? JSON.parse(formData.args) : [],
+          env_vars: formData.env_vars ? JSON.parse(formData.env_vars) : {},
+          headers: formData.headers ? JSON.parse(formData.headers) : {},
         }),
       });
 
@@ -96,9 +102,13 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
         setFormData({
           name: '',
           description: '',
+          transport: 'stdio',
           command: 'npx',
           script_path: '',
           args: '',
+          env_vars: '{}',
+          url: '',
+          headers: '',
           is_enabled: true,
           is_default: false,
           timeout_seconds: 30,
@@ -118,9 +128,13 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
     setFormData({
       name: server.name,
       description: server.description,
+      transport: server.transport || 'stdio',
       command: server.command,
       script_path: server.script_path,
       args: Array.isArray(server.args) ? JSON.stringify(server.args) : server.args,
+      env_vars: server.env_vars ? JSON.stringify(server.env_vars) : '{}',
+      url: server.url || '',
+      headers: server.headers ? JSON.stringify(server.headers) : '',
       is_enabled: server.is_enabled,
       is_default: server.is_default,
       timeout_seconds: server.timeout_seconds,
@@ -183,9 +197,13 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
     setFormData({
       name: '',
       description: '',
+      transport: 'stdio',
       command: 'npx',
       script_path: '',
       args: '',
+      env_vars: '{}',
+      url: '',
+      headers: '',
       is_enabled: true,
       is_default: false,
       timeout_seconds: 30,
@@ -199,9 +217,13 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
     setFormData({
       name: '',
       description: '',
+      transport: 'stdio',
       command: 'npx',
       script_path: '',
       args: '',
+      env_vars: '{}',
+      url: '',
+      headers: '',
       is_enabled: true,
       is_default: false,
       timeout_seconds: 30,
@@ -290,8 +312,8 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
               <thead>
                 <tr>
                   <th>名称</th>
-                  <th>命令</th>
-                  <th>路径</th>
+                  <th>传输类型</th>
+                  <th>命令/URL</th>
                   <th>状态</th>
                   <th>默认</th>
                   <th>操作</th>
@@ -304,8 +326,17 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
                       <div className="server-name">{server.name}</div>
                       <div className="server-desc">{server.description}</div>
                     </td>
-                    <td>{server.command}</td>
-                    <td>{server.script_path}</td>
+                    <td>
+                      <span className={`transport-badge ${server.transport || 'stdio'}`}>
+                        {(server.transport || 'stdio').toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      {server.transport === 'sse' || server.transport === 'http'
+                        ? (server.url || '-')
+                        : `${server.command} ${server.script_path}`
+                      }
+                    </td>
                     <td>
                       <span className={`status-badge ${server.is_enabled ? 'enabled' : 'disabled'}`}>
                         {server.is_enabled ? '启用' : '禁用'}
@@ -380,61 +411,155 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
                 />
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>命令 *</label>
-                  <select
-                    name="command"
-                    value={formData.command}
-                    onChange={handleInputChange}
-                    className="form-select"
-                  >
-                    <option value="npx">npx</option>
-                    <option value="node">node</option>
-                    <option value="python">python</option>
-                    <option value="uvx">uvx</option>
-                    <option value="docker">docker</option>
-                    <option value="custom">custom</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>超时时间(秒)</label>
-                  <input
-                    type="number"
-                    name="timeout_seconds"
-                    value={formData.timeout_seconds}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    min="1"
-                    max="300"
-                  />
-                </div>
-              </div>
-
               <div className="form-group">
-                <label>脚本路径 *</label>
-                <input
-                  type="text"
-                  name="script_path"
-                  value={formData.script_path}
+                <label>传输类型 *</label>
+                <select
+                  name="transport"
+                  value={formData.transport}
                   onChange={handleInputChange}
-                  className="form-input"
-                  required
-                />
+                  className="form-select"
+                >
+                  <option value="stdio">STDIO (标准输入输出)</option>
+                  <option value="sse">SSE (服务器推送事件)</option>
+                  <option value="http">HTTP (HTTP 请求)</option>
+                </select>
+                <span className="field-hint">
+                  {formData.transport === 'stdio' && '通过子进程标准输入输出通信，适用于本地 MCP 服务器'}
+                  {formData.transport === 'sse' && '通过 SSE 流式通信，适用于远程 MCP 服务器'}
+                  {formData.transport === 'http' && '通过 HTTP 请求通信，适用于 RESTful MCP 服务器'}
+                </span>
               </div>
 
-              <div className="form-group">
-                <label>参数 (JSON数组格式)</label>
-                <textarea
-                  name="args"
-                  value={formData.args}
-                  onChange={handleInputChange as any}
-                  className="form-textarea"
-                  rows={2}
-                  placeholder='["arg1", "arg2"]'
-                />
-              </div>
+              {/* STDIO 特有配置 */}
+              {formData.transport === 'stdio' && (
+                <>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>命令</label>
+                      <select
+                        name="command"
+                        value={formData.command}
+                        onChange={handleInputChange}
+                        className="form-select"
+                      >
+                        <option value="npx">npx</option>
+                        <option value="node">node</option>
+                        <option value="python">python</option>
+                        <option value="uvx">uvx</option>
+                        <option value="docker">docker</option>
+                        <option value="custom">custom</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>超时时间(秒)</label>
+                      <input
+                        type="number"
+                        name="timeout_seconds"
+                        value={formData.timeout_seconds}
+                        onChange={handleInputChange}
+                        className="form-input"
+                        min="1"
+                        max="300"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>脚本路径 *</label>
+                    <input
+                      type="text"
+                      name="script_path"
+                      value={formData.script_path}
+                      onChange={handleInputChange}
+                      className="form-input"
+                      placeholder="例如: @modelcontextprotocol/server-filesystem"
+                      required={formData.transport === 'stdio'}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>参数 (JSON数组格式)</label>
+                    <textarea
+                      name="args"
+                      value={formData.args}
+                      onChange={handleInputChange as any}
+                      className="form-textarea"
+                      rows={2}
+                      placeholder='["arg1", "arg2"]'
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>环境变量 (JSON对象格式)</label>
+                    <textarea
+                      name="env_vars"
+                      value={formData.env_vars}
+                      onChange={handleInputChange as any}
+                      className="form-textarea"
+                      rows={2}
+                      placeholder='{"KEY": "value", "API_KEY": "xxx"}'
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* SSE/HTTP 特有配置 */}
+              {(formData.transport === 'sse' || formData.transport === 'http') && (
+                <>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>服务器 URL *</label>
+                      <input
+                        type="url"
+                        name="url"
+                        value={formData.url}
+                        onChange={handleInputChange}
+                        className="form-input"
+                        placeholder="例如: http://localhost:3000/mcp"
+                        required={formData.transport !== 'stdio'}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>超时时间(秒)</label>
+                      <input
+                        type="number"
+                        name="timeout_seconds"
+                        value={formData.timeout_seconds}
+                        onChange={handleInputChange}
+                        className="form-input"
+                        min="1"
+                        max="300"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>请求头 (JSON对象格式)</label>
+                    <textarea
+                      name="headers"
+                      value={formData.headers}
+                      onChange={handleInputChange as any}
+                      className="form-textarea"
+                      rows={2}
+                      placeholder='{"Authorization": "Bearer xxx", "X-Custom": "value"}'
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>脚本路径 (可选，用于本地代理)</label>
+                    <input
+                      type="text"
+                      name="script_path"
+                      value={formData.script_path}
+                      onChange={handleInputChange}
+                      className="form-input"
+                      placeholder="例如: /path/to/proxy.js"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="form-checkboxes">
                 <label className="checkbox-label">
@@ -603,6 +728,29 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
           color: #721c24;
         }
 
+        .transport-badge {
+          padding: 4px 8px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+
+        .transport-badge.stdio {
+          background: #e3f2fd;
+          color: #1565c0;
+        }
+
+        .transport-badge.sse {
+          background: #f3e5f5;
+          color: #7b1fa2;
+        }
+
+        .transport-badge.http {
+          background: #e8f5e9;
+          color: #2e7d32;
+        }
+
         .default-badge {
           padding: 4px 8px;
           background: #007bff;
@@ -746,6 +894,14 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
 
         .form-textarea {
           resize: vertical;
+        }
+
+        .field-hint {
+          display: block;
+          margin-top: 6px;
+          font-size: 12px;
+          color: #6c757d;
+          font-style: italic;
         }
 
         .form-checkboxes {

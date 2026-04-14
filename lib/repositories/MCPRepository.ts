@@ -1,13 +1,19 @@
 import { query } from '../db';
 
+export type MCPTransportType = 'stdio' | 'sse' | 'http';
+
 export interface MCPServer {
   id: number;
   name: string;
   description: string;
+  transport: MCPTransportType;
   command: string;
   script_path: string;
   args: string[];
   env_vars: Record<string, string>;
+  // SSE/HTTP 特定配置
+  url?: string;
+  headers?: Record<string, string>;
   is_enabled: boolean;
   is_default: boolean;
   timeout_seconds: number;
@@ -18,10 +24,13 @@ export interface MCPServer {
 export interface CreateMCPServerInput {
   name: string;
   description?: string;
+  transport?: MCPTransportType;
   command: string;
   script_path: string;
   args?: string[];
   env_vars?: Record<string, string>;
+  url?: string;
+  headers?: Record<string, string>;
   is_enabled?: boolean;
   timeout_seconds?: number;
 }
@@ -29,10 +38,13 @@ export interface CreateMCPServerInput {
 export interface UpdateMCPServerInput {
   name?: string;
   description?: string;
+  transport?: MCPTransportType;
   command?: string;
   script_path?: string;
   args?: string[];
   env_vars?: Record<string, string>;
+  url?: string;
+  headers?: Record<string, string>;
   is_enabled?: boolean;
   is_default?: boolean;
   timeout_seconds?: number;
@@ -42,9 +54,12 @@ export interface MCPServerListItem {
   id: number;
   name: string;
   description: string;
-  command: string;
+  command?: string;
   scriptPath: string;
-  args: string[];
+  args?: string[];
+  transport?: MCPTransportType;
+  url?: string;
+  headers?: Record<string, string>;
   isDefault: boolean;
   timeoutSeconds: number;
 }
@@ -61,8 +76,8 @@ export class MCPRepository {
    */
   async getAll(): Promise<MCPServer[]> {
     const result = await query(
-      `SELECT id, name, description, command, script_path, args, env_vars,
-              is_enabled, is_default, timeout_seconds, created_at, updated_at
+      `SELECT id, name, description, transport, command, script_path, args, env_vars,
+              url, headers, is_enabled, is_default, timeout_seconds, created_at, updated_at
        FROM mcp_servers
        ORDER BY is_default DESC, is_enabled DESC, name ASC`
     );
@@ -89,7 +104,7 @@ export class MCPRepository {
     }
 
     const result = await query(
-      `SELECT id, name, description, command, script_path, args, is_default, timeout_seconds
+      `SELECT id, name, description, transport, command, script_path, args, url, headers, is_default, timeout_seconds
        FROM mcp_servers
        WHERE is_enabled = true
        ORDER BY is_default DESC, name ASC`
@@ -99,9 +114,12 @@ export class MCPRepository {
       id: row.id,
       name: row.name,
       description: row.description,
+      transport: row.transport || 'stdio',
       command: row.command,
       scriptPath: row.script_path,
       args: Array.isArray(row.args) ? row.args : JSON.parse(row.args || '[]'),
+      url: row.url,
+      headers: typeof row.headers === 'object' ? row.headers : JSON.parse(row.headers || '{}'),
       isDefault: row.is_default,
       timeoutSeconds: row.timeout_seconds,
     }));
@@ -120,8 +138,8 @@ export class MCPRepository {
    */
   async getById(id: number): Promise<MCPServer | null> {
     const result = await query(
-      `SELECT id, name, description, command, script_path, args, env_vars,
-              is_enabled, is_default, timeout_seconds, created_at, updated_at
+      `SELECT id, name, description, transport, command, script_path, args, env_vars,
+              url, headers, is_enabled, is_default, timeout_seconds, created_at, updated_at
        FROM mcp_servers WHERE id = $1`,
       [id]
     );
@@ -136,17 +154,20 @@ export class MCPRepository {
    */
   async create(data: CreateMCPServerInput): Promise<MCPServer> {
     const result = await query(
-      `INSERT INTO mcp_servers (name, description, command, script_path, args, env_vars, is_enabled, is_default, timeout_seconds)
-       VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, false, $8)
-       RETURNING id, name, description, command, script_path, args, env_vars,
-                 is_enabled, is_default, timeout_seconds, created_at, updated_at`,
+      `INSERT INTO mcp_servers (name, description, transport, command, script_path, args, env_vars, url, headers, is_enabled, is_default, timeout_seconds)
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8, $9::jsonb, $10, false, $11)
+       RETURNING id, name, description, transport, command, script_path, args, env_vars,
+                 url, headers, is_enabled, is_default, timeout_seconds, created_at, updated_at`,
       [
         data.name,
         data.description || '',
-        data.command,
-        data.script_path,
+        data.transport || 'stdio',
+        data.command || '',
+        data.script_path || '',
         JSON.stringify(data.args || []),
         JSON.stringify(data.env_vars || {}),
+        data.url || '',
+        JSON.stringify(data.headers || {}),
         data.is_enabled ?? true,
         data.timeout_seconds || 30,
       ]
@@ -163,23 +184,29 @@ export class MCPRepository {
       `UPDATE mcp_servers SET
          name = COALESCE($1, name),
          description = COALESCE($2, description),
-         command = COALESCE($3, command),
-         script_path = COALESCE($4, script_path),
-         args = COALESCE($5::jsonb, args),
-         env_vars = COALESCE($6::jsonb, env_vars),
-         is_enabled = COALESCE($7, is_enabled),
-         is_default = COALESCE($8, is_default),
-         timeout_seconds = COALESCE($9, timeout_seconds)
-       WHERE id = $10
-       RETURNING id, name, description, command, script_path, args, env_vars,
-                 is_enabled, is_default, timeout_seconds, created_at, updated_at`,
+         transport = COALESCE($3, transport),
+         command = COALESCE($4, command),
+         script_path = COALESCE($5, script_path),
+         args = COALESCE($6::jsonb, args),
+         env_vars = COALESCE($7::jsonb, env_vars),
+         url = COALESCE($8, url),
+         headers = COALESCE($9::jsonb, headers),
+         is_enabled = COALESCE($10, is_enabled),
+         is_default = COALESCE($11, is_default),
+         timeout_seconds = COALESCE($12, timeout_seconds)
+       WHERE id = $13
+       RETURNING id, name, description, transport, command, script_path, args, env_vars,
+                 url, headers, is_enabled, is_default, timeout_seconds, created_at, updated_at`,
       [
         data.name,
         data.description,
+        data.transport,
         data.command,
         data.script_path,
         data.args ? JSON.stringify(data.args) : null,
         data.env_vars ? JSON.stringify(data.env_vars) : null,
+        data.url,
+        data.headers ? JSON.stringify(data.headers) : null,
         data.is_enabled,
         data.is_default,
         data.timeout_seconds,
@@ -251,6 +278,7 @@ export class MCPRepository {
       ...row,
       args: Array.isArray(row.args) ? row.args : JSON.parse(row.args || '[]'),
       env_vars: typeof row.env_vars === 'object' ? row.env_vars : JSON.parse(row.env_vars || '{}'),
+      headers: typeof row.headers === 'object' ? row.headers : JSON.parse(row.headers || '{}'),
     };
   }
 }

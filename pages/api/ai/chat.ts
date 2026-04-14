@@ -1,11 +1,16 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { anthropic } from '@ai-sdk/anthropic';
-import { openai } from '@ai-sdk/openai';
-import { google } from '@ai-sdk/google';
-import { generateText, tool, LanguageModel, ToolSet } from 'ai';
-import { z } from 'zod';
-import { mcpRepository } from '../../../lib/repositories/MCPRepository';
-import { spawn } from 'child_process';
+import { NextApiRequest, NextApiResponse } from "next";
+// import { anthropic } from '@ai-sdk/anthropic';
+// import { openai } from '@ai-sdk/openai';
+// import { google } from '@ai-sdk/google';
+// import { generateText, tool, LanguageModel, ToolSet } from 'ai';
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+import { ChatOpenAI, type ClientOptions } from "@langchain/openai";
+import { createAgent, HumanMessage } from "langchain";
+import { z } from "zod";
+import { mcpRepository, MCPServerListItem } from "../../../lib/repositories/MCPRepository";
+import { SettingsRepository } from "../../../lib/repositories/SettingsRepository";
+import { NextResponse } from "next/server";
+import { Readable } from "stream";
 
 // MCP 工具定义接口
 interface MCPTool {
@@ -28,22 +33,32 @@ interface MCPServerInfo {
 }
 
 // 执行 MCP 工具调用
-async function executeMCPTool(
-  serverId: number,
-  toolName: string,
-  args: Record<string, any>
-): Promise<any> {
+async function executeMCPTool(serverId: number, toolName: string, args: Record<string, any>): Promise<any> {
   const server = await mcpRepository.getById(serverId);
   if (!server || !server.is_enabled) {
-    throw new Error('MCP server not found or disabled');
+    throw new Error("MCP server not found or disabled");
   }
 
-  const commandArgs = [
-    server.script_path,
-    ...(server.args || []),
-    toolName,
-    JSON.stringify(args)
-  ];
+  const transport = server.transport || "stdio";
+
+  // 根据传输类型选择不同的调用方式
+  switch (transport) {
+    case "stdio":
+      return executeStdioMCPTool(server, toolName, args);
+    case "sse":
+      return executeSSEMCPTool(server, toolName, args);
+    case "http":
+      return executeHttpMCPTool(server, toolName, args);
+    default:
+      throw new Error(`Unsupported MCP transport type: ${transport}`);
+  }
+}
+
+// 执行 STDIO 类型的 MCP 工具调用
+async function executeStdioMCPTool(server: any, toolName: string, args: Record<string, any>): Promise<any> {
+  const { spawn } = await import("child_process");
+
+  const commandArgs = [server.script_path, ...(server.args || []), toolName, JSON.stringify(args)];
 
   return new Promise<any>((resolve, reject) => {
     const childProcess = spawn(server.command, commandArgs, {
@@ -51,18 +66,18 @@ async function executeMCPTool(
       timeout: server.timeout_seconds * 1000,
     });
 
-    let output = '';
-    let errorOutput = '';
+    let output = "";
+    let errorOutput = "";
 
-    childProcess.stdout.on('data', (data) => {
+    childProcess.stdout.on("data", (data) => {
       output += data.toString();
     });
 
-    childProcess.stderr.on('data', (data) => {
+    childProcess.stderr.on("data", (data) => {
       errorOutput += data.toString();
     });
 
-    childProcess.on('close', (code) => {
+    childProcess.on("close", (code) => {
       if (code !== 0) {
         reject(new Error(errorOutput || `Process exited with code ${code}`));
       } else {
@@ -75,27 +90,60 @@ async function executeMCPTool(
       }
     });
 
-    childProcess.on('error', (error) => {
+    childProcess.on("error", (error) => {
       reject(error);
     });
   });
 }
 
-// 获取 MCP 服务器的工具列表
-async function getMCPServerTools(serverId: number): Promise<MCPTool[]> {
-  try {
-    const result = await executeMCPTool(serverId, 'list_tools', {});
-    return result.tools || [];
-  } catch (error) {
-    console.error(`Failed to get tools for MCP server ${serverId}:`, error);
-    return [];
+// 执行 SSE 类型的 MCP 工具调用
+async function executeSSEMCPTool(server: any, toolName: string, args: Record<string, any>): Promise<any> {
+  if (!server.url) {
+    throw new Error("SSE MCP server requires URL");
   }
+
+  const response = await fetch(`${server.url}/tools/${toolName}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...server.headers,
+    },
+    body: JSON.stringify(args),
+  });
+
+  if (!response.ok) {
+    throw new Error(`SSE MCP request failed: ${response.status} ${response.statusText}`);
+  }
+
+  return await response.json();
+}
+
+// 执行 HTTP 类型的 MCP 工具调用
+async function executeHttpMCPTool(server: any, toolName: string, args: Record<string, any>): Promise<any> {
+  if (!server.url) {
+    throw new Error("HTTP MCP server requires URL");
+  }
+
+  const response = await fetch(`${server.url}/tools/${toolName}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...server.headers,
+    },
+    body: JSON.stringify(args),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP MCP request failed: ${response.status} ${response.statusText}`);
+  }
+
+  return await response.json();
 }
 
 // ========== Step 1: 获取 MCP 列表和用户传入的 MCP，返回工具 ==========
 
-// 获取可用的 MCP 服务器列表及其工具
-async function getAvailableMCPServers(): Promise<MCPServerInfo[]> {
+// 获取可用的 MCP 服务器列表
+async function getAvailableMCPServers() {
   try {
     // 检查 MCP 是否启用
     const mcpEnabledResult = await mcpRepository.isMCPEnabled();
@@ -109,125 +157,96 @@ async function getAvailableMCPServers(): Promise<MCPServerInfo[]> {
       return [];
     }
 
-    // 获取每个服务器的工具
-    const serversWithTools: MCPServerInfo[] = [];
-    for (const server of enabledServers.servers) {
-      const tools = await getMCPServerTools(server.id);
-      serversWithTools.push({
-        id: server.id,
-        name: server.name,
-        description: server.description,
-        tools,
-      });
-    }
-
-    return serversWithTools;
+    const servers = enabledServers.servers;
+    return servers;
   } catch (error) {
-    console.error('Failed to get available MCP servers:', error);
+    console.error("Failed to get available MCP servers:", error);
     return [];
   }
 }
 
 // 根据用户传入的 MCP 名称筛选可用的 MCP 服务器
-async function filterMCPServers(
-  availableServers: MCPServerInfo[],
-  userSelectedMCPs?: string[]
-): Promise<MCPServerInfo[]> {
+async function filterMCPServers(availableServers: MCPServerListItem[], userSelectedMCPs?: string[]): Promise<MCPServerListItem[]> {
   if (!userSelectedMCPs || userSelectedMCPs.length === 0) {
-    // 如果用户没有指定，返回全部可用 MCP
-    return availableServers;
+    // 如果用户没有指定，返回空数组
+    return [];
   }
 
   // 筛选用户选择的 MCP（必须在可用列表中）
-  const filtered = availableServers.filter(server =>
-    userSelectedMCPs.includes(server.name)
-  );
+  const filtered = availableServers.filter((server) => userSelectedMCPs.includes(server.name));
 
   return filtered;
 }
 
+// AI 模型完整配置接口
+interface AIModelConfig {
+  provider: string;
+  model: string;
+  apiKey?: string;
+  baseUrl?: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
 // ========== Step 2: 获取 Model ==========
 
-// 获取 Model
-function getModel(provider: string, model: string): LanguageModel {
-  const lowerProvider = provider.toLowerCase();
+// 从配置中获取完整的 AI 模型配置
+async function getAIModelConfig(settings: Record<string, any>): Promise<AIModelConfig> {
+  try {
+    // const result = await SettingsRepository.getSettingsByKeys(["ai_provider", "ai_model", "ai_api_key", "ai_api_base_url", "ai_temperature", "ai_max_tokens"]);
+    // const [provider, model, apiKey, baseUrl, temperature, maxTokens] = result.map((s) => s.value);
+    // const [provider, model, apiKey, baseUrl, temperature, maxTokens] = await Promise.all([
+    //   SettingsRepository.getSettingValue("ai_provider", "openai"),
+    //   SettingsRepository.getSettingValue("ai_model", "gpt-3.5-turbo"),
+    //   SettingsRepository.getSettingValue("ai_api_key", ""),
+    //   SettingsRepository.getSettingValue("ai_api_base_url", ""),
+    //   SettingsRepository.getSettingValue("ai_temperature", 0.7),
+    //   SettingsRepository.getSettingValue("ai_max_tokens", 2048),
+    // ]);
+    const {
+      ai_provider: provider,
+      ai_model: model,
+      ai_api_key: apiKey,
+      ai_api_base_url: baseUrl,
+      ai_temperature: temperature,
+      ai_max_tokens: maxTokens,
+    } = settings;
 
-  switch (lowerProvider) {
-    case 'anthropic':
-    case 'claude':
-      return anthropic(model);
-    case 'openai':
-    case 'gpt':
-      return openai(model);
-    case 'google':
-    case 'gemini':
-      return google(model);
-    default:
-      // 默认使用 anthropic
-      return anthropic(model);
+    return {
+      provider,
+      model,
+      apiKey: apiKey || undefined,
+      baseUrl: baseUrl || undefined,
+      temperature: parseFloat(temperature),
+      maxTokens: parseInt(maxTokens, 10),
+    };
+  } catch (error) {
+    console.error("Failed to get AI model config:", error);
+    // 返回默认配置
+    return {
+      provider: "openai",
+      model: "gpt-3.5-turbo",
+      temperature: 0.7,
+      maxTokens: 2048,
+    };
   }
 }
 
-// ========== Step 3: 生成 Agent，将 model 和 tools 作为参数传入 ==========
+// 获取 Model
+function getModel(config: AIModelConfig) {
+  const { provider, model, apiKey, baseUrl } = config;
+  const configuration: ClientOptions = {
+    apiKey,
+    baseURL: baseUrl || undefined,
+  };
 
-// 生成 Agent 工具（将 MCP 工具转换为 AI SDK 工具格式）
-function generateAgentTools(mcpServers: MCPServerInfo[]): ToolSet {
-  const tools: ToolSet = {};
-
-  for (const server of mcpServers) {
-    for (const mcpTool of server.tools) {
-      // 工具名称前缀加上服务器名称，避免冲突
-      const toolName = `${server.name}_${mcpTool.name}`.replace(/[^a-zA-Z0-9_]/g, '_');
-
-      // 构建 Zod schema
-      const schemaShape: Record<string, z.ZodType<any>> = {};
-      const properties = mcpTool.inputSchema?.properties || {};
-      const required = mcpTool.inputSchema?.required || [];
-
-      for (const [key, prop] of Object.entries(properties)) {
-        const propType = (prop as any).type;
-        let zodType: z.ZodType<any>;
-
-        switch (propType) {
-          case 'string':
-            zodType = z.string();
-            break;
-          case 'number':
-          case 'integer':
-            zodType = z.number();
-            break;
-          case 'boolean':
-            zodType = z.boolean();
-            break;
-          case 'array':
-            zodType = z.array(z.any());
-            break;
-          case 'object':
-            zodType = z.record(z.any());
-            break;
-          default:
-            zodType = z.any();
-        }
-
-        // 如果不是必需的，设为可选
-        if (!required.includes(key)) {
-          zodType = zodType.optional();
-        }
-
-        schemaShape[key] = zodType;
-      }
-
-      tools[toolName] = tool({
-        description: `[${server.name}] ${mcpTool.description || mcpTool.name}`,
-        parameters: z.object(schemaShape),
-        execute: async (args) => {
-          return await executeMCPTool(server.id, mcpTool.name, args);
-        },
-      });
-    }
-  }
-
-  return tools;
+  const chatModel = new ChatOpenAI({
+    openAIApiKey: apiKey,
+    configuration,
+    modelName: model,
+    streaming: true,
+  });
+  return chatModel;
 }
 
 // 验证请求体
@@ -236,53 +255,38 @@ function validateRequest(body: any): {
   error?: string;
   data?: {
     messages: Array<{ role: string; content: string }>;
-    provider: string;
-    model: string;
-    systemPrompt?: string;
     mcpServers?: string[];
+    articleContext?: { title: string; content: string };
     stream?: boolean;
   };
 } {
   if (!body.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
-    return { valid: false, error: '缺少 messages 参数或格式不正确' };
-  }
-
-  if (!body.provider || typeof body.provider !== 'string') {
-    return { valid: false, error: '缺少 provider 参数' };
-  }
-
-  if (!body.model || typeof body.model !== 'string') {
-    return { valid: false, error: '缺少 model 参数' };
+    return { valid: false, error: "缺少 messages 参数或格式不正确" };
   }
 
   // 过滤有效消息
-  const messages = body.messages.filter((m: any) =>
-    m && typeof m === 'object' && m.role && m.content
-  );
+  const messages = body.messages.filter((m: any) => m && typeof m === "object" && m.role && m.content);
 
   if (messages.length === 0) {
-    return { valid: false, error: 'messages 中没有有效的消息' };
+    return { valid: false, error: "messages 中没有有效的消息" };
   }
 
   return {
     valid: true,
     data: {
       messages,
-      provider: body.provider,
-      model: body.model,
-      systemPrompt: body.systemPrompt,
       mcpServers: body.mcpServers,
       stream: body.stream,
-    }
+    },
   };
 }
 
 // API Handler
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
+  if (req.method !== "POST") {
     return res.status(405).json({
       success: false,
-      message: '方法不允许',
+      message: "方法不允许",
     });
   }
 
@@ -296,63 +300,149 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const { messages, provider, model, systemPrompt, mcpServers: userMCPs, stream } = validation.data!;
+    const { messages, mcpServers: userMCPs, articleContext, stream } = validation.data!;
+
+    const settings = await SettingsRepository.getAISettings();
+
+    // 检查 AI 是否启用
+    if (!settings.ai_enabled) {
+      return res.status(400).json({
+        success: false,
+        message: "AI 功能未启用",
+      });
+    }
+
+    // 检查 API Key
+    if (!settings.ai_api_key) {
+      return res.status(400).json({
+        success: false,
+        message: "AI API 密钥未配置",
+      });
+    }
+
+    let contextText = "";
+    if (articleContext) {
+      // Article-specific context - user is viewing an article
+      contextText = `
+
+当前用户正在阅读的文章：
+标题：${articleContext.title}
+
+文章内容：
+${articleContext.content}
+
+请根据上述文章内容来回答用户的问题。如果用户的问题与文章无关，也可以友好地回答，但优先关注文章相关的问题。`;
+    } else {
+      // General context - fetch recent blog posts
+      // const blogContext = await getBlogContext();
+      // if (blogContext.length > 0) {
+      //   contextText = `\n\n博客最近文章:\n${blogContext.map((p) => `- ${p.title}: ${p.excerpt}`).join("\n")}`;
+      // }
+    }
+    const systemPrompt = (settings.ai_assistant_system_prompt || "你是一个友好的博客AI助手。") + contextText;
 
     // Step 1: 获取可用的 MCP 服务器列表
     const availableMCPServers = await getAvailableMCPServers();
-    console.log(`[AI Chat] 可用 MCP 服务器: ${availableMCPServers.map(s => s.name).join(', ') || '无'}`);
+    console.log(`[AI Chat] 可用 MCP 服务器: ${availableMCPServers.map((s) => s.name).join(", ") || "无"}`);
 
     // 筛选用户选择的 MCP 服务器（如果在可用列表中）
     const selectedMCPServers = await filterMCPServers(availableMCPServers, userMCPs);
-    console.log(`[AI Chat] 用户选择的 MCP: ${userMCPs?.join(', ') || '全部'}`);
-    console.log(`[AI Chat] 最终使用的 MCP: ${selectedMCPServers.map(s => s.name).join(', ') || '无'}`);
+    console.log(`[AI Chat] 用户选择的 MCP: ${userMCPs?.join(", ") || "全部"}`);
+    console.log(`[AI Chat] 最终使用的 MCP: ${selectedMCPServers.map((s) => s.name).join(", ") || "无"}`);
 
-    // Step 2: 获取 Model
-    const languageModel = getModel(provider, model);
-    console.log(`[AI Chat] 使用模型: ${provider} / ${model}`);
+    // Step 2: 从配置获取 Model（不再依赖前端传入）
+    const modelConfig = await getAIModelConfig(settings);
+    console.log(modelConfig);
+    const languageModel = getModel(modelConfig);
+    console.log(`[AI Chat] 使用模型: ${modelConfig.provider} / ${modelConfig.model}`);
 
     // Step 3: 生成 Agent 工具
-    const tools = generateAgentTools(selectedMCPServers);
+    const tools = await generateAgentTools(selectedMCPServers);
     console.log(`[AI Chat] 可用工具数量: ${Object.keys(tools).length}`);
 
     // 调用 AI 生成回复
-    const result = await generateText({
+    const agent = await createAgent({
       model: languageModel,
-      messages: messages.map(m => ({
-        role: m.role as 'user' | 'assistant' | 'system',
-        content: m.content,
-      })),
-      system: systemPrompt,
-      tools: Object.keys(tools).length > 0 ? tools : undefined,
-      maxSteps: 10,
+      systemPrompt,
+      tools,
     });
+    // const result = await agent.invoke({
+    //   messages,
+    // });
+    // const result = await generateText({
+    //   model: languageModel,
+    //   messages: messages.map((m) => ({
+    //     role: m.role as "user" | "assistant" | "system",
+    //     content: m.content,
+    //   })),
+    //   system: systemPrompt,
+    //   tools: Object.keys(tools).length > 0 ? tools : undefined,
+    //   maxSteps: 10,
+    //   temperature: modelConfig.temperature,
+    //   maxTokens: modelConfig.maxTokens,
+    // });
 
     // 返回结果
-    return res.status(200).json({
-      success: true,
-      data: {
-        content: result.text,
-        toolCalls: result.toolCalls || [],
-        toolResults: result.toolResults || [],
-        finishReason: result.finishReason,
-        usage: result.usage,
-      },
-      meta: {
-        model: `${provider}/${model}`,
-        mcpServers: selectedMCPServers.map(s => ({
-          id: s.id,
-          name: s.name,
-          toolCount: s.tools.length,
-        })),
-      },
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
     });
-
+    const respoenStream = await agent.stream({ messages }, { streamMode: "messages" });
+    for await (const chunk of respoenStream) {      
+      const data = chunk[0];
+      if (data) {
+        // 直接写入响应
+        res.write(`data: ${JSON.stringify({ content: data.content, toolCalls: data.toolCalls })}\n\n`);
+      }
+    }
+    res.write("data: [DONE]\n\n");
+    res.end();
   } catch (error: any) {
-    console.error('AI Chat error:', error);
+    console.error("AI Chat error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message || 'AI 对话失败',
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      message: error.message || "AI 对话失败",
+      error: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
+}
+async function generateAgentTools(selectedMCPServers: MCPServerListItem[]) {
+  if (selectedMCPServers.length === 0) {
+    return [];
+  }
+  const mcpClientConfig = {};
+  for (const server of selectedMCPServers) {
+    switch (server.transport) {
+      case "http": {
+        mcpClientConfig[server.name] = {
+          transport: "http",
+          url: server.url,
+          headers: server.headers || {},
+        };
+        break;
+      }
+      case "sse": {
+        mcpClientConfig[server.name] = {
+          transport: "sse",
+          url: server.url,
+          headers: server.headers || {},
+        };
+        break;
+      }
+      case "stdio": {
+        mcpClientConfig[server.name] = {
+          transport: "stdio",
+          command: server.command,
+          args: [server.scriptPath, ...(server.args || [])].filter(Boolean),
+        };
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  const client = new MultiServerMCPClient(mcpClientConfig);
+  const tools = await client.getTools();
+  return tools;
 }

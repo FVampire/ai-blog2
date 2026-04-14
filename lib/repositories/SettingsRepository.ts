@@ -1,10 +1,11 @@
-import { query } from '../db';
+/** biome-ignore-all lint/complexity/noStaticOnlyClass: <explanation> */
+import { query } from "../db";
 
 interface Setting {
   id: number;
   key: string;
   value: string;
-  type: 'string' | 'number' | 'boolean' | 'json';
+  type: "string" | "number" | "boolean" | "json";
   description?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -21,10 +22,10 @@ export class SettingsRepository {
         id, key, value, type, description, created_at, updated_at
       FROM settings
       ORDER BY key ASC
-      `
+      `,
     );
 
-    return result.rows.map(row => ({
+    return result.rows.map((row) => ({
       id: row.id,
       key: row.key,
       value: row.value,
@@ -46,7 +47,7 @@ export class SettingsRepository {
       FROM settings
       WHERE key = $1
       `,
-      [key]
+      [key],
     );
 
     if (result.rows.length === 0) {
@@ -73,7 +74,7 @@ export class SettingsRepository {
       return [];
     }
 
-    const placeholders = keys.map((_, index) => `$${index + 1}`).join(', ');
+    const placeholders = keys.map((_, index) => `$${index + 1}`).join(", ");
     const queryText = `
       SELECT
         id, key, value, type, description, created_at, updated_at
@@ -84,7 +85,7 @@ export class SettingsRepository {
 
     const result = await query(queryText, keys);
 
-    return result.rows.map(row => ({
+    return result.rows.map((row) => ({
       id: row.id,
       key: row.key,
       value: row.value,
@@ -98,12 +99,7 @@ export class SettingsRepository {
   /**
    * 创建或更新设置
    */
-  static async upsertSetting(data: {
-    key: string;
-    value: string;
-    type: 'string' | 'number' | 'boolean' | 'json';
-    description?: string;
-  }): Promise<Setting> {
+  static async upsertSetting(data: { key: string; value: string; type: "string" | "number" | "boolean" | "json"; description?: string }): Promise<Setting> {
     const result = await query(
       `
       INSERT INTO settings (key, value, type, description)
@@ -116,7 +112,7 @@ export class SettingsRepository {
         updated_at = CURRENT_TIMESTAMP
       RETURNING id, key, value, type, description, created_at, updated_at
       `,
-      [data.key, data.value, data.type, data.description || null]
+      [data.key, data.value, data.type, data.description || null],
     );
 
     const row = result.rows[0];
@@ -134,11 +130,14 @@ export class SettingsRepository {
   /**
    * 更新设置
    */
-  static async updateSetting(key: string, data: {
-    value?: string;
-    type?: 'string' | 'number' | 'boolean' | 'json';
-    description?: string;
-  }): Promise<Setting> {
+  static async updateSetting(
+    key: string,
+    data: {
+      value?: string;
+      type?: "string" | "number" | "boolean" | "json";
+      description?: string;
+    },
+  ): Promise<Setting> {
     // 构建动态更新 SQL
     const updateFields: string[] = [];
     const updateValues: any[] = [];
@@ -167,7 +166,7 @@ export class SettingsRepository {
       // 获取当前设置信息
       const currentSetting = await this.getSettingByKey(key);
       if (!currentSetting) {
-        throw new Error('设置不存在');
+        throw new Error("设置不存在");
       }
       return currentSetting;
     }
@@ -177,7 +176,7 @@ export class SettingsRepository {
 
     const updateQuery = `
       UPDATE settings
-      SET ${updateFields.join(', ')}
+      SET ${updateFields.join(", ")}
       WHERE key = $${paramIndex}
       RETURNING id, key, value, type, description, created_at, updated_at
     `;
@@ -185,7 +184,7 @@ export class SettingsRepository {
     const result = await query(updateQuery, updateValues);
 
     if (result.rows.length === 0) {
-      throw new Error('设置不存在');
+      throw new Error("设置不存在");
     }
 
     const row = result.rows[0];
@@ -204,7 +203,7 @@ export class SettingsRepository {
    * 删除设置
    */
   static async deleteSetting(key: string): Promise<boolean> {
-    const result = await query('DELETE FROM settings WHERE key = $1', [key]);
+    const result = await query("DELETE FROM settings WHERE key = $1", [key]);
     return result.rowCount > 0;
   }
 
@@ -218,21 +217,21 @@ export class SettingsRepository {
     adminEmail: string;
     postsPerPage: number;
   }> {
-    const keys = ['site_name', 'site_description', 'site_url', 'admin_email', 'posts_per_page'];
+    const keys = ["site_name", "site_description", "site_url", "admin_email", "posts_per_page"];
     const settings = await this.getSettingsByKeys(keys);
 
     // 将设置转换为键值对对象
     const settingsMap: { [key: string]: string } = {};
-    settings.forEach(setting => {
+    settings.forEach((setting) => {
       settingsMap[setting.key] = setting.value;
     });
 
     return {
-      siteName: settingsMap['site_name'] || '默认站点名称',
-      siteDescription: settingsMap['site_description'] || '默认站点描述',
-      siteUrl: settingsMap['site_url'] || '',
-      adminEmail: settingsMap['admin_email'] || '',
-      postsPerPage: parseInt(settingsMap['posts_per_page']) || 10,
+      siteName: settingsMap["site_name"] || "默认站点名称",
+      siteDescription: settingsMap["site_description"] || "默认站点描述",
+      siteUrl: settingsMap["site_url"] || "",
+      adminEmail: settingsMap["admin_email"] || "",
+      postsPerPage: parseInt(settingsMap["posts_per_page"]) || 10,
     };
   }
 
@@ -249,48 +248,58 @@ export class SettingsRepository {
     const updates: Promise<Setting>[] = [];
 
     if (data.siteName !== undefined) {
-      updates.push(this.upsertSetting({
-        key: 'site_name',
-        value: data.siteName,
-        type: 'string',
-        description: '站点名称'
-      }));
+      updates.push(
+        this.upsertSetting({
+          key: "site_name",
+          value: data.siteName,
+          type: "string",
+          description: "站点名称",
+        }),
+      );
     }
 
     if (data.siteDescription !== undefined) {
-      updates.push(this.upsertSetting({
-        key: 'site_description',
-        value: data.siteDescription,
-        type: 'string',
-        description: '站点描述'
-      }));
+      updates.push(
+        this.upsertSetting({
+          key: "site_description",
+          value: data.siteDescription,
+          type: "string",
+          description: "站点描述",
+        }),
+      );
     }
 
     if (data.siteUrl !== undefined) {
-      updates.push(this.upsertSetting({
-        key: 'site_url',
-        value: data.siteUrl,
-        type: 'string',
-        description: '站点URL'
-      }));
+      updates.push(
+        this.upsertSetting({
+          key: "site_url",
+          value: data.siteUrl,
+          type: "string",
+          description: "站点URL",
+        }),
+      );
     }
 
     if (data.adminEmail !== undefined) {
-      updates.push(this.upsertSetting({
-        key: 'admin_email',
-        value: data.adminEmail,
-        type: 'string',
-        description: '管理员邮箱'
-      }));
+      updates.push(
+        this.upsertSetting({
+          key: "admin_email",
+          value: data.adminEmail,
+          type: "string",
+          description: "管理员邮箱",
+        }),
+      );
     }
 
     if (data.postsPerPage !== undefined) {
-      updates.push(this.upsertSetting({
-        key: 'posts_per_page',
-        value: data.postsPerPage.toString(),
-        type: 'number',
-        description: '每页文章数'
-      }));
+      updates.push(
+        this.upsertSetting({
+          key: "posts_per_page",
+          value: data.postsPerPage.toString(),
+          type: "number",
+          description: "每页文章数",
+        }),
+      );
     }
 
     // 并行执行所有更新
@@ -304,15 +313,15 @@ export class SettingsRepository {
     const settings = await this.getAllSettings();
     const settingsObject: { [key: string]: any } = {};
 
-    settings.forEach(setting => {
+    settings.forEach((setting) => {
       switch (setting.type) {
-        case 'number':
+        case "number":
           settingsObject[setting.key] = Number(setting.value);
           break;
-        case 'boolean':
-          settingsObject[setting.key] = setting.value.toLowerCase() === 'true';
+        case "boolean":
+          settingsObject[setting.key] = setting.value.toLowerCase() === "true";
           break;
-        case 'json':
+        case "json":
           try {
             settingsObject[setting.key] = JSON.parse(setting.value);
           } catch (e) {
@@ -327,6 +336,25 @@ export class SettingsRepository {
     return settingsObject;
   }
 
+  // 获取 AI 设置
+  static async getAISettings() {
+    const result = await query("SELECT key, value, type FROM settings WHERE key LIKE 'ai_%'");
+
+    const settings: Record<string, any> = {};
+    result.rows.forEach((row) => {
+      let value = row.value;
+      if (row.type === "boolean") {
+        value = row.value === "true";
+      }
+      if (row.type === "number") {
+        value = Number(row.value);
+      }        
+      settings[row.key] = value;
+    });
+
+    return settings;
+  }
+
   /**
    * 根据类型获取设置值
    */
@@ -338,11 +366,11 @@ export class SettingsRepository {
     }
 
     switch (setting.type) {
-      case 'number':
+      case "number":
         return Number(setting.value);
-      case 'boolean':
-        return setting.value.toLowerCase() === 'true';
-      case 'json':
+      case "boolean":
+        return setting.value.toLowerCase() === "true";
+      case "json":
         try {
           return JSON.parse(setting.value);
         } catch (e) {
@@ -351,5 +379,131 @@ export class SettingsRepository {
       default:
         return setting.value;
     }
+  }
+
+  /**
+   * 获取关于页面设置
+   */
+  static async getAboutSettings(): Promise<{
+    authorName: string;
+    authorBio: string;
+    authorBio2: string;
+    authorBio3: string;
+    socialLinks: Array<{ platform: string; name: string; url: string }>;
+  }> {
+    const keys = [
+      "about_author_name",
+      "about_author_bio",
+      "about_author_bio_2",
+      "about_author_bio_3",
+      "about_social_links",
+    ];
+    const settings = await this.getSettingsByKeys(keys);
+
+    // 将设置转换为键值对对象
+    const settingsMap: { [key: string]: string } = {};
+    settings.forEach((setting) => {
+      settingsMap[setting.key] = setting.value;
+    });
+
+    // 解析社交链接 JSON
+    let socialLinks: Array<{ platform: string; name: string; url: string }> = [];
+    try {
+      const socialLinksJson = settingsMap["about_social_links"];
+      if (socialLinksJson) {
+        const parsed = JSON.parse(socialLinksJson);
+        if (Array.isArray(parsed)) {
+          socialLinks = parsed.filter(
+            (link): link is { platform: string; name: string; url: string } =>
+              link &&
+              typeof link.platform === "string" &&
+              typeof link.name === "string" &&
+              typeof link.url === "string" &&
+              link.url.trim() !== ""
+          );
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse social links:", e);
+    }
+
+    return {
+      authorName: settingsMap["about_author_name"] || "John Doe",
+      authorBio: settingsMap["about_author_bio"] || "",
+      authorBio2: settingsMap["about_author_bio_2"] || "",
+      authorBio3: settingsMap["about_author_bio_3"] || "",
+      socialLinks,
+    };
+  }
+
+  /**
+   * 更新关于页面设置
+   */
+  static async updateAboutSettings(data: {
+    authorName?: string;
+    authorBio?: string;
+    authorBio2?: string;
+    authorBio3?: string;
+    socialLinks?: Array<{ platform: string; name: string; url: string }>;
+  }): Promise<void> {
+    const updates: Promise<Setting>[] = [];
+
+    if (data.authorName !== undefined) {
+      updates.push(
+        this.upsertSetting({
+          key: "about_author_name",
+          value: data.authorName,
+          type: "string",
+          description: "作者名称",
+        }),
+      );
+    }
+
+    if (data.authorBio !== undefined) {
+      updates.push(
+        this.upsertSetting({
+          key: "about_author_bio",
+          value: data.authorBio,
+          type: "string",
+          description: "作者简介（第一段）",
+        }),
+      );
+    }
+
+    if (data.authorBio2 !== undefined) {
+      updates.push(
+        this.upsertSetting({
+          key: "about_author_bio_2",
+          value: data.authorBio2,
+          type: "string",
+          description: "作者简介（第二段）",
+        }),
+      );
+    }
+
+    if (data.authorBio3 !== undefined) {
+      updates.push(
+        this.upsertSetting({
+          key: "about_author_bio_3",
+          value: data.authorBio3,
+          type: "string",
+          description: "作者简介（第三段）",
+        }),
+      );
+    }
+
+    if (data.socialLinks !== undefined) {
+      updates.push(
+        this.upsertSetting({
+          key: "about_social_links",
+          value: JSON.stringify(data.socialLinks),
+          type: "json",
+          description: "社交链接列表",
+        }),
+      );
+    }
+
+    // 并行执行所有更新
+    await Promise.all(updates);
   }
 }

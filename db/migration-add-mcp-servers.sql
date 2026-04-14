@@ -6,16 +6,30 @@ CREATE TABLE IF NOT EXISTS mcp_servers (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   description TEXT,
-  command VARCHAR(50) NOT NULL CHECK (command IN ('npx', 'node', 'python', 'uvx', 'docker', 'custom')),
-  script_path VARCHAR(500) NOT NULL,
+  transport VARCHAR(20) DEFAULT 'stdio' CHECK (transport IN ('stdio', 'sse', 'http')),
+  command VARCHAR(50) CHECK (command IN ('npx', 'node', 'python', 'uvx', 'docker', 'custom')),
+  script_path VARCHAR(500),
   args JSONB DEFAULT '[]'::jsonb,
   env_vars JSONB DEFAULT '{}'::jsonb,
+  url VARCHAR(1000),
+  headers JSONB DEFAULT '{}'::jsonb,
   is_enabled BOOLEAN DEFAULT true,
   is_default BOOLEAN DEFAULT false,
   timeout_seconds INTEGER DEFAULT 30,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Add new columns to existing table (if table already exists)
+ALTER TABLE mcp_servers
+  ADD COLUMN IF NOT EXISTS transport VARCHAR(20) DEFAULT 'stdio' CHECK (transport IN ('stdio', 'sse', 'http')),
+  ADD COLUMN IF NOT EXISTS url VARCHAR(1000),
+  ADD COLUMN IF NOT EXISTS headers JSONB DEFAULT '{}'::jsonb;
+
+-- Modify constraints for command and script_path based on transport type
+ALTER TABLE mcp_servers
+  ALTER COLUMN command DROP NOT NULL,
+  ALTER COLUMN script_path DROP NOT NULL;
 
 -- Create index for enabled servers
 CREATE INDEX IF NOT EXISTS idx_mcp_servers_enabled ON mcp_servers(is_enabled);

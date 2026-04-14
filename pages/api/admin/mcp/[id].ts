@@ -42,15 +42,31 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   // 更新 MCP 服务器 (PATCH /api/admin/mcp/:id)
   if (req.method === "PATCH" || req.method === "PUT") {
     try {
-      const { name, description, command, script_path, args, env_vars, is_enabled, is_default, timeout_seconds } = req.body;
-
-      const server = await mcpRepository.update(serverId, {
+      const {
         name,
         description,
+        transport,
         command,
         script_path,
         args,
         env_vars,
+        url,
+        headers,
+        is_enabled,
+        is_default,
+        timeout_seconds
+      } = req.body;
+
+      const server = await mcpRepository.update(serverId, {
+        name,
+        description,
+        transport,
+        command,
+        script_path,
+        args,
+        env_vars,
+        url,
+        headers,
         is_enabled,
         is_default,
         timeout_seconds,
