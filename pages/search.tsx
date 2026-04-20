@@ -66,7 +66,6 @@ export default function SearchPage() {
       if (response.success) {
         setResults(response.data.results);
         setTotal(response.data.total);
-        setSearchType(response.data.searchType);
       } else {
         setError(response.message || '搜索失败');
         setResults([]);
@@ -291,13 +290,13 @@ export default function SearchPage() {
         .search-title {
           font-size: 2.5rem;
           font-weight: 700;
-          color: var(--text-color);
+          color: #1F2937;
           margin-bottom: 12px;
         }
 
         .search-subtitle {
           font-size: 1rem;
-          color: var(--text-muted);
+          color: #6B7280;
           margin-bottom: 32px;
         }
 
@@ -310,22 +309,22 @@ export default function SearchPage() {
           position: relative;
           display: flex;
           align-items: center;
-          background: var(--card-bg);
-          border: 2px solid var(--border-color);
+          background: #FFFFFF;
+          border: 2px solid #E5E7EB;
           border-radius: 12px;
           padding: 4px;
           transition: all 0.2s ease;
         }
 
         .search-input-wrapper:focus-within {
-          border-color: var(--primary-color);
-          box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+          border-color: #FF6B6B;
+          box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
         }
 
         .search-icon {
           width: 20px;
           height: 20px;
-          color: var(--text-muted);
+          color: #9CA3AF;
           margin: 0 12px;
           flex-shrink: 0;
         }
@@ -336,18 +335,18 @@ export default function SearchPage() {
           background: transparent;
           padding: 14px 0;
           font-size: 1rem;
-          color: var(--text-color);
+          color: #1F2937;
           outline: none;
         }
 
         .search-input::placeholder {
-          color: var(--text-muted);
+          color: #9CA3AF;
         }
 
         .clear-btn {
           background: none;
           border: none;
-          color: var(--text-muted);
+          color: #9CA3AF;
           cursor: pointer;
           padding: 8px;
           margin-right: 4px;
@@ -360,21 +359,43 @@ export default function SearchPage() {
         }
 
         .search-btn {
-          background: var(--primary-color);
-          color: white;
-          border: none;
+          position: relative;
+          overflow: hidden;
+          background: #E5E7EB;
+          color: #374151;
+          border: 1px solid #D1D5DB;
           padding: 12px 24px;
           border-radius: 8px;
           font-size: 0.95rem;
-          font-weight: 600;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
           flex-shrink: 0;
         }
 
         .search-btn:hover:not(:disabled) {
-          background: var(--primary-color-dark);
-          transform: translateY(-1px);
+          background: #F3F4F6;
+          border-color: #9CA3AF;
+        }
+
+        .search-btn::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.6),
+            transparent
+          );
+          transition: left 0.5s ease;
+        }
+
+        .search-btn:hover::before {
+          left: 100%;
         }
 
         .search-btn:disabled {
@@ -393,25 +414,25 @@ export default function SearchPage() {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: var(--card-bg);
-          border: 1px solid var(--border-color);
+          background: #FFFFFF;
+          border: 1px solid #E5E7EB;
           padding: 10px 20px;
           border-radius: 8px;
           font-size: 0.9rem;
-          color: var(--text-muted);
+          color: #6B7280;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .type-btn:hover {
-          border-color: var(--primary-color);
-          color: var(--text-color);
+          border-color: #9CA3AF;
+          color: #374151;
         }
 
         .type-btn.active {
-          background: var(--primary-color);
-          border-color: var(--primary-color);
-          color: white;
+          background: #F3F4F6;
+          border-color: #D1D5DB;
+          color: #374151;
         }
 
         .search-info {
@@ -420,7 +441,7 @@ export default function SearchPage() {
 
         .info-text {
           font-size: 0.85rem;
-          color: var(--text-muted);
+          color: #6B7280;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -430,7 +451,7 @@ export default function SearchPage() {
         .info-badge {
           display: inline-block;
           padding: 2px 8px;
-          background: var(--bg-secondary);
+          background: #F3F4F6;
           border-radius: 4px;
           font-size: 0.75rem;
           font-weight: 600;

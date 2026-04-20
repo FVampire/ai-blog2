@@ -3,12 +3,12 @@ import Head from "next/head";
 import { GetServerSideProps } from "next";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import BlogPostCard from "../components/BlogPostCard";
 import TagCloud from "../components/TagCloud";
 import AuthorBio from "../components/AuthorBio";
 import SearchWidget from "../components/SearchWidget";
+import BlogSection from "../components/BlogSection";
+import { SettingsRepository } from "../lib/repositories/SettingsRepository";
 import { query } from "../lib/db";
-import { useRouter } from "next/router";
 
 interface Post {
   id: number;
@@ -21,42 +21,22 @@ interface Post {
   tags: Array<{ name: string; color: string }>;
 }
 
+interface AuthorSettings {
+  name: string;
+  bio: string;
+  avatar?: string;
+  socialLinks: Array<{ platform: string; name: string; url: string }>;
+}
+
 interface HomePageProps {
   posts: Post[];
   totalPosts: number;
   currentPage: number;
   totalPages: number;
+  authorSettings: AuthorSettings;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ posts, currentPage, totalPages }) => {
-  const router = useRouter();
-
-  const handlePageChange = (page: number) => {
-    // 更新URL参数并刷新页面
-    router.push(`/?page=${page}`, undefined, { scroll: true });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        pages.push(1, 2, 3, 4, "...", totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
-      }
-    }
-
-    return pages;
-  };
-
+const HomePage: React.FC<HomePageProps> = ({ posts, currentPage, totalPages, authorSettings }) => {
   return (
     <div>
       <Head>
@@ -70,61 +50,18 @@ const HomePage: React.FC<HomePageProps> = ({ posts, currentPage, totalPages }) =
       <div className="container">
         <div className="content-wrapper">
           <div className="main-content">
-            <div className="blog-section">
-              <h1 className="section-title">Latest Articles</h1>
-              {posts.length > 0 ? (
-                <>
-                  {posts.map((post) => (
-                    <BlogPostCard
-                      key={post.id}
-                      title={post.title}
-                      date={post.date}
-                      author={post.author}
-                      excerpt={post.excerpt}
-                      slug={post.slug}
-                      image={post.image}
-                      tags={post.tags}
-                    />
-                  ))}
-
-                  <div className="pagination">
-                    <button className="pagination-btn" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
-                      <span className="pagination-arrow">←</span>
-                    </button>
-
-                    {getPageNumbers().map((page, index) =>
-                      page === "..." ? (
-                        <span key={`ellipsis-${index}`} className="pagination-ellipsis">
-                          ...
-                        </span>
-                      ) : (
-                        <button
-                          key={page}
-                          className={`pagination-btn ${currentPage === page ? "active" : ""}`}
-                          onClick={() => handlePageChange(page as number)}
-                        >
-                          {page}
-                        </button>
-                      ),
-                    )}
-
-                    <button className="pagination-btn" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
-                      <span className="pagination-arrow">→</span>
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="empty-state">
-                  <p>暂无文章</p>
-                </div>
-              )}
-            </div>
+            <BlogSection posts={posts} currentPage={currentPage} totalPages={totalPages} />
           </div>
 
           <div className="sidebar">
             <SearchWidget />
             <TagCloud />
-            <AuthorBio />
+            <AuthorBio
+              name={authorSettings.name}
+              bio={authorSettings.bio}
+              avatar={authorSettings.avatar}
+              socialLinks={authorSettings.socialLinks}
+            />
           </div>
         </div>
       </div>
@@ -189,12 +126,26 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       tags: row.tags,
     }));
 
+    // 获取作者设置
+    const aboutSettings = await SettingsRepository.getAboutSettings();
+    const authorSettings = {
+      name: aboutSettings.authorName,
+      bio: aboutSettings.authorBio,
+      avatar: null,
+      socialLinks: aboutSettings.socialLinks.map(link => ({
+        platform: link.platform,
+        name: link.name || link.platform,
+        url: link.url,
+      })),
+    };
+
     return {
       props: {
         posts,
         totalPosts,
         currentPage: page,
         totalPages,
+        authorSettings,
       },
     };
   } catch (error) {
@@ -207,6 +158,16 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         totalPosts: 0,
         currentPage: 1,
         totalPages: 0,
+        authorSettings: {
+          name: "John Doe",
+          bio: "",
+          avatar: undefined,
+          socialLinks: [
+            { platform: "Twitter", name: "Twitter", url: "#" },
+            { platform: "GitHub", name: "GitHub", url: "#" },
+            { platform: "LinkedIn", name: "LinkedIn", url: "#" },
+          ],
+        },
       },
     };
   }

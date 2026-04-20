@@ -1,19 +1,31 @@
 import React from 'react';
 
-const AuthorBio: React.FC = () => {
+interface AuthorBioProps {
+  name?: string;
+  bio?: string;
+  avatar?: string;
+  socialLinks?: Array<{ platform: string; name: string; url: string }>;
+}
+
+const AuthorBio: React.FC<AuthorBioProps> = ({
+  name = 'John Doe',
+  bio = 'Full-stack developer with a passion for creating beautiful and functional web applications. I write about technology, design, and my journey in the tech industry.',
+  socialLinks = [
+    { platform: 'Twitter', name: 'Twitter', url: '#' },
+    { platform: 'GitHub', name: 'GitHub', url: '#' },
+    { platform: 'LinkedIn', name: 'LinkedIn', url: '#' },
+  ]
+}) => {
   return (
     <div className="card">
       <h2 className="section-title">About Me</h2>
       <div className="avatar"></div>
-      <h3 className="author-name">John Doe</h3>
-      <p className="author-bio">
-        Full-stack developer with a passion for creating beautiful and functional web applications.
-        I write about technology, design, and my journey in the tech industry.
-      </p>
+      <h3 className="author-name">{name}</h3>
+      <p className="author-bio">{bio}</p>
       <div className="social-links">
-        <a href="#" className="social-link">Twitter</a>
-        <a href="#" className="social  -link">GitHub</a>
-        <a href="#" className="social-link">LinkedIn</a>
+        {socialLinks.map((link, index) => (
+          <a key={index} href={link.url} className="social-link">{link.name}</a>
+        ))}
       </div>
     </div>
   );

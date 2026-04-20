@@ -11,6 +11,8 @@ import { mcpRepository, MCPServerListItem } from "../../../lib/repositories/MCPR
 import { SettingsRepository } from "../../../lib/repositories/SettingsRepository";
 import { NextResponse } from "next/server";
 import { Readable } from "stream";
+import { generateEmbedding } from "../../../lib/embedding";
+import { VectorRepository } from "../../../lib/repositories/VectorRepository";
 
 // MCP 工具定义接口
 interface MCPTool {
@@ -258,6 +260,7 @@ function validateRequest(body: any): {
     mcpServers?: string[];
     articleContext?: { title: string; content: string };
     stream?: boolean;
+    knowledgeBase?: string;
   };
 } {
   if (!body.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
@@ -277,6 +280,7 @@ function validateRequest(body: any): {
       messages,
       mcpServers: body.mcpServers,
       stream: body.stream,
+      knowledgeBase: body.knowledgeBase,
     },
   };
 }
@@ -300,7 +304,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const { messages, mcpServers: userMCPs, articleContext, stream } = validation.data!;
+    const { messages, mcpServers: userMCPs, articleContext, stream, knowledgeBase } = validation.data!;
 
     const settings = await SettingsRepository.getAISettings();
 
@@ -339,7 +343,37 @@ ${articleContext.content}
       //   contextText = `\n\n博客最近文章:\n${blogContext.map((p) => `- ${p.title}: ${p.excerpt}`).join("\n")}`;
       // }
     }
-    const systemPrompt = (settings.ai_assistant_system_prompt || "你是一个友好的博客AI助手。") + contextText;
+    // Step 1.5: 根据知识库检索相关内容
+    let knowledgeContext = "";
+    const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || "";
+
+    if (knowledgeBase === 'vector' && lastUserMessage) {
+      try {
+        console.log(`[AI Chat] 开始向量知识库检索，查询: ${lastUserMessage}`);
+        const queryVectors = await generateEmbedding(lastUserMessage, lastUserMessage, lastUserMessage);
+
+        if (queryVectors) {
+          const vectorResults = await VectorRepository.search(lastUserMessage, queryVectors, {
+            limit: 5,
+            threshold: 0.3,
+          });
+
+          if (vectorResults.length > 0) {
+            knowledgeContext = "\n\n【相关知识库内容】:\n" + vectorResults.map((result, idx) => {
+              const snippets = result.matchedSnippets?.join("\n") || result.excerpt || "";
+              return `[${idx + 1}] ${result.title}\n${snippets}`;
+            }).join("\n\n");
+
+            console.log(`[AI Chat] 向量检索找到 ${vectorResults.length} 条相关结果`);
+          }
+        }
+      } catch (kbError) {
+        console.error("[AI Chat] 知识库检索失败:", kbError);
+        // 知识库检索失败不影响主流程，继续执行
+      }
+    }
+
+    const systemPrompt = (settings.ai_assistant_system_prompt || "你是一个友好的博客AI助手。") + contextText + knowledgeContext;
 
     // Step 1: 获取可用的 MCP 服务器列表
     const availableMCPServers = await getAvailableMCPServers();

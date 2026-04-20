@@ -98,13 +98,13 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             align-items: center;
             justify-content: center;
             padding: 60px 20px;
-            color: var(--text-muted);
+            color: #6B7280;
           }
           .loading-spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--primary-color);
+            border: 3px solid #E5E7EB;
+            border-top-color: #FF6B6B;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin-bottom: 16px;
@@ -147,7 +147,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             align-items: center;
             justify-content: center;
             padding: 60px 20px;
-            color: var(--text-muted);
+            color: #6B7280;
             text-align: center;
           }
           .search-empty svg {
@@ -157,7 +157,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           .search-empty h3 {
             font-size: 1.25rem;
             margin-bottom: 8px;
-            color: var(--text-color);
+            color: #374151;
           }
           .search-empty p {
             font-size: 0.9rem;
@@ -294,7 +294,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           justify-content: space-between;
           margin-bottom: 24px;
           padding-bottom: 16px;
-          border-bottom: 1px solid var(--border-color);
+          border-bottom: 1px solid #E5E7EB;
         }
 
         .search-type-badge {
@@ -309,16 +309,17 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         .search-type-badge[data-type='vector'] {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
+          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
 
         .search-type-badge[data-type='text'] {
-          background: var(--bg-secondary);
-          color: var(--text-muted);
+          background: #E5E7EB;
+          color: #4B5563;
         }
 
         .result-count {
           font-size: 0.9rem;
-          color: var(--text-muted);
+          color: #6B7280;
         }
 
         .results-list {
@@ -331,15 +332,17 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           display: flex;
           gap: 20px;
           padding: 24px;
-          background: var(--card-bg);
+          background: #FFFFFF;
           border-radius: 12px;
-          border: 1px solid var(--border-color);
+          border: 1px solid #E5E7EB;
           transition: all 0.2s ease;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .result-card:hover {
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
           transform: translateY(-2px);
+          border-color: #D1D5DB;
         }
 
         .similarity-badge {
@@ -360,7 +363,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         .similarity-inner {
           width: 100%;
           height: 100%;
-          background: var(--card-bg);
+          background: #FFFFFF;
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -370,7 +373,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         .similarity-value {
           font-size: 0.875rem;
           font-weight: 700;
-          color: var(--text-color);
+          color: #1F2937;
         }
 
         .similarity-label {
@@ -388,7 +391,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         .result-title {
           font-size: 1.25rem;
           font-weight: 600;
-          color: var(--text-color);
+          color: #1F2937;
           text-decoration: none;
           display: block;
           margin-bottom: 12px;
@@ -396,12 +399,12 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         }
 
         .result-title:hover {
-          color: var(--primary-color);
+          color: #FF6B6B;
         }
 
         .matched-snippets {
-          background: #fefce8;
-          border-left: 3px solid #f59e0b;
+          background: #FFFBEB;
+          border-left: 3px solid #F59E0B;
           padding: 12px 16px;
           margin-bottom: 12px;
           border-radius: 0 8px 8px 0;
@@ -410,7 +413,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         .snippet-label {
           font-size: 0.75rem;
           font-weight: 600;
-          color: #92400e;
+          color: #92400E;
           text-transform: uppercase;
           letter-spacing: 0.5px;
           display: block;
@@ -419,7 +422,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 
         .snippet-text {
           font-size: 0.875rem;
-          color: #78350f;
+          color: #78350F;
           line-height: 1.6;
           margin: 0;
           font-style: italic;
@@ -427,7 +430,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
 
         .result-excerpt {
           font-size: 0.95rem;
-          color: var(--text-muted);
+          color: #6B7280;
           line-height: 1.7;
           margin: 0 0 16px 0;
           display: -webkit-box;
@@ -447,7 +450,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
           align-items: center;
           gap: 6px;
           font-size: 0.85rem;
-          color: var(--text-muted);
+          color: #6B7280;
         }
 
         .meta-item svg {

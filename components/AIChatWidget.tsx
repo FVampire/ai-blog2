@@ -23,6 +23,214 @@ interface ToolCall {
   endTime?: string;
 }
 
+// 复制功能辅助函数
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    console.error('Copy failed:', err);
+    return false;
+  }
+};
+
+// 代码块组件（带复制按钮）
+const CodeBlock: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
+  const [copied, setCopied] = useState(false);
+  const match = /language-(\w+)/.exec(className || '');
+  const language = match ? match[1] : '';
+  const codeContent = String(children).replace(/\n$/, '');
+
+  const handleCopy = async () => {
+    const success = await copyToClipboard(codeContent);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <div style={{ position: 'relative', margin: '10px 0' }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        background: 'linear-gradient(135deg, #2d2d2d, #1a1a1a)',
+        padding: '6px 12px',
+        borderRadius: '8px 8px 0 0',
+        fontSize: '12px',
+        color: '#aaa',
+        fontFamily: "'Inter', sans-serif"
+      }}>
+        <span>{language || 'code'}</span>
+        <button
+          onClick={handleCopy}
+          style={{
+            background: copied ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '4px 10px',
+            color: copied ? '#22c55e' : '#fff',
+            cursor: 'pointer',
+            fontSize: '11px',
+            transition: 'all 0.2s ease',
+            fontFamily: "'Inter', sans-serif"
+          }}
+        >
+          {copied ? '✓ 已复制' : '📋 复制'}
+        </button>
+      </div>
+      <pre style={{
+        background: '#1e1e1e',
+        padding: '14px',
+        borderRadius: '0 0 8px 8px',
+        overflow: 'auto',
+        fontSize: '13px',
+        margin: 0,
+        color: '#d4d4d4',
+        fontFamily: "'Monaco', 'Menlo', 'Consolas', monospace",
+        lineHeight: '1.6'
+      }}>
+        <code className={className}>{children}</code>
+      </pre>
+    </div>
+  );
+};
+
+// 任务列表项组件
+const TaskListItem: React.FC<{ children: React.ReactNode; checked?: boolean }> = ({ children, checked }) => (
+  <li style={{ margin: '6px 0', listStyle: 'none', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+    <input
+      type="checkbox"
+      checked={checked}
+      readOnly
+      style={{ marginTop: '4px', accentColor: '#FF6B6B' }}
+    />
+    <span style={{ textDecoration: checked ? 'line-through' : 'none', opacity: checked ? 0.6 : 1 }}>{children}</span>
+  </li>
+);
+
+// 工具调用卡片组件
+const ToolCallCard: React.FC<{ toolCall: ToolCall }> = ({ toolCall }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const statusIcon = {
+    running: '⏳',
+    success: '✅',
+    error: '❌'
+  }[toolCall.status];
+
+  const statusText = {
+    running: '执行中',
+    success: '已完成',
+    error: '失败'
+  }[toolCall.status];
+
+  const statusColor = {
+    running: '#f59e0b',
+    success: '#10b981',
+    error: '#ef4444'
+  }[toolCall.status];
+
+  return (
+    <div
+      className={`ai-tool-call-card ${toolCall.status}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      <div className="tool-call-main">
+        <span className="tool-call-icon">{statusIcon}</span>
+        <span className="tool-call-name">{toolCall.name}</span>
+        <span className="tool-call-desc">{toolCall.description}</span>
+        <span className="tool-call-status-badge" style={{ background: `${statusColor}20`, color: statusColor }}>
+          {statusText}
+        </span>
+        <span className="tool-call-expand-icon">{isExpanded ? '▼' : '▶'}</span>
+      </div>
+
+      {/* 悬浮详情面板 */}
+      {isHovered && !isExpanded && (
+        <div className="tool-call-hover-panel">
+          <div className="hover-panel-section">
+            <div className="hover-panel-title">🔧 工具名称</div>
+            <div className="hover-panel-value">{toolCall.name}</div>
+          </div>
+          {toolCall.description && (
+            <div className="hover-panel-section">
+              <div className="hover-panel-title">📝 描述</div>
+              <div className="hover-panel-value">{toolCall.description}</div>
+            </div>
+          )}
+          <div className="hover-panel-section">
+            <div className="hover-panel-title">📥 输入参数</div>
+            <pre className="hover-panel-code">{JSON.stringify(toolCall.arguments, null, 2)}</pre>
+          </div>
+          {toolCall.status === 'success' && toolCall.result && (
+            <div className="hover-panel-section">
+              <div className="hover-panel-title">📤 输出结果</div>
+              <pre className="hover-panel-code">
+                {typeof toolCall.result === 'string' && toolCall.result.length > 300
+                  ? toolCall.result.substring(0, 300) + '...'
+                  : toolCall.result}
+              </pre>
+            </div>
+          )}
+          {toolCall.status === 'error' && toolCall.error && (
+            <div className="hover-panel-section">
+              <div className="hover-panel-title">❌ 错误信息</div>
+              <pre className="hover-panel-code error">{toolCall.error}</pre>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 展开详情面板 */}
+      {isExpanded && (
+        <div className="tool-call-expand-panel">
+          <div className="expand-panel-section">
+            <div className="expand-panel-title">🔧 工具名称</div>
+            <div className="expand-panel-value">{toolCall.name}</div>
+          </div>
+          {toolCall.description && (
+            <div className="expand-panel-section">
+              <div className="expand-panel-title">📝 描述</div>
+              <div className="expand-panel-value">{toolCall.description}</div>
+            </div>
+          )}
+          <div className="expand-panel-section">
+            <div className="expand-panel-title">📥 输入参数</div>
+            <pre className="expand-panel-code">{JSON.stringify(toolCall.arguments, null, 2)}</pre>
+          </div>
+          {toolCall.status === 'success' && toolCall.result && (
+            <div className="expand-panel-section">
+              <div className="expand-panel-title">📤 输出结果</div>
+              <pre className="expand-panel-code">
+                {typeof toolCall.result === 'string' && toolCall.result.length > 1000
+                  ? toolCall.result.substring(0, 1000) + '\n... (结果过长，仅显示前1000字符)'
+                  : toolCall.result}
+              </pre>
+            </div>
+          )}
+          {toolCall.status === 'error' && toolCall.error && (
+            <div className="expand-panel-section">
+              <div className="expand-panel-title">❌ 错误信息</div>
+              <pre className="expand-panel-code error">{toolCall.error}</pre>
+            </div>
+          )}
+          {toolCall.startTime && (
+            <div className="tool-call-time">
+              开始时间: {new Date(toolCall.startTime).toLocaleString('zh-CN')}
+              {toolCall.endTime && ` | 结束时间: ${new Date(toolCall.endTime).toLocaleString('zh-CN')}`}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface AIConfig {
   ai_available: boolean;
   ai_assistant_enabled: boolean;
@@ -275,6 +483,7 @@ const AIChatWidget: React.FC = () => {
         body: JSON.stringify({
           messages: allMessages,
           mcpServers: selectedMCPNames,
+          knowledgeBase: selectedKnowledgeBase || 'vector',
           stream: true,
         }),
       });
@@ -310,13 +519,26 @@ const AIChatWidget: React.FC = () => {
             try {
               const parsed = JSON.parse(data);
 
-              // 处理工具调用信息
-              if (parsed.type === 'tool_calls' && parsed.toolCalls) {
+              // 处理工具调用信息（后端发送的是 { content, toolCalls }）
+              if (parsed.toolCalls && Array.isArray(parsed.toolCalls)) {
+                // 转换后端的工具调用格式为前端格式
+                const transformedToolCalls = parsed.toolCalls.map((tc: any) => ({
+                  id: tc.id || `tool-${Date.now()}-${Math.random()}`,
+                  name: tc.name || tc.function?.name || 'Unknown Tool',
+                  description: tc.function?.description || '',
+                  arguments: tc.function?.arguments ? (typeof tc.function.arguments === 'string' ? JSON.parse(tc.function.arguments) : tc.function.arguments) : {},
+                  status: tc.status || 'running',
+                  result: tc.output || tc.result,
+                  error: tc.error,
+                  startTime: tc.startTime,
+                  endTime: tc.endTime,
+                }));
+
                 setMessages(prev => {
                   const newMessages = [...prev];
                   const lastMessage = newMessages[newMessages.length - 1];
                   if (lastMessage && lastMessage.role === 'assistant') {
-                    lastMessage.toolCalls = parsed.toolCalls;
+                    lastMessage.toolCalls = transformedToolCalls;
                   }
                   return newMessages;
                 });
@@ -326,18 +548,31 @@ const AIChatWidget: React.FC = () => {
               // 处理完成标记
               if (parsed.type === 'done') {
                 if (parsed.toolCalls) {
+                  const transformedToolCalls = parsed.toolCalls.map((tc: any) => ({
+                    id: tc.id || `tool-${Date.now()}-${Math.random()}`,
+                    name: tc.name || tc.function?.name || 'Unknown Tool',
+                    description: tc.function?.description || '',
+                    arguments: tc.function?.arguments ? (typeof tc.function.arguments === 'string' ? JSON.parse(tc.function.arguments) : tc.function.arguments) : {},
+                    status: tc.status || 'success',
+                    result: tc.output || tc.result,
+                    error: tc.error,
+                    startTime: tc.startTime,
+                    endTime: tc.endTime,
+                  }));
+
                   setMessages(prev => {
                     const newMessages = [...prev];
                     const lastMessage = newMessages[newMessages.length - 1];
                     if (lastMessage && lastMessage.role === 'assistant') {
-                      lastMessage.toolCalls = parsed.toolCalls;
+                      lastMessage.toolCalls = transformedToolCalls;
                     }
                     return newMessages;
                   });
                 }
                 break;
               }
-              console.log(parsed);
+
+              // 处理文本内容
               if (parsed.content) {
                 fullContent += parsed.content;
                 // 更新最后一条消息的内容
@@ -409,6 +644,7 @@ const AIChatWidget: React.FC = () => {
           model: config?.ai_model || 'claude-3-sonnet',
           systemPrompt: systemPrompt || undefined,
           mcpServers: selectedMCPNames,
+          knowledgeBase: selectedKnowledgeBase || 'vector',
           stream: false,
         }),
       });
@@ -416,10 +652,26 @@ const AIChatWidget: React.FC = () => {
       const data = await response.json();
 
       if (data.success) {
+        // 转换工具调用格式
+        let transformedToolCalls: ToolCall[] | undefined;
+        if (data.data.toolCalls && Array.isArray(data.data.toolCalls)) {
+          transformedToolCalls = data.data.toolCalls.map((tc: any) => ({
+            id: tc.id || `tool-${Date.now()}-${Math.random()}`,
+            name: tc.name || tc.function?.name || 'Unknown Tool',
+            description: tc.function?.description || '',
+            arguments: tc.function?.arguments ? (typeof tc.function.arguments === 'string' ? JSON.parse(tc.function.arguments) : tc.function.arguments) : {},
+            status: tc.status || 'success',
+            result: tc.output || tc.result,
+            error: tc.error,
+            startTime: tc.startTime,
+            endTime: tc.endTime,
+          }));
+        }
+
         setMessages(prev => [...prev, {
           role: 'assistant',
           content: data.data.content,
-          toolCalls: data.data.toolCalls,
+          toolCalls: transformedToolCalls,
         }]);
       } else {
         setMessages(prev => [...prev, {
@@ -581,45 +833,7 @@ const AIChatWidget: React.FC = () => {
                 {msg.toolCalls && msg.toolCalls.length > 0 && (
                   <div className="ai-tool-calls">
                     {msg.toolCalls.map((toolCall) => (
-                      <div key={toolCall.id} className={`ai-tool-call ${toolCall.status}`}>
-                        <div className="ai-tool-call-header">
-                          <span className="ai-tool-call-icon">
-                            {toolCall.status === 'running' && '⏳'}
-                            {toolCall.status === 'success' && '✅'}
-                            {toolCall.status === 'error' && '❌'}
-                          </span>
-                          <span className="ai-tool-call-name">{toolCall.name}</span>
-                          <span className="ai-tool-call-status">
-                            {toolCall.status === 'running' && '执行中...'}
-                            {toolCall.status === 'success' && '已完成'}
-                            {toolCall.status === 'error' && '失败'}
-                          </span>
-                        </div>
-                        <div className="ai-tool-call-details">
-                          <div className="ai-tool-call-section">
-                            <div className="ai-tool-call-section-title">输入参数</div>
-                            <pre className="ai-tool-call-code">
-                              {JSON.stringify(toolCall.arguments, null, 2)}
-                            </pre>
-                          </div>
-                          {toolCall.status === 'success' && toolCall.result && (
-                            <div className="ai-tool-call-section">
-                              <div className="ai-tool-call-section-title">执行结果</div>
-                              <pre className="ai-tool-call-code">
-                                {typeof toolCall.result === 'string' && toolCall.result.length > 500
-                                  ? toolCall.result.substring(0, 500) + '...'
-                                  : toolCall.result}
-                              </pre>
-                            </div>
-                          )}
-                          {toolCall.status === 'error' && toolCall.error && (
-                            <div className="ai-tool-call-section">
-                              <div className="ai-tool-call-section-title">错误信息</div>
-                              <pre className="ai-tool-call-code error">{toolCall.error}</pre>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      <ToolCallCard key={toolCall.id} toolCall={toolCall} />
                     ))}
                   </div>
                 )}
@@ -629,52 +843,85 @@ const AIChatWidget: React.FC = () => {
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw, rehypeHighlight]}
                       components={{
-                        p: ({ children }) => <p style={{ margin: '0 0 8px 0' }}>{children}</p>,
-                        ul: ({ children }) => <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>{children}</ul>,
-                        ol: ({ children }) => <ol style={{ margin: '8px 0', paddingLeft: '20px' }}>{children}</ol>,
-                        li: ({ children }) => <li style={{ margin: '4px 0' }}>{children}</li>,
-                        code: ({ children, className }) => {
-                          const isInline = !className;
-                          return isInline ? (
-                            <code style={{
-                              background: 'rgba(255, 107, 107, 0.1)',
-                              padding: '2px 6px',
-                              borderRadius: '4px',
-                              fontSize: '13px',
-                              color: '#FF6B6B'
-                            }}>{children}</code>
-                          ) : (
-                            <pre style={{
-                              background: '#f8f9fa',
-                              padding: '12px',
-                              borderRadius: '8px',
-                              overflow: 'auto',
-                              fontSize: '13px',
-                              margin: '8px 0'
-                            }}>
-                              <code className={className}>{children}</code>
-                            </pre>
-                          );
+                        p: ({ children }) => <p style={{ margin: '0 0 10px 0', lineHeight: '1.7' }}>{children}</p>,
+                        ul: ({ children }) => <ul style={{ margin: '10px 0', paddingLeft: '22px', lineHeight: '1.8' }}>{children}</ul>,
+                        ol: ({ children }) => <ol style={{ margin: '10px 0', paddingLeft: '22px', lineHeight: '1.8' }}>{children}</ol>,
+                        li: ({ children, checked }) => {
+                          if (checked !== undefined) {
+                            return <TaskListItem checked={checked}>{children}</TaskListItem>;
+                          }
+                          return <li style={{ margin: '6px 0' }}>{children}</li>;
                         },
-                        h1: ({ children }) => <h1 style={{ margin: '16px 0 8px 0', fontSize: '18px', fontWeight: 'bold' }}>{children}</h1>,
-                        h2: ({ children }) => <h2 style={{ margin: '14px 0 8px 0', fontSize: '16px', fontWeight: 'bold' }}>{children}</h2>,
-                        h3: ({ children }) => <h3 style={{ margin: '12px 0 6px 0', fontSize: '15px', fontWeight: 'bold' }}>{children}</h3>,
-                        hr: () => <hr style={{ margin: '12px 0', border: 'none', borderTop: '1px solid rgba(255, 140, 66, 0.2)' }} />,
+                        code: ({ children, className, ...props }) => {
+                          const isInline = !className;
+
+                          if (isInline) {
+                            return (
+                              <code style={{
+                                background: 'rgba(255, 107, 107, 0.12)',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontSize: '13px',
+                                color: '#FF6B6B',
+                                fontFamily: "'Monaco', 'Menlo', 'Consolas', monospace"
+                              }}>{children}</code>
+                            );
+                          }
+
+                          return <CodeBlock className={className}>{children}</CodeBlock>;
+                        },
+                        h1: ({ children }) => <h1 style={{ margin: '20px 0 12px 0', fontSize: '20px', fontWeight: 'bold', borderBottom: '2px solid rgba(255, 107, 107, 0.3)', paddingBottom: '8px', color: '#2d2d2d' }}>{children}</h1>,
+                        h2: ({ children }) => <h2 style={{ margin: '18px 0 10px 0', fontSize: '18px', fontWeight: 'bold', borderBottom: '1px solid rgba(255, 107, 107, 0.2)', paddingBottom: '6px', color: '#2d2d2d' }}>{children}</h2>,
+                        h3: ({ children }) => <h3 style={{ margin: '14px 0 8px 0', fontSize: '16px', fontWeight: 'bold', color: '#2d2d2d' }}>{children}</h3>,
+                        h4: ({ children }) => <h4 style={{ margin: '12px 0 6px 0', fontSize: '15px', fontWeight: '600', color: '#495057' }}>{children}</h4>,
+                        hr: () => <hr style={{ margin: '16px 0', border: 'none', borderTop: '2px dashed rgba(255, 140, 66, 0.3)' }} />,
                         blockquote: ({ children }) => (
                           <blockquote style={{
-                            margin: '8px 0',
-                            padding: '8px 12px',
-                            borderLeft: '3px solid #FF6B6B',
-                            background: 'rgba(255, 107, 107, 0.05)',
-                            borderRadius: '0 4px 4px 0'
+                            margin: '10px 0',
+                            padding: '10px 16px',
+                            borderLeft: '4px solid #FF6B6B',
+                            background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.05), rgba(255, 140, 66, 0.05))',
+                            borderRadius: '0 8px 8px 0',
+                            color: '#6b7280',
+                            fontStyle: 'italic'
                           }}>{children}</blockquote>
                         ),
                         a: ({ children, href }) => (
                           <a href={href} target="_blank" rel="noopener noreferrer" style={{
                             color: '#FF6B6B',
-                            textDecoration: 'underline'
-                          }}>{children}</a>
+                            textDecoration: 'none',
+                            borderBottom: '1px solid rgba(255, 107, 107, 0.4)',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderBottomColor = '#FF6B6B';
+                            e.currentTarget.style.color = '#FF8C42';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderBottomColor = 'rgba(255, 107, 107, 0.4)';
+                            e.currentTarget.style.color = '#FF6B6B';
+                          }}
+                          >{children}</a>
                         ),
+                        table: ({ children }) => (
+                          <div style={{ overflowX: 'auto', margin: '12px 0' }}>
+                            <table style={{
+                              width: '100%',
+                              borderCollapse: 'collapse',
+                              fontSize: '13px',
+                              background: 'white',
+                              borderRadius: '8px',
+                              overflow: 'hidden',
+                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                            }}>{children}</table>
+                          </div>
+                        ),
+                        thead: ({ children }) => <thead style={{ background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 140, 66, 0.1))' }}>{children}</thead>,
+                        th: ({ children }) => <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: '600', borderBottom: '2px solid rgba(255, 107, 107, 0.2)', color: '#495057' }}>{children}</th>,
+                        td: ({ children }) => <td style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255, 140, 66, 0.1)', color: '#6b7280' }}>{children}</td>,
+                        strong: ({ children }) => <strong style={{ fontWeight: '600', color: '#2d2d2d' }}>{children}</strong>,
+                        em: ({ children }) => <em style={{ color: '#FF6B6B', fontStyle: 'italic' }}>{children}</em>,
+                        del: ({ children }) => <del style={{ color: '#9ca3af', textDecoration: 'line-through' }}>{children}</del>,
                       }}
                     >
                       {msg.content}
@@ -1471,114 +1718,154 @@ const AIChatWidget: React.FC = () => {
           }
         }
 
-        /* 工具调用展示样式 */
+        /* 工具调用卡片样式 */
         .ai-tool-calls {
-          margin-bottom: 8px;
+          margin-bottom: 12px;
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 10px;
         }
 
-        .ai-tool-call {
-          background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+        .ai-tool-call-card {
+          position: relative;
+          background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08));
           border: 1px solid rgba(99, 102, 241, 0.2);
           border-radius: 12px;
-          padding: 10px 12px;
-          font-size: 12px;
+          padding: 12px 14px;
+          font-size: 13px;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.25s ease;
         }
 
-        .ai-tool-call:hover {
-          border-color: rgba(99, 102, 241, 0.4);
-          box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+        .ai-tool-call-card:hover {
+          border-color: rgba(99, 102, 241, 0.5);
+          box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+          transform: translateY(-1px);
         }
 
-        .ai-tool-call.running {
+        .ai-tool-call-card.running {
           background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.1));
           border-color: rgba(251, 191, 36, 0.3);
-          animation: pulse 2s infinite;
+          animation: toolCardPulse 2s infinite;
         }
 
-        .ai-tool-call.success {
-          background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.1));
-          border-color: rgba(34, 197, 94, 0.3);
+        .ai-tool-call-card.success {
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(34, 197, 94, 0.08));
+          border-color: rgba(16, 185, 129, 0.25);
         }
 
-        .ai-tool-call.error {
-          background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
-          border-color: rgba(239, 68, 68, 0.3);
+        .ai-tool-call-card.error {
+          background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(220, 38, 38, 0.08));
+          border-color: rgba(239, 68, 68, 0.25);
         }
 
-        @keyframes pulse {
+        @keyframes toolCardPulse {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
+          50% { opacity: 0.75; }
         }
 
-        .ai-tool-call-header {
+        .tool-call-main {
           display: flex;
           align-items: center;
-          gap: 8px;
-          margin-bottom: 8px;
+          gap: 10px;
         }
 
-        .ai-tool-call-icon {
-          font-size: 14px;
+        .tool-call-icon {
+          font-size: 16px;
+          flex-shrink: 0;
         }
 
-        .ai-tool-call-name {
+        .tool-call-name {
           font-weight: 600;
-          color: #4F46E5;
-          font-family: 'Inter', sans-serif;
+          color: #6366f1;
+          font-family: "'Monaco', 'Menlo', 'Consolas', monospace";
+          font-size: 13px;
+          flex-shrink: 0;
+        }
+
+        .ai-tool-call-card.running .tool-call-name {
+          color: #d97706;
+        }
+
+        .ai-tool-call-card.success .tool-call-name {
+          color: #059669;
+        }
+
+        .ai-tool-call-card.error .tool-call-name {
+          color: #dc2626;
+        }
+
+        .tool-call-desc {
           flex: 1;
+          color: #6b7280;
+          font-size: 12px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-family: 'Inter', sans-serif;
         }
 
-        .ai-tool-call.running .ai-tool-call-name {
-          color: #D97706;
-        }
-
-        .ai-tool-call.success .ai-tool-call-name {
-          color: #16A34A;
-        }
-
-        .ai-tool-call.error .ai-tool-call-name {
-          color: #DC2626;
-        }
-
-        .ai-tool-call-status {
+        .tool-call-status-badge {
           font-size: 11px;
-          color: #6B7280;
-          padding: 2px 8px;
-          background: rgba(255, 255, 255, 0.5);
-          border-radius: 10px;
-        }
-
-        .ai-tool-call-details {
-          border-top: 1px solid rgba(99, 102, 241, 0.1);
-          padding-top: 8px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .ai-tool-call-section {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .ai-tool-call-section-title {
-          font-size: 10px;
-          color: #6B7280;
           font-weight: 500;
+          padding: 3px 10px;
+          border-radius: 12px;
+          flex-shrink: 0;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .tool-call-expand-icon {
+          font-size: 10px;
+          color: #9ca3af;
+          transition: transform 0.2s ease;
+          flex-shrink: 0;
+        }
+
+        /* 悬浮详情面板 */
+        .tool-call-hover-panel {
+          position: absolute;
+          top: calc(100% + 8px);
+          left: 0;
+          right: 0;
+          background: white;
+          border: 1px solid rgba(99, 102, 241, 0.2);
+          border-radius: 12px;
+          padding: 14px;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+          z-index: 100;
+          max-height: 280px;
+          overflow-y: auto;
+          animation: fadeIn 0.2s ease;
+        }
+
+        .hover-panel-section {
+          margin-bottom: 12px;
+        }
+
+        .hover-panel-section:last-child {
+          margin-bottom: 0;
+        }
+
+        .hover-panel-title {
+          font-size: 11px;
+          color: #6b7280;
+          font-weight: 600;
+          margin-bottom: 6px;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+          font-family: 'Inter', sans-serif;
         }
 
-        .ai-tool-call-code {
-          background: rgba(0, 0, 0, 0.03);
+        .hover-panel-value {
+          font-size: 13px;
+          color: #374151;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .hover-panel-code {
+          background: #f8f9fa;
           border-radius: 6px;
-          padding: 8px;
+          padding: 10px;
           font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
           font-size: 11px;
           color: #374151;
@@ -1586,11 +1873,75 @@ const AIChatWidget: React.FC = () => {
           white-space: pre-wrap;
           word-break: break-word;
           margin: 0;
+          max-height: 80px;
         }
 
-        .ai-tool-call-code.error {
-          background: rgba(239, 68, 68, 0.05);
-          color: #DC2626;
+        .hover-panel-code.error {
+          background: rgba(239, 68, 68, 0.08);
+          color: #dc2626;
+        }
+
+        /* 展开详情面板 */
+        .tool-call-expand-panel {
+          margin-top: 14px;
+          padding-top: 14px;
+          border-top: 1px solid rgba(99, 102, 241, 0.15);
+          animation: slideDown 0.2s ease;
+        }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .expand-panel-section {
+          margin-bottom: 14px;
+        }
+
+        .expand-panel-section:last-of-type {
+          margin-bottom: 0;
+        }
+
+        .expand-panel-title {
+          font-size: 12px;
+          color: #6b7280;
+          font-weight: 600;
+          margin-bottom: 8px;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .expand-panel-value {
+          font-size: 14px;
+          color: #1f2937;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .expand-panel-code {
+          background: #1e1e1e;
+          border-radius: 8px;
+          padding: 12px;
+          font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+          font-size: 12px;
+          color: #d4d4d4;
+          overflow-x: auto;
+          white-space: pre-wrap;
+          word-break: break-word;
+          margin: 0;
+          max-height: 200px;
+        }
+
+        .expand-panel-code.error {
+          background: rgba(220, 38, 38, 0.1);
+          color: #dc2626;
+        }
+
+        .tool-call-time {
+          font-size: 11px;
+          color: #9ca3af;
+          margin-top: 12px;
+          padding-top: 10px;
+          border-top: 1px dashed rgba(156, 163, 175, 0.3);
+          font-family: 'Inter', sans-serif;
         }
       `}</style>
     </>
