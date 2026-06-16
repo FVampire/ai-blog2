@@ -31,6 +31,9 @@ export function useAIChat() {
   const [filteredCommands, setFilteredCommands] = useState<Command[]>([]);
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
 
+  // Session history for regeneration
+  const [sessionHistory, setSessionHistory] = useState<Message[][]>([]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -103,7 +106,22 @@ export function useAIChat() {
       }]);
     }
     setShowSuggestions(true);
+    setSessionHistory([]);
   }, [config, loading, isStreaming]);
+
+  // Save current session to history
+  const saveSessionToHistory = useCallback(() => {
+    if (messages.length > 1) {
+      setSessionHistory(prev => [...prev, [...messages]]);
+    }
+  }, [messages]);
+
+  // Restore session from history
+  const restoreSessionFromHistory = useCallback((index: number) => {
+    if (index >= 0 && index < sessionHistory.length) {
+      setMessages(sessionHistory[index]);
+    }
+  }, [sessionHistory]);
 
   // Toggle MCP
   const toggleMCP = useCallback(() => {
@@ -190,5 +208,9 @@ export function useAIChat() {
     fetchConfig,
     fetchMCPServers,
     scrollToBottom,
+    // Session history
+    sessionHistory,
+    saveSessionToHistory,
+    restoreSessionFromHistory,
   };
 }

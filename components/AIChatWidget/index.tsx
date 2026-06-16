@@ -8,6 +8,9 @@ import SuggestionChips from './components/SuggestionChips';
 import { useArticle } from '../../contexts/ArticleContext';
 import { useAIChat } from '../../hooks/useAIChat';
 
+// Import the new CSS styles
+import './AIChatWidget.css';
+
 // 知识库选项
 const KNOWLEDGE_BASES = [
   { id: '', name: '默认知识库', description: '使用博客文章作为知识来源' },
@@ -338,7 +341,11 @@ const AIChatWidget: React.FC = () => {
           {/* Messages */}
           <div className="ai-chat-messages">
             {chat.messages.map((msg, index) => (
-              <ChatMessage key={index} message={msg} />
+              <ChatMessage 
+                key={index} 
+                message={msg} 
+                isLastAssistant={msg.role === 'assistant' && index === chat.messages.length - 1}
+              />
             ))}
 
             {/* Suggestion chips */}

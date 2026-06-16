@@ -16,7 +16,14 @@ interface Post {
   excerpt: string;
   slug: string;
   image: string;
-  tags: string[];
+  tags: Array<{ name: string; color: string }>;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  post_count: number;
 }
 
 function ArticlesContent() {
@@ -26,6 +33,7 @@ function ArticlesContent() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     const page = parseInt(searchParams.get('page') || '1') || 1;
@@ -43,6 +51,17 @@ function ArticlesContent() {
       .catch(err => {
         console.error('Failed to fetch posts:', err);
         setLoading(false);
+      });
+
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setCategories(data.data);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch categories:', err);
       });
   }, [searchParams]);
 
@@ -82,11 +101,11 @@ function ArticlesContent() {
               <h1 className="section-title">All Articles</h1>
 
               {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#6C757D' }}>
+                <div className="text-center py-10 text-text-secondary">
                   加载中...
                 </div>
               ) : posts.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#6C757D' }}>
+                <div className="text-center py-10 text-text-secondary">
                   暂无文章
                 </div>
               ) : (
@@ -145,13 +164,20 @@ function ArticlesContent() {
           <div className="sidebar">
             <div className="card">
               <h2 className="section-title">Categories</h2>
-              <ul style={{ paddingLeft: '20px' }}>
-                <li style={{ marginBottom: '10px' }}><a href="#">Web Development</a></li>
-                <li style={{ marginBottom: '10px' }}><a href="#">UI/UX Design</a></li>
-                <li style={{ marginBottom: '10px' }}><a href="#">Backend</a></li>
-                <li style={{ marginBottom: '10px' }}><a href="#">DevOps</a></li>
-                <li><a href="#">Career</a></li>
-              </ul>
+              {categories.length === 0 ? (
+                <p className="text-center py-3 text-text-secondary">加载中...</p>
+              ) : (
+                <ul className="pl-5">
+                  {categories.map((cat) => (
+                    <li key={cat.id} className="mb-2.5">
+                      <a href={`/tags/${cat.slug}`} className="hover:text-warm-orange transition-colors">{cat.name}</a>
+                      <span className="ml-2 text-gray-400 text-xs">
+                        ({cat.post_count})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>

@@ -69,11 +69,8 @@ const TagCloud: React.FC = () => {
           <a
             key={tag.id}
             href={`/tags/${tag.slug}`}
-            className="tag tag-with-count"
+            className="tag tag-with-count no-underline cursor-pointer relative"
             style={{
-              textDecoration: 'none',
-              cursor: 'pointer',
-              position: 'relative',
               animationDelay: `${index * 0.1}s`,
               background: `linear-gradient(135deg, ${tag.color}, ${adjustBrightness(tag.color, 15)})`,
               boxShadow: `0 4px 15px ${tag.color}30`

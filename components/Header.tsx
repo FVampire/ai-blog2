@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -21,10 +21,29 @@ const NavLink: React.FC<NavLinkProps> = ({ href, children }) => {
   );
 };
 
+interface SiteSettings {
+  siteName: string;
+}
+
 const Header: React.FC = () => {
+  const [siteName, setSiteName] = useState('BLOG');
+
+  useEffect(() => {
+    fetch('/api/settings/public')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data.siteName) {
+          setSiteName(data.data.siteName);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch site settings:', err);
+      });
+  }, []);
+
   return (
     <header className="header">
-      <div className="logo">BLOG</div>
+      <div className="logo">{siteName}</div>
       <nav className="navigation">
         <NavLink href="/">Home</NavLink>
         <NavLink href="/articles">Articles</NavLink>

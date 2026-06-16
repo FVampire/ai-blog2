@@ -52,13 +52,13 @@ export default async function AboutPage() {
             <div className="blog-section">
               <h1 className="section-title">About Me</h1>
               <div className="card">
-                <div className="avatar" style={{ margin: '0 auto 20px' }}></div>
+                <div className="avatar mx-auto mb-5"></div>
                 <h2 className="author-name">{settings.authorName}</h2>
                 <p className="author-bio">{settings.authorBio}</p>
                 <p className="author-bio">{settings.authorBio2}</p>
                 <p className="author-bio">{settings.authorBio3}</p>
                 {settings.socialLinks && settings.socialLinks.length > 0 && (
-                  <div className="social-links" style={{ justifyContent: 'center', marginTop: '20px' }}>
+                  <div className="social-links justify-center mt-5">
                     {settings.socialLinks.map((link) => (
                       <a key={link.platform} href={link.url} className="social-link" target="_blank" rel="noopener noreferrer">
                         {link.name}

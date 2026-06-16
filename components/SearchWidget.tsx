@@ -18,7 +18,7 @@ const SearchWidget: React.FC = () => {
   return (
     <div className="card">
       <h2 className="section-title">Search</h2>
-      <form onSubmit={handleSubmit} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+      <form onSubmit={handleSubmit} className="relative flex items-center">
         <svg className="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <title>Search</title>
           <circle cx="11" cy="11" r="8"></circle>
@@ -34,29 +34,7 @@ const SearchWidget: React.FC = () => {
         <button
           type="submit"
           aria-label="搜索"
-          style={{
-            position: 'absolute',
-            right: '12px',
-            background: 'linear-gradient(135deg, #FF6B6B, #FF8C42)',
-            border: 'none',
-            color: 'white',
-            cursor: 'pointer',
-            padding: '8px',
-            borderRadius: '8px',
-            transition: 'all 0.2s',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 6px rgba(255, 107, 107, 0.3)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateX(2px) scale(1.05)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 107, 0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = '';
-            e.currentTarget.style.boxShadow = '0 2px 6px rgba(255, 107, 107, 0.3)';
-          }}
+          className="search-submit-btn"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <title>Search</title>

@@ -145,7 +145,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <div className="card">
             <h1 className="section-title">文章未找到</h1>
             <p>请求的文章不存在或已被删除。</p>
-            <a href="/" style={{ color: '#FF6B6B', marginTop: '20px', display: 'inline-block' }}>
+            <a href="/" className="inline-block mt-5 text-warm-coral hover:text-warm-orange transition-colors">
               返回首页
             </a>
           </div>
@@ -177,7 +177,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 )}
 
                 <div className="blog-card-content">
-                  <h1 className="blog-title" style={{ marginBottom: '16px' }}>
+                  <h1 className="blog-title mb-4">
                     {post.title}
                   </h1>
 
@@ -207,7 +207,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                     </div>
                   )}
 
-                  <div className="markdown-preview" style={{ marginTop: '32px' }}>
+                  <div className="markdown-preview mt-8">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeSlug]}
@@ -245,18 +245,12 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             {relatedPosts.length > 0 && (
               <div className="card">
                 <h2 className="section-title">相关文章</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="flex flex-col gap-3">
                   {relatedPosts.map(relatedPost => (
                     <a
                       key={relatedPost.id}
                       href={`/posts/${relatedPost.slug}`}
-                      style={{
-                        color: '#495057',
-                        fontSize: '14px',
-                        transition: 'color 0.3s ease',
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#FF6B6B'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#495057'}
+                      className="text-sm text-gray-600 hover:text-warm-coral transition-colors duration-300"
                     >
                       {relatedPost.title}
                     </a>

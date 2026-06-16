@@ -37,7 +37,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   return (
     <div className="ai-chat-input">
-      {/* 选项按钮 */}
+      {/* Options button */}
       <button
         className={`ai-options-toggle ${hasActiveOptions ? 'active' : ''}`}
         onClick={onToggleOptions}
@@ -46,7 +46,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         &#x2699;&#xFE0F;
       </button>
 
-      {/* 命令提示下拉框 */}
+      {/* Command hints dropdown */}
       {showCommandHints && (
         <div className="ai-command-hints">
           <div className="ai-command-hints-header">

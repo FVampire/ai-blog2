@@ -16,7 +16,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ title, date, author, excerp
     <div className="card blog-card">
       {image && (
         <div className="blog-image-container">
-          <Image src={image} alt={title} className="blog-image" width={400} height={250} style={{ objectFit: 'cover' }} />
+          <Image src={image} alt={title} className="blog-image" width={400} height={250} style={{ objectFit: 'cover' }} unoptimized />
         </div>
       )}
       <div className="blog-card-content">
