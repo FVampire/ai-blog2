@@ -60,7 +60,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   try {
     const page = parseInt((await searchParams).page || "1") || 1;
     currentPage = page;
-    const postsPerPage = 4;
+    const postsPerPage = 6;
 
     const result = await PostRepository.getPublicPosts({ page, limit: postsPerPage });
 

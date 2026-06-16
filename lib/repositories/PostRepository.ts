@@ -74,29 +74,66 @@ export class PostRepository extends BaseRepository {
     search?: string;
   } = {}): Promise<PaginationResult<Omit<PostDTO, 'content'>>> {
     const { page = 1, limit = 10, search } = options;
-    const repo = await this.getRepo(Post);
+    const ds = await this.getDataSource();
+    const offset = (page - 1) * limit;
 
-    const qb = repo.createQueryBuilder('p')
-      .leftJoinAndSelect('p.tags', 't')
-      .leftJoin('p.author', 'u')
-      .addSelect('u.username', 'author_name')
-      .where('p.status = :status', { status: 'published' });
+    let queryText = `
+      SELECT
+        p.id, p.title, p.slug, p.excerpt, p.image_url,
+        p.views, p.published_at,
+        u.username as author_name,
+        COALESCE(
+          json_agg(
+            json_build_object('id', t.id, 'name', t.name, 'slug', t.slug, 'color', t.color)
+          ) FILTER (WHERE t.id IS NOT NULL), '[]'
+        ) as tags
+      FROM posts p
+      LEFT JOIN users u ON p.author_id = u.id
+      LEFT JOIN post_tags pt ON p.id = pt.post_id
+      LEFT JOIN tags t ON pt.tag_id = t.id
+      WHERE p.status = 'published'
+    `;
+
+    const queryParams: unknown[] = [];
+    let paramIndex = 1;
 
     if (search) {
-      qb.andWhere('(p.title ILIKE :search OR u.username ILIKE :search)', { search: `%${search}%` });
+      queryText += ` AND (p.title ILIKE $${paramIndex} OR u.username ILIKE $${paramIndex})`;
+      queryParams.push(`%${search}%`);
+      paramIndex++;
     }
 
-    qb.orderBy('p.published_at', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit);
+    queryText += `
+      GROUP BY p.id, u.username
+      ORDER BY p.created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    queryParams.push(limit, offset);
 
-    const [posts, total] = await qb.getManyAndCount();
+    const rows = await ds.query(queryText, queryParams);
 
-    const data = posts.map(p => {
-      const dto = toDTO(p, (p as any).author_name, extractTags(p));
-      const { content: _, ...rest } = dto;
-      return rest;
-    });
+    let countQuery = `SELECT COUNT(*) FROM posts p WHERE p.status = 'published'`;
+    const countParams: unknown[] = [];
+
+    if (search) {
+      countQuery += ' AND (p.title ILIKE $1 OR EXISTS(SELECT 1 FROM users u WHERE u.id = p.author_id AND u.username ILIKE $1))';
+      countParams.push(`%${search}%`);
+    }
+
+    const countResult = await ds.query(countQuery, countParams);
+    const total = parseInt(countResult[0].count);
+
+    const data = rows.map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      excerpt: row.excerpt,
+      imageUrl: row.image_url || '',
+      views: row.views,
+      authorName: row.author_name,
+      publishedAt: row.published_at,
+      tags: row.tags,
+    }));
 
     return {
       data,
