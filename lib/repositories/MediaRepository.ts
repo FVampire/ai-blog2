@@ -1,6 +1,6 @@
-import { NextApiRequest, NextApiResponse } from 'next';
 import fs from 'fs';
 import path from 'path';
+
 import { BaseRepository } from './BaseRepository';
 
 // 媒体文件接口
@@ -27,7 +27,7 @@ export class MediaRepository extends BaseRepository {
   private static readonly ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
   private static readonly ALLOWED_FILE_EXTENSIONS = [
     ...MediaRepository.ALLOWED_IMAGE_EXTENSIONS,
-    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.zip', '.rar'
+    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.zip', '.rar',
   ];
 
   /**
@@ -51,7 +51,6 @@ export class MediaRepository extends BaseRepository {
    * 安全地处理文件名，防止路径遍历攻击
    */
   private static sanitizeFilename(filename: string): string {
-    // 移除路径遍历字符并获取基本文件名
     return path.basename(filename);
   }
 
@@ -70,32 +69,19 @@ export class MediaRepository extends BaseRepository {
     page?: number;
     limit?: number;
     search?: string;
-    request?: NextApiRequest;
-    response?: NextApiResponse;
   } = {}): Promise<MediaPaginationResult> {
     const { page = 1, limit = 20, search } = options;
 
     try {
-      // 确保上传目录存在
       await this.ensureUploadsDir();
       const uploadsDir = this.getUploadsDir();
 
-      // 读取目录中的所有文件
       const files = fs.readdirSync(uploadsDir);
 
-      // 过滤文件并获取文件信息
       let mediaFiles = files
         .filter(file => {
-          // 检查是否为允许的文件类型
-          if (!this.isAllowedExtension(file)) {
-            return false;
-          }
-
-          // 如果有搜索条件，检查文件名是否匹配
-          if (search && !file.toLowerCase().includes(search.toLowerCase())) {
-            return false;
-          }
-
+          if (!this.isAllowedExtension(file)) return false;
+          if (search && !file.toLowerCase().includes(search.toLowerCase())) return false;
           return true;
         })
         .map(file => {
@@ -109,15 +95,11 @@ export class MediaRepository extends BaseRepository {
             size: stats.size,
             uploadedAt: stats.birthtime,
             modifiedAt: stats.mtime,
-            extension: ext
+            extension: ext,
           };
         })
-        .sort((a, b) => {
-          // 按上传时间倒序排列
-          return new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime();
-        });
+        .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
 
-      // 计算分页
       const total = mediaFiles.length;
       const offset = (page - 1) * limit;
       mediaFiles = mediaFiles.slice(offset, offset + limit);
@@ -127,7 +109,7 @@ export class MediaRepository extends BaseRepository {
         total,
         page,
         limit,
-        totalPages: Math.ceil(total / limit)
+        totalPages: Math.ceil(total / limit),
       };
     } catch (error) {
       console.error('Get media files error:', error);
@@ -138,28 +120,23 @@ export class MediaRepository extends BaseRepository {
   /**
    * 删除媒体文件
    */
-  static async deleteMediaFile(filename: string, request?: NextApiRequest, response?: NextApiResponse): Promise<boolean> {
+  static async deleteMediaFile(filename: string): Promise<boolean> {
     try {
-      // 安全检查：防止路径遍历攻击
       const safeFilename = this.sanitizeFilename(filename);
       const filePath = path.join(this.getUploadsDir(), safeFilename);
 
-      // 确保上传目录存在
       await this.ensureUploadsDir();
 
-      // 检查文件是否存在
       if (!fs.existsSync(filePath)) {
         throw new Error('文件不存在');
       }
 
-      // 检查文件是否在上传目录中（额外的安全检查）
       const uploadsDir = this.getUploadsDir();
       const relativePath = path.relative(uploadsDir, filePath);
       if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
         throw new Error('非法文件路径');
       }
 
-      // 删除文件
       fs.unlinkSync(filePath);
       return true;
     } catch (error) {
@@ -171,28 +148,21 @@ export class MediaRepository extends BaseRepository {
   /**
    * 获取媒体文件信息
    */
-  static async getMediaFileInfo(filename: string, request?: NextApiRequest, response?: NextApiResponse): Promise<MediaFile | null> {
+  static async getMediaFileInfo(filename: string): Promise<MediaFile | null> {
     try {
-      // 安全检查：防止路径遍历攻击
       const safeFilename = this.sanitizeFilename(filename);
       const filePath = path.join(this.getUploadsDir(), safeFilename);
 
-      // 确保上传目录存在
       await this.ensureUploadsDir();
 
-      // 检查文件是否存在
-      if (!fs.existsSync(filePath)) {
-        return null;
-      }
+      if (!fs.existsSync(filePath)) return null;
 
-      // 检查文件是否在上传目录中（额外的安全检查）
       const uploadsDir = this.getUploadsDir();
       const relativePath = path.relative(uploadsDir, filePath);
       if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
         throw new Error('非法文件路径');
       }
 
-      // 获取文件信息
       const stats = fs.statSync(filePath);
       const ext = path.extname(safeFilename).toLowerCase();
 
@@ -202,7 +172,7 @@ export class MediaRepository extends BaseRepository {
         size: stats.size,
         uploadedAt: stats.birthtime,
         modifiedAt: stats.mtime,
-        extension: ext
+        extension: ext,
       };
     } catch (error) {
       console.error('Get media file info error:', error);
@@ -213,14 +183,11 @@ export class MediaRepository extends BaseRepository {
   /**
    * 检查文件是否存在
    */
-  static async mediaFileExists(filename: string, request?: NextApiRequest, response?: NextApiResponse): Promise<boolean> {
+  static async mediaFileExists(filename: string): Promise<boolean> {
     try {
       const safeFilename = this.sanitizeFilename(filename);
       const filePath = path.join(this.getUploadsDir(), safeFilename);
-
-      // 确保上传目录存在
       await this.ensureUploadsDir();
-
       return fs.existsSync(filePath);
     } catch (error) {
       console.error('Check media file exists error:', error);

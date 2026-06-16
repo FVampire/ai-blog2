@@ -1,5 +1,8 @@
+'use client';
+
 import React from "react";
-import { useRouter } from "next/router";
+
+import { useRouter } from "next/navigation";
 
 interface PaginationProps {
   currentPage: number;
@@ -10,7 +13,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages }) => {
   const router = useRouter();
 
   const handlePageChange = (page: number) => {
-    router.push(`/?page=${page}`, undefined, { scroll: true });
+    router.push(`/?page=${page}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 

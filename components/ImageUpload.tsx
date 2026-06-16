@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
 
 interface ImageUploadProps {

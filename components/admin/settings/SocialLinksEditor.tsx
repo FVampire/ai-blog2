@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from "react";
 
 interface SocialLink {
@@ -101,7 +103,7 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({ links, onChange }
         </button>
       </div>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .social-links-editor {
           width: 100%;
         }
@@ -187,7 +189,7 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({ links, onChange }
           background: #d1d5db;
           cursor: not-allowed;
         }
-      `}</style>
+      `}} />
     </div>
   );
 };

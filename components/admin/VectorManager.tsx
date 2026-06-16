@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * VectorManager 组件
  * 后台管理向量数据
@@ -223,7 +225,7 @@ export const VectorManager: React.FC = () => {
         </button>
       </div>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .vector-manager {
           display: flex;
           flex-direction: column;
@@ -460,7 +462,7 @@ export const VectorManager: React.FC = () => {
           color: #dc2626;
           padding: 4px 0;
         }
-      `}</style>
+      `}} />
     </div>
   );
 };

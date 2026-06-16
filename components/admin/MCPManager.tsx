@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
+
 import { MCPServer, MCPTransportType } from '../../lib/repositories/MCPRepository';
 
 interface MCPManagerProps {
@@ -596,7 +599,7 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
         </div>
       )}
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .mcp-manager {
           padding: 20px 0;
         }
@@ -986,7 +989,7 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
             display: none;
           }
         }
-      `}</style>
+      `}} />
     </div>
   );
 };

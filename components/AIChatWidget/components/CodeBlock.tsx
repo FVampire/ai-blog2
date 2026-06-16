@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useState } from 'react';
+
 import { copyToClipboard } from '../utils/helpers';
 
 // 代码块组件（带复制按钮）

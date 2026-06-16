@@ -37,7 +37,7 @@ interface SearchWeights {
  */
 async function getEmbeddingConfig(): Promise<EmbeddingConfig | null> {
   try {
-    const { query } = await import('./db-adapter');
+    const { query } = await import('./db');
 
     // 从数据库获取配置
     const { rows } = await query(
@@ -72,7 +72,7 @@ async function getEmbeddingConfig(): Promise<EmbeddingConfig | null> {
  */
 export async function getSearchWeights(): Promise<SearchWeights> {
   try {
-    const { query } = await import('./db-adapter');
+    const { query } = await import('./db');
     const { rows } = await query(
       "SELECT key, value FROM settings WHERE key LIKE 'ai_vector_search_weight_%'"
     );
@@ -98,7 +98,7 @@ export async function getSearchWeights(): Promise<SearchWeights> {
  */
 export async function getSimilarityThreshold(): Promise<number> {
   try {
-    const { query } = await import('./db-adapter');
+    const { query } = await import('./db');
     const { rows } = await query(
       "SELECT value FROM settings WHERE key = 'ai_vector_search_threshold'"
     );

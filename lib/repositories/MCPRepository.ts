@@ -1,32 +1,15 @@
-import { query } from '../db';
+import { BaseRepository } from './BaseRepository';
+import { MCPServer } from '../entities/MCPServer';
+import { Setting } from '../entities/Setting';
 
 export type MCPTransportType = 'stdio' | 'sse' | 'http';
-
-export interface MCPServer {
-  id: number;
-  name: string;
-  description: string;
-  transport: MCPTransportType;
-  command: string;
-  script_path: string;
-  args: string[];
-  env_vars: Record<string, string>;
-  // SSE/HTTP 特定配置
-  url?: string;
-  headers?: Record<string, string>;
-  is_enabled: boolean;
-  is_default: boolean;
-  timeout_seconds: number;
-  created_at: string;
-  updated_at: string;
-}
 
 export interface CreateMCPServerInput {
   name: string;
   description?: string;
   transport?: MCPTransportType;
-  command: string;
-  script_path: string;
+  command?: string;
+  script_path?: string;
   args?: string[];
   env_vars?: Record<string, string>;
   url?: string;
@@ -70,183 +53,146 @@ export interface MCPServersResponse {
   defaultServer: MCPServerListItem | null;
 }
 
-export class MCPRepository {
+function entityToListItem(s: MCPServer): MCPServerListItem {
+  return {
+    id: s.id,
+    name: s.name,
+    description: s.description ?? '',
+    command: s.command,
+    scriptPath: s.scriptPath ?? '',
+    args: s.args,
+    transport: s.transport,
+    url: s.url,
+    headers: s.headers,
+    isDefault: s.isDefault,
+    timeoutSeconds: s.timeoutSeconds,
+  };
+}
+
+export class MCPRepository extends BaseRepository {
   /**
    * 获取所有 MCP 服务器（管理员）
    */
-  async getAll(): Promise<MCPServer[]> {
-    const result = await query(
-      `SELECT id, name, description, transport, command, script_path, args, env_vars,
-              url, headers, is_enabled, is_default, timeout_seconds, created_at, updated_at
-       FROM mcp_servers
-       ORDER BY is_default DESC, is_enabled DESC, name ASC`
-    );
-
-    return result.rows.map(row => this.parseRow(row));
+  async getAll() {
+    const repo = await (this.constructor as typeof BaseRepository)['getRepo'](MCPServer);
+    return repo.find({
+      order: { isDefault: 'DESC', isEnabled: 'DESC', name: 'ASC' },
+    });
   }
 
   /**
    * 获取启用的 MCP 服务器列表（公开）
    */
   async getEnabledList(): Promise<MCPServersResponse> {
-    // 检查 MCP 是否启用
-    const mcpEnabledResult = await query(
-      "SELECT value FROM settings WHERE key = 'mcp_enabled'"
-    );
-    const enabled = mcpEnabledResult.rows[0]?.value === 'true';
+    const ds = await (this.constructor as typeof BaseRepository)['getDataSource']();
+    const settingRepo = ds.getRepository(Setting);
+    const mcpEnabled = await settingRepo.findOne({ where: { key: 'mcp_enabled' } });
+    const enabled = mcpEnabled?.value === 'true';
 
     if (!enabled) {
-      return {
-        enabled: false,
-        servers: [],
-        defaultServer: null,
-      };
+      return { enabled: false, servers: [], defaultServer: null };
     }
 
-    const result = await query(
-      `SELECT id, name, description, transport, command, script_path, args, url, headers, is_default, timeout_seconds
-       FROM mcp_servers
-       WHERE is_enabled = true
-       ORDER BY is_default DESC, name ASC`
-    );
+    const repo = ds.getRepository(MCPServer);
+    const servers = await repo.find({
+      where: { isEnabled: true },
+      order: { isDefault: 'DESC', name: 'ASC' },
+    });
 
-    const servers: MCPServerListItem[] = result.rows.map(row => ({
-      id: row.id,
-      name: row.name,
-      description: row.description,
-      transport: row.transport || 'stdio',
-      command: row.command,
-      scriptPath: row.script_path,
-      args: Array.isArray(row.args) ? row.args : JSON.parse(row.args || '[]'),
-      url: row.url,
-      headers: typeof row.headers === 'object' ? row.headers : JSON.parse(row.headers || '{}'),
-      isDefault: row.is_default,
-      timeoutSeconds: row.timeout_seconds,
-    }));
+    const list = servers.map(entityToListItem);
+    const defaultServer = list.find((s: MCPServerListItem) => s.isDefault) || list[0] || null;
 
-    const defaultServer = servers.find(s => s.isDefault) || servers[0] || null;
-
-    return {
-      enabled: true,
-      servers,
-      defaultServer,
-    };
+    return { enabled: true, servers: list, defaultServer };
   }
 
   /**
    * 根据 ID 获取 MCP 服务器
    */
   async getById(id: number): Promise<MCPServer | null> {
-    const result = await query(
-      `SELECT id, name, description, transport, command, script_path, args, env_vars,
-              url, headers, is_enabled, is_default, timeout_seconds, created_at, updated_at
-       FROM mcp_servers WHERE id = $1`,
-      [id]
-    );
-
-    if (result.rows.length === 0) return null;
-
-    return this.parseRow(result.rows[0]);
+    const ds = await (this.constructor as typeof BaseRepository)['getDataSource']();
+    const repo = ds.getRepository(MCPServer);
+    return await repo.findOne({ where: { id } }) ?? null;
   }
 
   /**
    * 创建 MCP 服务器
    */
   async create(data: CreateMCPServerInput): Promise<MCPServer> {
-    const result = await query(
-      `INSERT INTO mcp_servers (name, description, transport, command, script_path, args, env_vars, url, headers, is_enabled, is_default, timeout_seconds)
-       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8, $9::jsonb, $10, false, $11)
-       RETURNING id, name, description, transport, command, script_path, args, env_vars,
-                 url, headers, is_enabled, is_default, timeout_seconds, created_at, updated_at`,
-      [
-        data.name,
-        data.description || '',
-        data.transport || 'stdio',
-        data.command || '',
-        data.script_path || '',
-        JSON.stringify(data.args || []),
-        JSON.stringify(data.env_vars || {}),
-        data.url || '',
-        JSON.stringify(data.headers || {}),
-        data.is_enabled ?? true,
-        data.timeout_seconds || 30,
-      ]
-    );
+    const ds = await (this.constructor as typeof BaseRepository)['getDataSource']();
+    const repo = ds.getRepository(MCPServer);
+    const server = repo.create({
+      name: data.name,
+      description: data.description ?? '',
+      transport: data.transport ?? 'stdio',
+      command: data.command ?? '',
+      scriptPath: data.script_path ?? '',
+      args: data.args ?? [],
+      envVars: data.env_vars ?? {},
+      url: data.url ?? '',
+      headers: data.headers ?? {},
+      isEnabled: data.is_enabled ?? true,
+      isDefault: false,
+      timeoutSeconds: data.timeout_seconds ?? 30,
+    });
 
-    return this.parseRow(result.rows[0]);
+    return await repo.save(server) as MCPServer;
   }
 
   /**
    * 更新 MCP 服务器
    */
   async update(id: number, data: UpdateMCPServerInput): Promise<MCPServer | null> {
-    const result = await query(
-      `UPDATE mcp_servers SET
-         name = COALESCE($1, name),
-         description = COALESCE($2, description),
-         transport = COALESCE($3, transport),
-         command = COALESCE($4, command),
-         script_path = COALESCE($5, script_path),
-         args = COALESCE($6::jsonb, args),
-         env_vars = COALESCE($7::jsonb, env_vars),
-         url = COALESCE($8, url),
-         headers = COALESCE($9::jsonb, headers),
-         is_enabled = COALESCE($10, is_enabled),
-         is_default = COALESCE($11, is_default),
-         timeout_seconds = COALESCE($12, timeout_seconds)
-       WHERE id = $13
-       RETURNING id, name, description, transport, command, script_path, args, env_vars,
-                 url, headers, is_enabled, is_default, timeout_seconds, created_at, updated_at`,
-      [
-        data.name,
-        data.description,
-        data.transport,
-        data.command,
-        data.script_path,
-        data.args ? JSON.stringify(data.args) : null,
-        data.env_vars ? JSON.stringify(data.env_vars) : null,
-        data.url,
-        data.headers ? JSON.stringify(data.headers) : null,
-        data.is_enabled,
-        data.is_default,
-        data.timeout_seconds,
-        id,
-      ]
-    );
+    const ds = await (this.constructor as typeof BaseRepository)['getDataSource']();
+    const repo = ds.getRepository(MCPServer);
+    const server = await repo.findOne({ where: { id } });
+    if (!server) return null;
 
-    if (result.rows.length === 0) return null;
+    if (data.name !== undefined) server.name = data.name;
+    if (data.description !== undefined) server.description = data.description;
+    if (data.transport !== undefined) server.transport = data.transport;
+    if (data.command !== undefined) server.command = data.command;
+    if (data.script_path !== undefined) server.scriptPath = data.script_path;
+    if (data.args !== undefined) server.args = data.args;
+    if (data.env_vars !== undefined) server.envVars = data.env_vars;
+    if (data.url !== undefined) server.url = data.url;
+    if (data.headers !== undefined) server.headers = data.headers;
+    if (data.is_enabled !== undefined) server.isEnabled = data.is_enabled;
+    if (data.is_default !== undefined) server.isDefault = data.is_default;
+    if (data.timeout_seconds !== undefined) server.timeoutSeconds = data.timeout_seconds;
 
-    return this.parseRow(result.rows[0]);
+    return await repo.save(server) as MCPServer;
   }
 
   /**
    * 删除 MCP 服务器
    */
   async delete(id: number): Promise<boolean> {
-    const result = await query('DELETE FROM mcp_servers WHERE id = $1 RETURNING id', [id]);
-    return result.rows.length > 0;
+    const ds = await (this.constructor as typeof BaseRepository)['getDataSource']();
+    const repo = ds.getRepository(MCPServer);
+    const result = await repo.delete(id);
+    return (result.affected ?? 0) > 0;
   }
 
   /**
    * 设置默认 MCP 服务器
    */
   async setDefault(id: number): Promise<boolean> {
-    await query('UPDATE mcp_servers SET is_default = false');
-    const result = await query(
-      'UPDATE mcp_servers SET is_default = true WHERE id = $1 RETURNING id',
-      [id]
-    );
-    return result.rows.length > 0;
+    const ds = await (this.constructor as typeof BaseRepository)['getDataSource']();
+    const repo = ds.getRepository(MCPServer);
+    // 清除所有默认标记
+    await repo.update({}, { isDefault: false });
+    // 设置新的默认
+    const result = await repo.update(id, { isDefault: true });
+    return (result.affected ?? 0) > 0;
   }
 
   /**
    * 检查 MCP 功能是否启用
    */
   async isMCPEnabled(): Promise<boolean> {
-    const result = await query(
-      "SELECT value FROM settings WHERE key = 'mcp_enabled'"
-    );
-    return result.rows[0]?.value === 'true';
+    const ds = await (this.constructor as typeof BaseRepository)['getDataSource']();
+    const setting = await ds.getRepository(Setting).findOne({ where: { key: 'mcp_enabled' } });
+    return setting?.value === 'true';
   }
 
   /**
@@ -257,28 +203,18 @@ export class MCPRepository {
     allowUserSelect: boolean;
     defaultServerId: string;
   }> {
-    const result = await query(
-      "SELECT key, value FROM settings WHERE key LIKE 'mcp_%'"
-    );
+    const ds = await (this.constructor as typeof BaseRepository)['getDataSource']();
+    const repo = ds.getRepository(Setting);
+    const qb = repo.createQueryBuilder('s').where('s.key LIKE :prefix', { prefix: 'mcp_%' });
+    const settings = await qb.getMany();
 
-    const settings: Record<string, string> = {};
-    result.rows.forEach((row: any) => {
-      settings[row.key] = row.value;
-    });
+    const map: Record<string, string> = {};
+    settings.forEach(s => { map[s.key] = s.value ?? ''; });
 
     return {
-      enabled: settings['mcp_enabled'] === 'true',
-      allowUserSelect: settings['mcp_allow_user_select'] !== 'false',
-      defaultServerId: settings['mcp_default_server_id'] || '',
-    };
-  }
-
-  private parseRow(row: any): MCPServer {
-    return {
-      ...row,
-      args: Array.isArray(row.args) ? row.args : JSON.parse(row.args || '[]'),
-      env_vars: typeof row.env_vars === 'object' ? row.env_vars : JSON.parse(row.env_vars || '{}'),
-      headers: typeof row.headers === 'object' ? row.headers : JSON.parse(row.headers || '{}'),
+      enabled: map['mcp_enabled'] === 'true',
+      allowUserSelect: map['mcp_allow_user_select'] !== 'false',
+      defaultServerId: map['mcp_default_server_id'] || '',
     };
   }
 }

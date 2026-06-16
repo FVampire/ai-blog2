@@ -1,8 +1,11 @@
+'use client';
+
 import React, { useState } from 'react';
+
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeRaw from 'rehype-raw';
+import remarkGfm from 'remark-gfm';
 
 interface MarkdownEditorProps {
   value: string;

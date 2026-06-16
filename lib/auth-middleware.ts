@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+
 import { verifyToken, JWTPayload } from './jwt';
 
 export interface AuthenticatedRequest extends NextApiRequest {

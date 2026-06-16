@@ -1,3 +1,5 @@
+'use client';
+
 import React from "react";
 
 interface AISettingsProps {
@@ -212,7 +214,7 @@ const AISettings: React.FC<AISettingsProps> = ({ settings, onChange }) => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .ai-settings {
           width: 100%;
         }
@@ -392,7 +394,7 @@ const AISettings: React.FC<AISettingsProps> = ({ settings, onChange }) => {
         .toggle-switch input:checked + .toggle-slider:before {
           transform: translateX(24px);
         }
-      `}</style>
+      `}} />
     </div>
   );
 };

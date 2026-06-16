@@ -1,6 +1,9 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+
 import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -8,6 +11,7 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<{ username: string; role: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -30,7 +34,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     router.push('/admin/login');
   };
 
-  const isActive = (path: string) => router.pathname === path;
+  const isActive = (path: string) => pathname === path;
 
   if (!user) {
     return <div className="admin-loading">加载中...</div>;

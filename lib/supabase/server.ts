@@ -1,5 +1,6 @@
-import { createServerClient as createSupabaseServerClient, type CookieOptions } from '@supabase/ssr';
 import { type NextRequest, type NextResponse } from 'next/server';
+
+import { createServerClient as createSupabaseServerClient, type CookieOptions } from '@supabase/ssr';
 
 // 从环境变量获取 Supabase 配置
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';

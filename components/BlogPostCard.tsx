@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import React from 'react';
 
 interface BlogPostCardProps {
@@ -15,7 +16,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ title, date, author, excerp
     <div className="card blog-card">
       {image && (
         <div className="blog-image-container">
-          <img src={image} alt={title} className="blog-image" />
+          <Image src={image} alt={title} className="blog-image" width={400} height={250} style={{ objectFit: 'cover' }} />
         </div>
       )}
       <div className="blog-card-content">
