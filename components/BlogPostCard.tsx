@@ -13,38 +13,51 @@ interface BlogPostCardProps {
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ title, date, author, excerpt, slug, image, tags }) => {
   return (
-    <div className="card blog-card">
+    <article className="blog-card-modern">
       {image && (
-        <div className="blog-image-container">
-          <Image src={image} alt={title} className="blog-image" width={400} height={250} style={{ objectFit: 'cover' }} unoptimized />
-        </div>
+        <a href={`/posts/${slug}`} className="blog-card-image-link">
+          <div className="blog-card-image-wrapper">
+            <Image
+              src={image}
+              alt={title}
+              fill
+              sizes="(max-width: 768px) 100vw, 300px"
+              className="blog-card-image"
+              unoptimized
+            />
+          </div>
+        </a>
       )}
-      <div className="blog-card-content">
-        <h2 className="blog-title">{title}</h2>
-        <div className="blog-meta">
-          <span className="meta-text">{date}</span>
-          <span className="meta-text">by {author}</span>
-        </div>
-        <p className="blog-excerpt">{excerpt}</p>
+      <div className="blog-card-body">
         {tags && tags.length > 0 && (
-          <div className="blog-tags">
-            {tags.map((tag, index) => (
+          <div className="blog-card-tags">
+            {tags.slice(0, 3).map((tag, index) => (
               <span
                 key={index}
-                className="blog-tag"
-                style={{
-                  background: `linear-gradient(135deg, ${tag.color}, ${adjustBrightness(tag.color, 20)})`,
-                  boxShadow: `0 2px 8px ${tag.color}30`
-                }}
+                className="blog-card-tag"
+                style={{ backgroundColor: `${tag.color}15`, color: tag.color }}
               >
                 {tag.name}
               </span>
             ))}
           </div>
         )}
-        <a href={`/posts/${slug}`} className="read-more">Read more</a>
+        <h2 className="blog-card-title">
+          <a href={`/posts/${slug}`}>{title}</a>
+        </h2>
+        <p className="blog-card-excerpt">{excerpt}</p>
+        <div className="blog-card-footer">
+          <span className="blog-card-date">{date}</span>
+          <a href={`/posts/${slug}`} className="blog-card-readmore">
+            阅读更多
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          </a>
+        </div>
       </div>
-    </div>
+    </article>
   );
 };
 
