@@ -1,23 +1,18 @@
 import { NextResponse } from 'next/server';
 
-import { query } from '@/lib/db';
+import { TagLegacyRepository } from '@/lib/repositories/TagLegacyRepository';
 
 export async function GET() {
   try {
-    const result = await query(
-      `SELECT t.id, t.name, t.slug, t.color, COUNT(pt.post_id) as post_count
-       FROM tags t
-       LEFT JOIN post_tags pt ON t.id = pt.tag_id
-       LEFT JOIN posts p ON pt.post_id = p.id AND p.status = 'published'
-       GROUP BY t.id, t.name, t.slug, t.color
-       HAVING COUNT(pt.post_id) > 0
-       ORDER BY post_count DESC`
-    );
-
-    return NextResponse.json({
-      success: true,
-      data: result.rows,
-    });
+    const tags = await TagLegacyRepository.getPopularTags(20);
+    const data = tags.map((t) => ({
+      id: t.id,
+      name: t.name,
+      slug: t.slug,
+      color: t.color,
+      post_count: t.postCount,
+    }));
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Get categories error:', error);
     return NextResponse.json(

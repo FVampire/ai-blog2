@@ -6,13 +6,13 @@ import { useArticle } from '../../../contexts/ArticleContext';
 
 interface ArticleTrackerProps {
   post: {
-    id: number;
+    id: string;
     title: string;
     slug: string;
     excerpt: string;
     content: string;
     author_name: string;
-    tags: { id: number; name: string; slug: string }[];
+    tags: { id: string | number; name: string; slug: string }[];
   };
 }
 

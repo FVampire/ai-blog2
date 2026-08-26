@@ -58,8 +58,8 @@ INSERT INTO settings (key, value, type, description) VALUES
 
   -- 关于页面设置
   ('about_author_name', 'John Doe', 'string', '作者名称'),
-  ('about_author_bio', 'I'm a full-stack developer with over 10 years of experience building web applications. My passion lies in creating beautiful, functional, and user-friendly digital experiences.', 'string', '作者简介（第一段）'),
-  ('about_author_bio_2', 'Throughout my career, I\'ve worked with startups and enterprises alike, helping them transform their ideas into successful products. I specialize in modern JavaScript frameworks like React and Node.js, and I\'m always excited to learn about new technologies.', 'string', '作者简介（第二段）'),
-  ('about_author_bio_3', 'When I''m not coding, you can find me hiking in the mountains, reading science fiction novels, or experimenting with new cooking recipes. I believe in continuous learning and sharing knowledge with the community through writing and mentoring.', 'string', '作者简介（第三段）'),
+  ('about_author_bio', 'I am a full-stack developer with over 10 years of experience building web applications. My passion lies in creating beautiful, functional, and user-friendly digital experiences.', 'string', '作者简介（第一段）'),
+  ('about_author_bio_2', 'Throughout my career, I have worked with startups and enterprises alike, helping them transform their ideas into successful products. I specialize in modern JavaScript frameworks like React and Node.js.', 'string', '作者简介（第二段）'),
+  ('about_author_bio_3', 'When I am not coding, you can find me hiking in the mountains, reading science fiction novels, or experimenting with new cooking recipes.', 'string', '作者简介（第三段）'),
   ('about_social_links', '[{"platform":"twitter","name":"Twitter","url":"https://twitter.com"},{"platform":"github","name":"GitHub","url":"https://github.com"},{"platform":"linkedin","name":"LinkedIn","url":"https://linkedin.com"}]', 'json', '社交链接列表')
 ON CONFLICT (key) DO NOTHING;

@@ -9,6 +9,8 @@ import { Comment } from './entities/Comment';
 import { Setting } from './entities/Setting';
 import { MCPServer } from './entities/MCPServer';
 import { PostVector } from './entities/PostVector';
+import { Project } from './entities/Project';
+import { getDatabaseSsl, sanitizeDatabaseUrl } from './pg-config';
 
 let dataSource: DataSource | null = null;
 
@@ -21,9 +23,9 @@ export function getDataSource(): DataSource {
 
   dataSource = new DataSource({
     type: 'postgres',
-    url: DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
-    entities: [User, Post, Tag, PostTag, Comment, Setting, MCPServer, PostVector],
+    url: sanitizeDatabaseUrl(DATABASE_URL),
+    ssl: getDatabaseSsl(),
+    entities: [User, Post, Tag, PostTag, Comment, Setting, MCPServer, PostVector, Project],
     synchronize: false, // 生产环境不要自动同步，使用迁移
     logging: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     extra: {

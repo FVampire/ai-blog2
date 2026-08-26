@@ -12,41 +12,40 @@ interface TableOfContentsProps {
   content: string;
 }
 
+/** Match rehype-slug: lowercase, spaces to hyphens, collapse dashes */
+function slugifyHeading(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 const TableOfContents: React.FC<TableOfContentsProps> = ({ content }) => {
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [activeId, setActiveId] = useState<string>('');
 
   useEffect(() => {
-    // 解析 Markdown 中的标题
     const headingRegex = /^(#{1,6})\s+(.+)$/gm;
     const matches = Array.from(content.matchAll(headingRegex));
 
     const extractedHeadings: Heading[] = matches.map((match) => {
       const level = match[1].length;
-      const text = match[2].trim();
-      // 生成与 rehype-slug 相同的 ID：小写、空格转连字符、移除特殊字符
-      const id = text
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .trim();
-
-      return { id, text, level };
+      const text = match[2].trim().replace(/\s+#+\s*$/, '');
+      return { id: slugifyHeading(text), text, level };
     });
 
     setHeadings(extractedHeadings);
   }, [content]);
 
   useEffect(() => {
-    // 监听滚动，更新当前激活的标题
     const handleScroll = () => {
-      const headingElements = headings.map(h =>
-        document.getElementById(h.id)
-      ).filter(Boolean);
+      const headingElements = headings
+        .map((h) => document.getElementById(h.id))
+        .filter(Boolean) as HTMLElement[];
 
       const currentHeading = headingElements.find((element, index) => {
-        if (!element) return false;
         const rect = element.getBoundingClientRect();
         const nextElement = headingElements[index + 1];
 
@@ -63,8 +62,8 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ content }) => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    handleScroll(); // 初始化
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, [headings]);
@@ -72,11 +71,11 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ content }) => {
   const scrollToHeading = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      const offset = 80; // 留出顶部空间
+      const offset = 80;
       const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({
         top: elementPosition - offset,
-        behavior: 'smooth'
+        behavior: 'smooth',
       });
     }
   };
@@ -86,25 +85,28 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ content }) => {
   }
 
   return (
-    <div className="toc-container">
-      <div className="toc-header">目录</div>
-      <nav className="toc-nav">
-        {headings.map((heading, index) => (
-          <a
-            key={heading.id + index}
-            href={`#${heading.id}`}
-            className={`toc-link toc-level-${heading.level} ${activeId === heading.id ? 'active' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              scrollToHeading(heading.id);
-            }}
-            style={{
-              paddingLeft: `${(heading.level - 1) * 12}px`,
-            }}
-          >
-            {heading.text}
-          </a>
-        ))}
+    <div className="toc-card">
+      <h2 className="toc-title">目录</h2>
+      <nav className="toc-nav" aria-label="文章目录">
+        <ul className="toc-list">
+          {headings.map((heading, index) => (
+            <li
+              key={`${heading.id}-${index}`}
+              className={`toc-item toc-level-${heading.level} ${activeId === heading.id ? 'is-active' : ''}`}
+            >
+              <a
+                href={`#${heading.id}`}
+                className="toc-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToHeading(heading.id);
+                }}
+              >
+                <span className="toc-text">{heading.text}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
       </nav>
     </div>
   );

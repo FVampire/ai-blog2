@@ -1,0 +1,27 @@
+#!/bin/bash
+# Git post-receive hook — 放在服务器 bare 仓库的 hooks/post-receive
+# 用法见 scripts/server-setup.sh
+
+set -euo pipefail
+
+DEPLOY_DIR="${DEPLOY_DIR:-/var/www/ai-blog2}"
+BRANCH="${DEPLOY_BRANCH:-main}"
+LOG_FILE="${DEPLOY_DIR}/deploy.log"
+
+while read -r oldrev newrev refname; do
+  if [[ "$refname" == "refs/heads/$BRANCH" ]]; then
+    echo "==> Received push to $BRANCH, deploying..."
+    {
+      echo "[$(date)] Deploy triggered by push to $BRANCH"
+      export SKIP_GIT_PULL=1
+      export APP_DIR="$DEPLOY_DIR"
+      export DEPLOY_BRANCH="$BRANCH"
+      cd "$DEPLOY_DIR"
+      git --git-dir="$DEPLOY_DIR/.git" fetch origin "$BRANCH"
+      git --git-dir="$DEPLOY_DIR/.git" --work-tree="$DEPLOY_DIR" checkout -f "$BRANCH"
+      bash scripts/deploy.sh "$BRANCH"
+      echo "[$(date)] Deploy finished"
+    } >> "$LOG_FILE" 2>&1
+    echo "==> Deploy complete. Log: $LOG_FILE"
+  fi
+done

@@ -18,7 +18,3 @@ SET color = CASE
 END
 WHERE color IS NULL OR color = '#FF6B6B';
 
--- Verification query
-SELECT id, name, slug, color
-FROM tags
-ORDER BY id;

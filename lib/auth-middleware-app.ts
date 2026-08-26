@@ -65,3 +65,68 @@ export function requireRoles(request: NextRequest, allowedRoles: string[]): Auth
 export function isAuthError(result: AuthResult | NextResponse): result is NextResponse {
   return result instanceof NextResponse;
 }
+
+/**
+ * Require Agent API key authentication (for Cursor Agent / MCP publishing).
+ * Accepts Authorization: Bearer <key> or X-Agent-Key header.
+ */
+export function requireAgentAuth(request: NextRequest): true | NextResponse {
+  const agentKey = process.env.AGENT_API_KEY;
+  if (!agentKey) {
+    return NextResponse.json(
+      { success: false, message: 'Agent API 未配置，请设置 AGENT_API_KEY 环境变量' },
+      { status: 503 }
+    );
+  }
+
+  const authHeader = request.headers.get('authorization');
+  const headerKey = request.headers.get('x-agent-key');
+
+  let providedKey: string | null = null;
+  if (authHeader?.startsWith('Bearer ')) {
+    providedKey = authHeader.substring(7);
+  } else if (headerKey) {
+    providedKey = headerKey;
+  }
+
+  if (!providedKey || providedKey !== agentKey) {
+    return NextResponse.json(
+      { success: false, message: 'Agent API Key 无效' },
+      { status: 401 }
+    );
+  }
+
+  return true;
+}
+
+/**
+ * Require deploy webhook secret.
+ */
+export function requireDeployAuth(request: NextRequest): true | NextResponse {
+  const deploySecret = process.env.DEPLOY_SECRET;
+  if (!deploySecret) {
+    return NextResponse.json(
+      { success: false, message: '部署 webhook 未配置，请设置 DEPLOY_SECRET' },
+      { status: 503 }
+    );
+  }
+
+  const authHeader = request.headers.get('authorization');
+  const headerSecret = request.headers.get('x-deploy-secret');
+
+  let provided: string | null = null;
+  if (authHeader?.startsWith('Bearer ')) {
+    provided = authHeader.substring(7);
+  } else if (headerSecret) {
+    provided = headerSecret;
+  }
+
+  if (!provided || provided !== deploySecret) {
+    return NextResponse.json(
+      { success: false, message: '部署密钥无效' },
+      { status: 401 }
+    );
+  }
+
+  return true;
+}

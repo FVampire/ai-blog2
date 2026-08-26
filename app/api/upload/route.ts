@@ -3,7 +3,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+import { requireAuth, isAuthError, requireAgentAuth } from '@/lib/auth-middleware-app';
+
+function isAuthorized(request: NextRequest): boolean {
+  const jwtResult = requireAuth(request);
+  if (!isAuthError(jwtResult)) return true;
+  const agentResult = requireAgentAuth(request);
+  return agentResult === true;
+}
+
 export async function POST(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json(
+      { success: false, message: '需要认证' },
+      { status: 401 }
+    );
+  }
+
   try {
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
     if (!fs.existsSync(uploadDir)) {
@@ -20,13 +36,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate unique filename
     const ext = path.extname(file.name);
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     const filename = `${uniqueSuffix}${ext}`;
     const filePath = path.join(uploadDir, filename);
 
-    // Write file to disk
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     fs.writeFileSync(filePath, buffer);

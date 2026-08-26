@@ -16,11 +16,13 @@ function parseSettingValue(value: string | null, type: string): unknown {
 export async function GET() {
   try {
     const result = await query(
-      `SELECT key, value, type FROM settings WHERE key LIKE 'site_%' OR key LIKE 'about_%' OR key LIKE 'footer_%' ORDER BY key`
+      `SELECT key, value, type FROM settings
+       WHERE key LIKE 'site_%' OR key LIKE 'about_%' OR key LIKE 'footer_%' OR key LIKE 'projects_%'
+       ORDER BY key`
     );
 
     const settings: Record<string, unknown> = {};
-    result.rows.forEach((row: any) => {
+    result.rows.forEach((row: { key: string; value: string; type: string }) => {
       settings[row.key] = parseSettingValue(row.value, row.type);
     });
 
@@ -31,6 +33,11 @@ export async function GET() {
         siteDescription: settings.site_description || 'A blog about technology, design, and development',
         footerText: settings.footer_text || `© ${new Date().getFullYear()} 五月的火. All rights reserved.`,
         socialLinks: settings.about_social_links || [],
+        projectsEnabled: settings.projects_enabled !== false,
+        projectsNavLabel: settings.projects_nav_label || 'Projects',
+        projectsIntro: settings.projects_intro || '我的项目与开发成果',
+        projectsShowOnHome: settings.projects_show_on_home !== false,
+        projectsHomeCount: settings.projects_home_count || 3,
       },
     });
   } catch (error) {

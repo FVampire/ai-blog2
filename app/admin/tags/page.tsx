@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 
 import AdminLayout from '../../../components/admin/AdminLayout';
 
-interface Tag { id: number; name: string; slug: string; color: string; created_at: string; post_count: number; }
+interface Tag { id: string; name: string; slug: string; color: string; created_at: string; post_count: number; }
 
 export default function AdminTags() {
   const [tags, setTags] = useState<Tag[]>([]);

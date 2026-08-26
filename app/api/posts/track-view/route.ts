@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { query } from '@/lib/db';
+import { BlogRepository } from '@/lib/repositories/BlogRepository';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,27 +13,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await query(
-      'UPDATE posts SET views = views + 1 WHERE id = $1 RETURNING views',
-      [postId]
-    );
-
-    if (result.rows.length === 0) {
-      return NextResponse.json(
-        { success: false, message: '文章不存在' },
-        { status: 404 }
-      );
-    }
+    const views = await BlogRepository.incrementViews(String(postId));
 
     return NextResponse.json({
       success: true,
-      data: { views: result.rows[0].views },
+      data: { views },
     });
   } catch (error) {
     console.error('Track view error:', error);
-    return NextResponse.json(
-      { success: false, message: '记录浏览失败' },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : '记录浏览失败';
+    const status = message === '文章不存在' ? 404 : 500;
+    return NextResponse.json({ success: false, message }, { status });
   }
 }

@@ -1,0 +1,69 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: blog
+      POSTGRES_PASSWORD: blog_password
+      POSTGRES_DB: blog_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./db/migration-add-settings.sql:/docker-entrypoint-initdb.d/02-settings.sql
+      - ./db/migration-add-comments.sql:/docker-entrypoint-initdb.d/03-comments.sql
+      - ./db/migration-add-tag-color.sql:/docker-entrypoint-initdb.d/04-tag-color.sql
+      - ./db/migration-add-post-relations.sql:/docker-entrypoint-initdb.d/05-post-relations.sql
+      - ./db/migration-add-vectors.sql:/docker-entrypoint-initdb.d/06-vectors.sql
+      - ./db/migration-add-mcp-servers.sql:/docker-entrypoint-initdb.d/07-mcp-servers.sql
+      - ./db/migration-add-ai-settings.sql:/docker-entrypoint-initdb.d/08-ai-settings.sql
+      - ./db/migration-add-projects.sql:/docker-entrypoint-initdb.d/09-projects.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blog -d blog_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://blog:blog_password@postgres:5432/blog_db
+      JWT_SECRET: ${JWT_SECRET:-change-this-jwt-secret-in-production}
+      JWT_EXPIRES_IN: 7d
+      NODE_ENV: production
+      PORT: 3000
+      AGENT_API_KEY: ${AGENT_API_KEY:-your-agent-api-key}
+      AGENT_AUTHOR_ID: 1
+      DEPLOY_SECRET: ${DEPLOY_SECRET:-your-deploy-secret}
+      SITE_URL: ${SITE_URL:-http://localhost:3000}
+    volumes:
+      - uploads_data:/app/public/uploads
+    ports:
+      - "3000:3000"
+
+  # Optional: deploy webhook listener (runs deploy.sh on git push)
+  deploy:
+    image: node:20-alpine
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+      - uploads_data:/app/public/uploads
+    environment:
+      DEPLOY_SECRET: ${DEPLOY_SECRET:-your-deploy-secret}
+      DEPLOY_BRANCH: ${DEPLOY_BRANCH:-main}
+    command: >
+      sh -c "apk add --no-cache git bash &&
+             echo 'Deploy webhook ready. Trigger via POST /api/deploy/webhook on app service.' &&
+             tail -f /dev/null"
+    profiles:
+      - deploy
+
+volumes:
+  postgres_data:
+  uploads_data:

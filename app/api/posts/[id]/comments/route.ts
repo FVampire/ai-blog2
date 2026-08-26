@@ -3,41 +3,35 @@ import { NextRequest, NextResponse } from 'next/server';
 import { needsModeration, getFilterReason } from '@/lib/content-filter';
 import { query } from '@/lib/db';
 
-// GET - Get approved comments for a post (public)
+// GET — approved comments for a blog (id = blog uuid)
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
 
   try {
     const result = await query(
-      `SELECT id, visitor_id, content, created_at
+      `SELECT id, visitor_id, content, city, created_at
        FROM comments
-       WHERE post_id = $1 AND status = 'approved'
+       WHERE blog_id = $1::uuid AND status = 'approved'
        ORDER BY created_at DESC`,
       [id]
     );
 
-    return NextResponse.json({
-      success: true,
-      data: result.rows,
-    });
+    return NextResponse.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Comments API error:', error);
-    return NextResponse.json(
-      { success: false, message: '服务器错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: '服务器错误' }, { status: 500 });
   }
 }
 
-// POST - Submit a new comment (public)
+// POST — submit comment on blog
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id: blogId } = await params;
 
   try {
     const { visitorId, content } = await request.json();
@@ -66,30 +60,27 @@ export async function POST(
     const needsReview = needsModeration(content);
     const status = needsReview ? 'pending' : 'approved';
 
-    // Get IP address
     const forwarded = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip');
-    const ipAddress = forwarded
-      ? forwarded.split(',')[0]
-      : 'unknown';
+    const ipAddress = forwarded ? forwarded.split(',')[0] : 'unknown';
 
     let city = '';
     if (ipAddress && ipAddress !== 'unknown') {
       try {
-        const result = await fetch(
-          `http://ip-api.com/json/${ipAddress}?lang=zh-CN`
-        );
-        if (result.ok) {
-          const data = await result.json();
+        const geo = await fetch(`http://ip-api.com/json/${ipAddress}?lang=zh-CN`);
+        if (geo.ok) {
+          const data = await geo.json();
           city = data.city || '';
         }
-      } catch {}
+      } catch {
+        // ignore geo errors
+      }
     }
 
     const result = await query(
-      `INSERT INTO comments (post_id, visitor_id, ip_address, city, content, status)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO comments (blog_id, visitor_id, ip_address, city, content, status)
+       VALUES ($1::uuid, $2, $3, $4, $5, $6)
        RETURNING id, visitor_id, content, city, status, created_at`,
-      [id, visitorId, ipAddress, city, content.trim(), status]
+      [blogId, visitorId, ipAddress, city, content.trim(), status]
     );
 
     if (needsReview) {
@@ -110,9 +101,6 @@ export async function POST(
     );
   } catch (error) {
     console.error('Comments API error:', error);
-    return NextResponse.json(
-      { success: false, message: '服务器错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: '服务器错误' }, { status: 500 });
   }
 }

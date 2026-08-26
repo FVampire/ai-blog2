@@ -1,8 +1,8 @@
 -- Migration: Add Vector Search Support
 -- 添加向量搜索支持，用于存储文章Embedding向量
 
--- 启用 pgvector 扩展 (需要安装 pgvector 扩展)
--- CREATE EXTENSION IF NOT EXISTS vector;
+-- 启用 pgvector 扩展
+CREATE EXTENSION IF NOT EXISTS vector;
 
 -- 创建文章向量表
 CREATE TABLE IF NOT EXISTS post_vectors (
@@ -17,13 +17,7 @@ CREATE TABLE IF NOT EXISTS post_vectors (
   UNIQUE(post_id)
 );
 
--- 创建向量索引以加速相似度搜索
--- 使用IVFFlat索引，适合高维向量
-CREATE INDEX IF NOT EXISTS idx_post_vectors_content ON post_vectors USING ivfflat (content_vector vector_cosine_ops);
-CREATE INDEX IF NOT EXISTS idx_post_vectors_excerpt ON post_vectors USING ivfflat (excerpt_vector vector_cosine_ops);
-CREATE INDEX IF NOT EXISTS idx_post_vectors_title ON post_vectors USING ivfflat (title_vector vector_cosine_ops);
-
--- 创建普通索引
+-- 向量索引（表有数据后再建 IVFFlat 更稳，此处仅建普通索引）
 CREATE INDEX IF NOT EXISTS idx_post_vectors_post_id ON post_vectors(post_id);
 
 -- 创建更新触发器

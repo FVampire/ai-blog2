@@ -340,4 +340,28 @@ export class SettingsRepository extends BaseRepository {
 
     await Promise.all(updates);
   }
+
+  /**
+   * 获取项目展示设置
+   */
+  static async getProjectDisplaySettings(): Promise<{
+    enabled: boolean;
+    showOnHome: boolean;
+    homeCount: number;
+    intro: string;
+    navLabel: string;
+  }> {
+    const keys = ['projects_enabled', 'projects_show_on_home', 'projects_home_count', 'projects_intro', 'projects_nav_label'];
+    const settings = await this.getSettingsByKeys(keys);
+    const map: Record<string, string> = {};
+    settings.forEach((s) => { map[s.key] = s.value; });
+
+    return {
+      enabled: map['projects_enabled'] !== 'false',
+      showOnHome: map['projects_show_on_home'] !== 'false',
+      homeCount: parseInt(map['projects_home_count']) || 3,
+      intro: map['projects_intro'] || '我的项目与开发成果',
+      navLabel: map['projects_nav_label'] || 'Projects',
+    };
+  }
 }

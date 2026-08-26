@@ -9,55 +9,22 @@ import CommentsSection from '../../../components/CommentsSection';
 import Footer from '../../../components/Footer';
 import Header from '../../../components/Header';
 import TableOfContents from '../../../components/TableOfContents';
-import { query } from '../../../lib/db';
+import { BlogRepository } from '../../../lib/repositories/BlogRepository';
 import ArticleTracker from './ArticleTracker';
-
-interface Tag {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface Post {
-  id: number;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  image_url: string | null;
-  status: string;
-  views: number;
-  published_at: string;
-  author_name: string;
-  tags: Tag[];
-  prev_post_id?: number;
-  next_post_id?: number;
-}
-
-interface NavPost {
-  id: number;
-  title: string;
-  slug: string;
-}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  try {
-    const result = await query(
-      `SELECT p.title, p.excerpt FROM posts p WHERE p.slug = $1 AND p.status = 'published'`,
-      [slug]
-    );
-    if (result.rows.length > 0) {
-      return {
-        title: `${result.rows[0].title} - 五月的火`,
-        description: result.rows[0].excerpt || `Read ${result.rows[0].title} on 五月的火`,
-      };
-    }
-  } catch {}
+  const blog = await BlogRepository.getBlogBySlug(slug);
+  if (blog) {
+    return {
+      title: `${blog.title} - 五月的火`,
+      description: blog.excerpt || `Read ${blog.title} on 五月的火`,
+    };
+  }
   return { title: '文章未找到 - 五月的火' };
 }
 
-function formatDate(dateString: string) {
+function formatDate(dateString: string | Date) {
   const date = new Date(dateString);
   return date.toLocaleDateString('zh-CN', {
     year: 'numeric',
@@ -69,75 +36,10 @@ function formatDate(dateString: string) {
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  let post: Post | null = null;
-  let relatedPosts: Post[] = [];
-  let prevPost: NavPost | null = null;
-  let nextPost: NavPost | null = null;
+  const blog = await BlogRepository.getBlogBySlug(slug);
+  const authorName = await BlogRepository.getAuthorName();
 
-  try {
-    const postResult = await query(
-      `SELECT
-        p.id, p.title, p.slug, p.excerpt, p.content, p.image_url,
-        p.status, p.views, p.prev_post_id, p.next_post_id,
-        TO_CHAR(p.published_at, 'YYYY-MM-DD HH24:MI:SS') as published_at,
-        TO_CHAR(p.created_at, 'YYYY-MM-DD HH24:MI:SS') as created_at,
-        u.username as author_name
-       FROM posts p
-       LEFT JOIN users u ON p.author_id = u.id
-       WHERE p.slug = $1 AND p.status = 'published'`,
-      [slug]
-    );
-
-    if (postResult.rows.length > 0) {
-      post = postResult.rows[0];
-
-      const tagsResult = await query(
-        `SELECT t.id, t.name, t.slug
-         FROM tags t
-         INNER JOIN post_tags pt ON t.id = pt.tag_id
-         WHERE pt.post_id = $1
-         ORDER BY t.name ASC`,
-        [post.id]
-      );
-      post.tags = tagsResult.rows;
-
-      const relatedPostsResult = await query(
-        `SELECT DISTINCT p.id, p.title, p.slug,
-         EXTRACT(EPOCH FROM p.published_at)::INTEGER as published_at
-         FROM posts p
-         INNER JOIN post_tags pt ON p.id = pt.post_id
-         WHERE pt.tag_id IN (
-           SELECT tag_id FROM post_tags WHERE post_id = $1
-         )
-         AND p.id != $1
-         AND p.status = 'published'
-         ORDER BY published_at DESC
-         LIMIT 5`,
-        [post.id]
-      );
-      relatedPosts = relatedPostsResult.rows;
-
-      if (post.prev_post_id) {
-        const prevResult = await query(
-          `SELECT id, title, slug FROM posts WHERE id = $1 AND status = 'published'`,
-          [post.prev_post_id]
-        );
-        if (prevResult.rows.length > 0) prevPost = prevResult.rows[0];
-      }
-
-      if (post.next_post_id) {
-        const nextResult = await query(
-          `SELECT id, title, slug FROM posts WHERE id = $1 AND status = 'published'`,
-          [post.next_post_id]
-        );
-        if (nextResult.rows.length > 0) nextPost = nextResult.rows[0];
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching post:', error);
-  }
-
-  if (!post) {
+  if (!blog) {
     return (
       <div>
         <Header />
@@ -155,9 +57,22 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     );
   }
 
+  const relatedPosts = await BlogRepository.getRelatedBlogs(blog.id);
+  const { prevBlog, nextBlog } = await BlogRepository.getAdjacentBlogs(blog.id);
+
+  const trackerPost = {
+    id: blog.id,
+    title: blog.title,
+    slug: blog.slug,
+    excerpt: blog.excerpt,
+    content: blog.content,
+    author_name: authorName,
+    tags: blog.tags.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
+  };
+
   return (
     <div>
-      <ArticleTracker post={post} />
+      <ArticleTracker post={trackerPost} />
 
       <Header />
 
@@ -166,11 +81,11 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <div className="main-content">
             <div className="blog-section">
               <article className="blog-card">
-                {post.image_url && (
+                {blog.imageUrl && (
                   <div className="blog-image-container">
                     <img
-                      src={post.image_url}
-                      alt={post.title}
+                      src={blog.imageUrl}
+                      alt={blog.title}
                       className="blog-image"
                     />
                   </div>
@@ -178,27 +93,28 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
                 <div className="blog-card-content">
                   <h1 className="blog-title mb-4">
-                    {post.title}
+                    {blog.title}
                   </h1>
 
                   <div className="blog-meta">
                     <span className="meta-text">
-                      {formatDate(post.published_at)}
+                      {formatDate(blog.updatedAt || blog.createdAt)}
                     </span>
-                    <span className="meta-text">作者: {post.author_name}</span>
-                    <span className="meta-text">👁️ {post.views} 次阅读</span>
+                    <span className="meta-text">作者: {authorName}</span>
+                    <span className="meta-text">👁️ {blog.views} 次阅读</span>
                   </div>
 
-                  {post.tags && post.tags.length > 0 && (
-                    <div className="blog-tags">
-                      {post.tags.map((tag, index) => (
+                  {blog.tags.length > 0 && (
+                    <div className="article-tags">
+                      {blog.tags.map((tag) => (
                         <a
                           key={tag.id}
                           href={`/tags/${tag.slug}`}
-                          className={`blog-tag blog-tag-${(index % 3) + 1}`}
+                          className="article-tag"
                           style={{
-                            textDecoration: 'none',
-                            cursor: 'pointer',
+                            backgroundColor: `${tag.color || '#6C757D'}18`,
+                            color: tag.color || '#6C757D',
+                            borderColor: `${tag.color || '#6C757D'}40`,
                           }}
                         >
                           {tag.name}
@@ -212,41 +128,41 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeSlug]}
                     >
-                      {post.content}
+                      {blog.content}
                     </ReactMarkdown>
                   </div>
 
-                  {(prevPost || nextPost) && (
-                    <div className={`post-navigation ${!prevPost || !nextPost ? 'single-nav' : ''}`}>
-                      {prevPost && (
-                        <a href={`/posts/${prevPost.slug}`} className="nav-post prev">
+                  {(prevBlog || nextBlog) && (
+                    <div className={`post-navigation ${!prevBlog || !nextBlog ? 'single-nav' : ''}`}>
+                      {prevBlog && (
+                        <a href={`/posts/${prevBlog.slug}`} className="nav-post prev">
                           <div className="nav-label">← 上一篇</div>
-                          <div className="nav-title">{prevPost.title}</div>
+                          <div className="nav-title">{prevBlog.title}</div>
                         </a>
                       )}
-                      {nextPost && (
-                        <a href={`/posts/${nextPost.slug}`} className="nav-post next">
+                      {nextBlog && (
+                        <a href={`/posts/${nextBlog.slug}`} className="nav-post next">
                           <div className="nav-label">下一篇 →</div>
-                          <div className="nav-title">{nextPost.title}</div>
+                          <div className="nav-title">{nextBlog.title}</div>
                         </a>
                       )}
                     </div>
                   )}
 
-                  <CommentsSection postId={post.id} />
+                  <CommentsSection postId={blog.id} />
                 </div>
               </article>
             </div>
           </div>
 
           <div className="sidebar">
-            <TableOfContents content={post.content} />
+            <TableOfContents content={blog.content} />
 
             {relatedPosts.length > 0 && (
               <div className="card">
                 <h2 className="section-title">相关文章</h2>
                 <div className="flex flex-col gap-3">
-                  {relatedPosts.map(relatedPost => (
+                  {relatedPosts.map((relatedPost) => (
                     <a
                       key={relatedPost.id}
                       href={`/posts/${relatedPost.slug}`}

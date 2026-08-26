@@ -8,7 +8,7 @@ interface BlogPostCardProps {
   excerpt: string;
   slug: string;
   image?: string;
-  tags?: Array<{ name: string; color: string }>;
+  tags?: Array<{ name: string; color: string; slug?: string }>;
 }
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ title, date, author, excerpt, slug, image, tags }) => {
@@ -31,14 +31,19 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ title, date, author, excerp
       <div className="blog-card-body">
         {tags && tags.length > 0 && (
           <div className="blog-card-tags">
-            {tags.slice(0, 3).map((tag, index) => (
-              <span
-                key={index}
+            {tags.slice(0, 3).map((tag) => (
+              <a
+                key={tag.slug || tag.name}
+                href={tag.slug ? `/tags/${tag.slug}` : '#'}
                 className="blog-card-tag"
-                style={{ backgroundColor: `${tag.color}15`, color: tag.color }}
+                style={{
+                  backgroundColor: `${tag.color}18`,
+                  color: tag.color,
+                  border: `1px solid ${tag.color}35`,
+                }}
               >
                 {tag.name}
-              </span>
+              </a>
             ))}
           </div>
         )}

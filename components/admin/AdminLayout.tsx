@@ -59,6 +59,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <span className="sidebar-text">文章管理</span>
           </Link>
 
+          <Link href="/admin/projects" className={`sidebar-link ${pathname?.startsWith('/admin/projects') ? 'active' : ''}`}>
+            <span className="sidebar-icon">🚀</span>
+            <span className="sidebar-text">项目管理</span>
+          </Link>
+
           <Link href="/admin/users" className={`sidebar-link ${isActive('/admin/users') ? 'active' : ''}`}>
             <span className="sidebar-icon">👥</span>
             <span className="sidebar-text">用户管理</span>

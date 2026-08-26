@@ -110,6 +110,7 @@ export default function AdminSettings() {
 
   const tabs = [
     { id: "basic", name: "基本设置", icon: "🌐" }, { id: "display", name: "显示设置", icon: "📱" },
+    { id: "projects", name: "项目展示", icon: "🚀" },
     { id: "comments", name: "评论设置", icon: "💬" }, { id: "users", name: "用户设置", icon: "👥" },
     { id: "upload", name: "上传设置", icon: "📤" }, { id: "social", name: "作者与社交", icon: "👤" },
     { id: "ai", name: "AI 设置", icon: "🤖" }, { id: "vector", name: "向量搜索", icon: "🔍" },
@@ -119,6 +120,7 @@ export default function AdminSettings() {
   const settingGroups: Record<string, string[]> = {
     basic: ["site_name", "site_description", "site_keywords", "site_logo", "site_favicon"],
     display: ["posts_per_page", "comments_per_page", "excerpt_length"],
+    projects: ["projects_enabled", "projects_show_on_home", "projects_home_count", "projects_intro", "projects_nav_label"],
     comments: ["comments_enabled", "comments_moderation", "comments_guest_allowed"],
     users: ["registration_enabled", "default_user_role"],
     upload: ["upload_max_size", "upload_allowed_types"],
@@ -134,6 +136,8 @@ export default function AdminSettings() {
     registration_enabled: "开放注册", default_user_role: "默认用户角色", upload_max_size: "最大上传大小(MB)", upload_allowed_types: "允许的文件类型",
     author_name: "作者名称", author_bio: "作者简介", author_avatar: "作者头像 URL", about_social_links: "社交链接",
     footer_text: "页脚文字", analytics_code: "统计代码",
+    projects_enabled: "启用项目展示", projects_show_on_home: "首页显示精选项目",
+    projects_home_count: "首页项目数量", projects_intro: "项目页介绍文字", projects_nav_label: "导航栏项目名称",
     ai_enabled: "启用AI功能", ai_provider: "AI服务商", ai_api_key: "API密钥", ai_api_base_url: "API地址(可选)", ai_model: "模型名称",
     ai_model_light: "轻量模型名称", ai_embedding_model: "Embedding模型名称", ai_assistant_enabled: "启用AI助手", ai_assistant_name: "助手名称",
     ai_assistant_welcome: "欢迎语", ai_assistant_system_prompt: "系统提示词",

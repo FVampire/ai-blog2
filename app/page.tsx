@@ -8,9 +8,11 @@ import AuthorBio from "../components/AuthorBio";
 import BlogSection from "../components/BlogSection";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import ProjectsSection from "../components/ProjectsSection";
 import SearchWidget from "../components/SearchWidget";
 import TagCloud from "../components/TagCloud";
-import { PostRepository } from "../lib/repositories/PostRepository";
+import { BlogRepository } from "../lib/repositories/BlogRepository";
+import { ProjectRepository } from "../lib/repositories/ProjectRepository";
 import { SettingsRepository } from "../lib/repositories/SettingsRepository";
 
 interface Post {
@@ -62,7 +64,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     currentPage = page;
     const postsPerPage = 6;
 
-    const result = await PostRepository.getPublicPosts({ page, limit: postsPerPage });
+    const result = await BlogRepository.getPublicBlogs({ page, limit: postsPerPage });
+    const authorName = await BlogRepository.getAuthorName();
 
     totalPosts = result.total;
     totalPages = result.totalPages;
@@ -70,7 +73,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     posts = result.data.map((row) => ({
       id: row.id,
       title: row.title,
-      date: new Date(row.publishedAt as any).toLocaleDateString("en-US", {
+      date: new Date((row.updatedAt || row.createdAt) as Date).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -79,14 +82,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       excerpt: row.excerpt,
       slug: row.slug,
       image: row.imageUrl || "",
-      tags: Array.isArray(row.tags) ? row.tags.map((t: any) =>
-        typeof t === 'string' ? { name: t, color: '#6C757D' } : { name: t.name, color: t.color || '#6C757D' }
-      ) : [],
+      tags: Array.isArray(row.tags) ? row.tags.map((t: { name: string; slug?: string; color?: string }) => ({
+        name: t.name,
+        slug: t.slug,
+        color: t.color || '#6C757D',
+      })) : [],
     }));
 
     const aboutSettings = await SettingsRepository.getAboutSettings();
     authorSettings = {
-      name: aboutSettings.authorName,
+      name: authorName || aboutSettings.authorName,
       bio: aboutSettings.authorBio,
       avatar: undefined,
       socialLinks: aboutSettings.socialLinks.map((link) => ({
@@ -99,13 +104,48 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     console.error("Error fetching posts:", error);
   }
 
+  let featuredProjects: Awaited<ReturnType<typeof ProjectRepository.getAllProjects>> = [];
+  let projectSettings = {
+    showOnHome: true,
+    homeCount: 3,
+    intro: "我的项目与开发成果",
+    navLabel: "Projects",
+  };
+
+  try {
+    projectSettings = await SettingsRepository.getProjectDisplaySettings();
+    if (projectSettings.showOnHome) {
+      const allFeatured = await ProjectRepository.getAllProjects({ featured: true, status: 'active' });
+      featuredProjects = allFeatured.slice(0, projectSettings.homeCount);
+      if (featuredProjects.length < projectSettings.homeCount) {
+        const rest = await ProjectRepository.getAllProjects({ status: 'active' });
+        const ids = new Set(featuredProjects.map((p) => p.id));
+        for (const p of rest) {
+          if (!ids.has(p.id) && featuredProjects.length < projectSettings.homeCount) {
+            featuredProjects.push(p);
+            ids.add(p.id);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+  }
+
   return (
     <div>
-      <Header />
+      <Header projectsNavLabel={projectSettings.navLabel} projectsEnabled={projectSettings.enabled} />
 
       <div className="container">
         <div className="content-wrapper">
           <div className="main-content">
+            {projectSettings.showOnHome && featuredProjects.length > 0 && (
+              <ProjectsSection
+                projects={featuredProjects}
+                title={projectSettings.navLabel}
+                intro={projectSettings.intro}
+              />
+            )}
             <BlogSection posts={posts} currentPage={currentPage} totalPages={totalPages} />
           </div>
 

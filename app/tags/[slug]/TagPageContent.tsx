@@ -9,18 +9,18 @@ import Header from '../../../components/Header';
 import TagCloud from '../../../components/TagCloud';
 
 interface Post {
-  id: number;
+  id: string;
   title: string;
   date: string;
   author: string;
   excerpt: string;
   slug: string;
   image: string;
-  tags: Array<{ name: string; color: string }>;
+  tags: Array<{ name: string; color: string; slug?: string }>;
 }
 
 interface Tag {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   post_count: number;
