@@ -1,0 +1,31 @@
+#!/bin/bash
+# Git post-receive — bare 仓库收到 push 后部署 ~/pencil-blog
+# 安装: bash scripts/install-pencil-blog-hook.sh
+
+set -euo pipefail
+
+export PATH="/home/ubuntu/.nvm/versions/node/v21.5.0/bin:/home/ubuntu/.local/share/pnpm:/usr/bin:/bin"
+
+BARE_REPO="/home/ubuntu/repos/pencil-blog.git"
+DEPLOY_DIR="/home/ubuntu/pencil-blog"
+BRANCH="master"
+LOG_FILE="${DEPLOY_DIR}/deploy.log"
+
+while read -r oldrev newrev refname; do
+  if [[ "$refname" == "refs/heads/$BRANCH" ]]; then
+    echo "==> Push to $BRANCH, deploying to $DEPLOY_DIR ..."
+    {
+      echo "[$(date)] Deploy triggered ($oldrev -> $newrev)"
+      git --git-dir="$BARE_REPO" --work-tree="$DEPLOY_DIR" checkout -f "$BRANCH"
+      cd "$DEPLOY_DIR"
+      export APP_DIR="$DEPLOY_DIR"
+      export BRANCH="$BRANCH"
+      export SKIP_GIT_PULL=1
+      bash scripts/deploy-pencil-blog.sh
+      echo "[$(date)] Deploy finished"
+    } >> "$LOG_FILE" 2>&1
+    echo "==> Done. Log: $LOG_FILE"
+  else
+    echo "==> Ignored ref: $refname (only deploy $BRANCH)"
+  fi
+done
