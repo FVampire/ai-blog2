@@ -15,6 +15,7 @@ const SuggestionChips: React.FC<SuggestionChipsProps> = ({ suggestions, onSend, 
       <div className="suggestions-list">
         {suggestions.map((suggestion, index) => (
           <button
+            type="button"
             key={index}
             className="suggestion-chip"
             onClick={() => onSend(suggestion)}

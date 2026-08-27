@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { CloseIcon } from './Icons';
 import type { MCPServer, KnowledgeBase } from '../../../types/ai-chat';
 
 interface OptionsPanelProps {
@@ -37,12 +38,11 @@ const OptionsPanel: React.FC<OptionsPanelProps> = ({
     <div className="ai-options-panel">
       <div className="ai-options-header">
         <span>选项设置</span>
-        <button className="ai-options-close" onClick={onClose}>
-          &#x2715;
+        <button type="button" className="ai-options-close" onClick={onClose} aria-label="关闭选项">
+          <CloseIcon size={14} />
         </button>
       </div>
       <div className="ai-options-content">
-        {/* MCP 开关 */}
         {mcpEnabled && (
           <div className="ai-option-item">
             <div className="ai-option-info">
@@ -50,21 +50,22 @@ const OptionsPanel: React.FC<OptionsPanelProps> = ({
               <span className="ai-option-desc">启用 MCP 扩展功能</span>
             </div>
             <button
+              type="button"
               className={`ai-toggle-btn ${useMCP ? 'active' : ''}`}
               onClick={onToggleMCP}
             >
-              {useMCP ? 'ON' : 'OFF'}
+              {useMCP ? '开' : '关'}
             </button>
           </div>
         )}
 
-        {/* MCP 服务器选择 */}
         {mcpEnabled && mcpAllowUserSelect && useMCP && mcpServers.length > 0 && (
           <div className="ai-option-item ai-knowledge-base">
             <span className="ai-option-label">MCP 服务器</span>
             <div className="ai-knowledge-list">
               {mcpServers.map((server) => (
                 <button
+                  type="button"
                   key={server.id}
                   className={`ai-knowledge-chip ${selectedMCP === server.id ? 'active' : ''}`}
                   onClick={() => onSelectMCP(selectedMCP === server.id ? null : server.id)}
@@ -77,12 +78,12 @@ const OptionsPanel: React.FC<OptionsPanelProps> = ({
           </div>
         )}
 
-        {/* 知识库选择 */}
         <div className="ai-option-item ai-knowledge-base">
           <span className="ai-option-label">知识库</span>
           <div className="ai-knowledge-list">
             {knowledgeBases.map((kb) => (
               <button
+                type="button"
                 key={kb.id}
                 className={`ai-knowledge-chip ${selectedKnowledgeBase === kb.id ? 'active' : ''}`}
                 onClick={() => onSelectKnowledgeBase(kb.id)}

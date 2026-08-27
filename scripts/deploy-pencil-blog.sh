@@ -4,8 +4,10 @@
 
 set -eu
 
-export PATH="/home/ubuntu/.nvm/versions/node/v21.5.0/bin:/home/ubuntu/.local/share/pnpm:$PATH"
-APP_DIR="${APP_DIR:-$HOME/pencil-blog}"
+export PATH="/home/ubuntu/.nvm/versions/node/v21.5.0/bin:/home/ubuntu/.local/share/pnpm:/usr/bin:/bin"
+export CI=true
+PM2="/home/ubuntu/.local/share/pnpm/global/5/node_modules/pm2/bin/pm2"
+APP_DIR="${APP_DIR:-/home/ubuntu/pencil-blog}"
 BRANCH="${BRANCH:-master}"
 
 cd "$APP_DIR"
@@ -36,12 +38,12 @@ echo "Building ..."
 pnpm build
 
 echo "Restarting PM2 ..."
-if pm2 describe blog >/dev/null 2>&1; then
-  pm2 restart ecosystem.config.js --env production
+if "$PM2" describe blog >/dev/null 2>&1; then
+  "$PM2" restart ecosystem.config.js --env production
 else
-  pm2 start ecosystem.config.js --env production
+  "$PM2" start ecosystem.config.js --env production
 fi
-pm2 save --force
-pm2 status
+"$PM2" save --force
+"$PM2" status
 
 echo "=== Deploy complete $(date) ==="

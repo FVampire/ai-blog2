@@ -1,15 +1,19 @@
-import React from 'react';
+'use client';
 
+import React, { useEffect } from 'react';
+
+import { SendIcon, SettingsIcon, StopIcon } from './Icons';
 import type { Command } from '../../../types/ai-chat';
 
 interface ChatInputProps {
   input: string;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onSend: () => void;
+  onStop?: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   loading: boolean;
   isStreaming: boolean;
-  inputRef: React.RefObject<HTMLInputElement>;
+  inputRef: React.RefObject<HTMLTextAreaElement | null>;
   showCommandHints: boolean;
   filteredCommands: Command[];
   selectedCommandIndex: number;
@@ -23,6 +27,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   input,
   onInputChange,
   onSend,
+  onStop,
   onKeyDown,
   loading,
   isStreaming,
@@ -35,23 +40,33 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onToggleOptions,
   hasActiveOptions,
 }) => {
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }, [input, inputRef]);
+
+  const busy = loading || isStreaming;
+  const canSend = !busy && !!input.trim();
+
   return (
     <div className="ai-chat-input">
-      {/* Options button */}
       <button
+        type="button"
         className={`ai-options-toggle ${hasActiveOptions ? 'active' : ''}`}
         onClick={onToggleOptions}
         title="选项设置"
+        aria-label="选项设置"
       >
-        &#x2699;&#xFE0F;
+        <SettingsIcon size={18} />
       </button>
 
-      {/* Command hints dropdown */}
       {showCommandHints && (
         <div className="ai-command-hints">
           <div className="ai-command-hints-header">
             <span>可用命令</span>
-            <span className="ai-command-hints-shortcut">Tab 补全 &middot; &uarr;&darr; 选择 &middot; Esc 关闭</span>
+            <span className="ai-command-hints-shortcut">Tab 补全 · ↑↓ 选择 · Esc 关闭</span>
           </div>
           {filteredCommands.map((cmd, index) => (
             <div
@@ -67,18 +82,38 @@ const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
-      <input
+      <textarea
         ref={inputRef}
-        type="text"
+        rows={1}
         value={input}
         onChange={onInputChange}
         onKeyDown={onKeyDown}
-        placeholder="输入消息... (输入 / 查看命令)"
-        disabled={loading || isStreaming}
+        placeholder="输入消息，Enter 发送"
+        disabled={busy}
+        aria-label="对话输入"
       />
-      <button onClick={onSend} disabled={loading || isStreaming || !input.trim()}>
-        {isStreaming ? '生成中...' : '发送'}
-      </button>
+      {isStreaming ? (
+        <button
+          type="button"
+          className="ai-send-btn stop"
+          onClick={onStop}
+          title="停止生成"
+          aria-label="停止生成"
+        >
+          <StopIcon size={16} />
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="ai-send-btn"
+          onClick={onSend}
+          disabled={!canSend}
+          title="发送"
+          aria-label="发送"
+        >
+          <SendIcon size={16} />
+        </button>
+      )}
     </div>
   );
 };

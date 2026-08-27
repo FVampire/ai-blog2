@@ -1,3 +1,4 @@
+import { createHmac } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { verifyToken, JWTPayload } from './jwt';
@@ -100,9 +101,31 @@ export function requireAgentAuth(request: NextRequest): true | NextResponse {
 }
 
 /**
- * Require deploy webhook secret.
+ * Gitee 签名密钥模式：X-Gitee-Token + X-Gitee-Timestamp
+ * @see https://help.gitee.com/webhook/gitee-webhook-push-data-format
  */
-export function requireDeployAuth(request: NextRequest): true | NextResponse {
+function verifyGiteeSignature(secret: string, timestamp: string, token: string): boolean {
+  try {
+    const ts = Number(timestamp);
+    if (!Number.isFinite(ts)) return false;
+    if (Math.abs(Date.now() - ts) > 3600 * 1000) return false;
+
+    const payload = `${timestamp}\n${secret}`;
+    const sign = createHmac('sha256', secret).update(payload).digest('base64');
+    return token === sign;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Require deploy webhook secret.
+ * Supports: Bearer / X-Deploy-Secret, Gitee 密码 (X-Gitee-Token 或 body.password), Gitee 签名密钥.
+ */
+export function requireDeployAuth(
+  request: NextRequest,
+  body?: Record<string, unknown>
+): true | NextResponse {
   const deploySecret = process.env.DEPLOY_SECRET;
   if (!deploySecret) {
     return NextResponse.json(
@@ -113,15 +136,28 @@ export function requireDeployAuth(request: NextRequest): true | NextResponse {
 
   const authHeader = request.headers.get('authorization');
   const headerSecret = request.headers.get('x-deploy-secret');
+  const giteeToken = request.headers.get('x-gitee-token');
+  const giteeTimestamp = request.headers.get('x-gitee-timestamp');
+  const bodyPassword = typeof body?.password === 'string' ? body.password : null;
 
-  let provided: string | null = null;
-  if (authHeader?.startsWith('Bearer ')) {
-    provided = authHeader.substring(7);
-  } else if (headerSecret) {
-    provided = headerSecret;
+  let authorized = false;
+
+  if (authHeader?.startsWith('Bearer ') && authHeader.substring(7) === deploySecret) {
+    authorized = true;
+  } else if (headerSecret === deploySecret) {
+    authorized = true;
+  } else if (giteeToken === deploySecret || bodyPassword === deploySecret) {
+    // Gitee「密码」模式：明文密码在 X-Gitee-Token 或 JSON body.password
+    authorized = true;
+  } else if (
+    giteeToken &&
+    giteeTimestamp &&
+    verifyGiteeSignature(deploySecret, giteeTimestamp, giteeToken)
+  ) {
+    authorized = true;
   }
 
-  if (!provided || provided !== deploySecret) {
+  if (!authorized) {
     return NextResponse.json(
       { success: false, message: '部署密钥无效' },
       { status: 401 }

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import type { Message, AIConfig, MCPServer, Command } from '../types/ai-chat';
+import { useState, useEffect, useRef, useCallback, type ChangeEvent } from 'react';
+
 import { useArticle } from '../contexts/ArticleContext';
+import type { Message, AIConfig, MCPServer, Command } from '../types/ai-chat';
 
 const AVAILABLE_COMMANDS: Command[] = [
   { name: '/clear', description: '清空当前对话上下文', example: '/clear' },
@@ -35,7 +36,7 @@ export function useAIChat() {
   const [sessionHistory, setSessionHistory] = useState<Message[][]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Get current article context
   const { article } = useArticle();
@@ -135,7 +136,7 @@ export function useAIChat() {
   }, []);
 
   // Handle input change with command hints
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setInput(value);
 

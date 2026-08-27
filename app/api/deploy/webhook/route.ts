@@ -1,67 +1,59 @@
-import { NextRequest, NextResponse } from 'next/server';
-
 import { requireDeployAuth } from '@/lib/auth-middleware-app';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { spawn } from 'child_process';
+import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * Deploy webhook: triggers git pull + build + restart
  *
  * POST /api/deploy/webhook
- * Headers: Authorization: Bearer <DEPLOY_SECRET> or X-Deploy-Secret: <secret>
+ * Auth: Bearer / X-Deploy-Secret, or Gitee 密码/密钥 (X-Gitee-Token)
  */
+function resolveDeployBranch(body: Record<string, unknown>, fallback: string): string {
+  if (typeof body.branch === 'string' && body.branch) return body.branch;
+  if (typeof body.ref === 'string' && body.ref.startsWith('refs/heads/')) {
+    return body.ref.slice('refs/heads/'.length);
+  }
+  return fallback;
+}
+
 export async function POST(request: NextRequest) {
-  const authResult = requireDeployAuth(request);
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+  const authResult = requireDeployAuth(request, body);
   if (authResult instanceof NextResponse) return authResult;
 
   const deployScript = process.env.DEPLOY_SCRIPT || 'scripts/deploy.sh';
-  const startTime = Date.now();
+  const branch = resolveDeployBranch(body, process.env.DEPLOY_BRANCH || 'main');
+  const logFile = `${process.cwd()}/deploy.log`;
 
-  try {
-    const body = await request.json().catch(() => ({}));
-    const branch = body.branch || process.env.DEPLOY_BRANCH || 'main';
+  console.log(`[Deploy] Trigger async deployment for branch: ${branch}`);
 
-    console.log(`[Deploy] Starting deployment from branch: ${branch}`);
+  const appDir = process.cwd();
+  const deployEnv = {
+    ...process.env,
+    HOME: process.env.HOME || '/home/ubuntu',
+    APP_DIR: appDir,
+    DEPLOY_BRANCH: branch,
+    PATH: `/home/ubuntu/.nvm/versions/node/v21.5.0/bin:/home/ubuntu/.local/share/pnpm:/usr/bin:/bin:${process.env.PATH || ''}`,
+    CI: 'true',
+  };
 
-    const { stdout, stderr } = await execAsync(
-      `bash ${deployScript} ${branch}`,
-      {
-        cwd: process.cwd(),
-        timeout: 300000,
-        env: { ...process.env, DEPLOY_BRANCH: branch },
-      }
-    );
+  const child = spawn('bash', ['-lc', `bash ${deployScript} ${branch} >> ${logFile} 2>&1`], {
+    cwd: appDir,
+    detached: true,
+    stdio: 'ignore',
+    env: deployEnv,
+  });
+  child.unref();
 
-    const duration = Date.now() - startTime;
-
-    return NextResponse.json({
-      success: true,
-      message: '部署完成',
-      data: {
-        branch,
-        duration: `${duration}ms`,
-        output: stdout.slice(-2000),
-        warnings: stderr ? stderr.slice(-500) : null,
-      },
-    });
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    console.error('[Deploy] Deployment failed:', error);
-
-    const execError = error as { stdout?: string; stderr?: string; message?: string };
-    return NextResponse.json({
-      success: false,
-      message: '部署失败',
-      data: {
-        duration: `${duration}ms`,
-        error: execError.message,
-        output: execError.stdout?.slice(-2000),
-        stderr: execError.stderr?.slice(-1000),
-      },
-    }, { status: 500 });
-  }
+  return NextResponse.json({
+    success: true,
+    message: '部署已触发，请稍后查看 deploy.log',
+    data: {
+      branch,
+      deployScript,
+      logFile,
+    },
+  });
 }
 
 export async function GET(request: NextRequest) {
