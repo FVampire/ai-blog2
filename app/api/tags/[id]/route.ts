@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth, isAuthError } from '@/lib/auth-middleware-app';
-import { TagLegacyRepository } from '@/lib/repositories/TagLegacyRepository';
+import { TagRepository } from '@/lib/repositories/TagRepository';
 
 export async function PUT(
   request: NextRequest,
@@ -11,6 +11,10 @@ export async function PUT(
   if (isAuthError(authResult)) return authResult;
 
   const { id } = await params;
+  const tagId = parseInt(id, 10);
+  if (Number.isNaN(tagId)) {
+    return NextResponse.json({ success: false, message: '无效的标签ID' }, { status: 400 });
+  }
 
   try {
     const { name, slug, color } = await request.json();
@@ -30,7 +34,7 @@ export async function PUT(
       );
     }
 
-    const tag = await TagLegacyRepository.updateTag(id, {
+    const tag = await TagRepository.updateTag(tagId, {
       name,
       slug,
       color: colorValue,
@@ -57,14 +61,16 @@ export async function DELETE(
   if (isAuthError(authResult)) return authResult;
 
   const { id } = await params;
+  const tagId = parseInt(id, 10);
+  if (Number.isNaN(tagId)) {
+    return NextResponse.json({ success: false, message: '无效的标签ID' }, { status: 400 });
+  }
 
   try {
-    await TagLegacyRepository.deleteTag(id);
+    await TagRepository.deleteTag(tagId);
     return NextResponse.json({ success: true, message: '标签删除成功' });
   } catch (error) {
     console.error('Delete tag error:', error);
-    const message = error instanceof Error ? error.message : '删除标签失败';
-    const status = message === '标签不存在' ? 404 : 500;
-    return NextResponse.json({ success: false, message }, { status });
+    return NextResponse.json({ success: false, message: '删除标签失败' }, { status: 500 });
   }
 }

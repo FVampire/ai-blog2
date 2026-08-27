@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth, isAuthError } from '@/lib/auth-middleware-app';
-import { TagLegacyRepository } from '@/lib/repositories/TagLegacyRepository';
+import { TagRepository } from '@/lib/repositories/TagRepository';
 
 export async function GET() {
   try {
-    const tags = await TagLegacyRepository.getAllTagsWithCount();
-    // Admin UI expects post_count field name
+    const tags = await TagRepository.getAllTagsWithCount();
     const data = tags.map((t) => ({
       id: t.id,
       name: t.name,
@@ -47,7 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tag = await TagLegacyRepository.createTag({ name, slug, color: colorValue });
+    const tag = await TagRepository.createTag({ name, slug, color: colorValue });
     return NextResponse.json(
       { success: true, message: '标签创建成功', data: tag },
       { status: 201 }

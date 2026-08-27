@@ -105,7 +105,7 @@ export class PostRepository extends BaseRepository {
 
     queryText += `
       GROUP BY p.id, u.username
-      ORDER BY p.created_at DESC
+      ORDER BY p.published_at DESC NULLS LAST, p.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
     queryParams.push(limit, offset);
@@ -359,13 +359,50 @@ export class PostRepository extends BaseRepository {
   /**
    * 增加文章浏览量
    */
-  static async incrementViews(id: number): Promise<void> {
-    const repo = await this.getRepo(Post);
-    await repo.createQueryBuilder()
-      .update(Post)
-      .set({ views: () => 'views + 1' })
-      .where('id = :id', { id })
-      .execute();
+  static async incrementViews(id: number): Promise<number> {
+    const ds = await this.getDataSource();
+    const rows = await ds.query(
+      'UPDATE posts SET views = views + 1 WHERE id = $1 RETURNING views',
+      [id]
+    );
+    if (!rows.length) throw new Error('文章不存在');
+    return Number(rows[0].views);
+  }
+
+  static async getAuthorName(): Promise<string> {
+    const ds = await this.getDataSource();
+    const setting = await ds.query(
+      'SELECT value FROM settings WHERE key = $1 LIMIT 1',
+      ['about_author_name']
+    );
+    if (setting[0]?.value) return String(setting[0].value);
+
+    const user = await ds.query(
+      'SELECT username FROM users WHERE role = $1 ORDER BY id LIMIT 1',
+      ['admin']
+    );
+    return user[0]?.username || '五月的火';
+  }
+
+  static async getRelatedPosts(postId: number, limit = 5): Promise<Pick<PostDTO, 'id' | 'title' | 'slug'>[]> {
+    const ds = await this.getDataSource();
+    const rows = await ds.query(
+      `SELECT p.id, p.title, p.slug
+       FROM posts p
+       INNER JOIN post_tags pt ON p.id = pt.post_id
+       WHERE pt.tag_id IN (SELECT tag_id FROM post_tags WHERE post_id = $1)
+         AND p.id != $1
+         AND p.status = 'published'
+       GROUP BY p.id, p.title, p.slug, p.published_at, p.created_at
+       ORDER BY p.published_at DESC NULLS LAST, p.created_at DESC
+       LIMIT $2`,
+      [postId, limit]
+    );
+    return rows.map((r: { id: number; title: string; slug: string }) => ({
+      id: r.id,
+      title: r.title,
+      slug: r.slug,
+    }));
   }
 
   /**

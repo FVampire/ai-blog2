@@ -1,4 +1,4 @@
-import { BlogRepository } from '../../../lib/repositories/BlogRepository';
+import { PostRepository } from '../../../lib/repositories/PostRepository';
 import AdminPostsContent from './AdminPostsContent';
 
 export const metadata = {
@@ -7,7 +7,7 @@ export const metadata = {
 
 export default async function AdminPostsPage() {
   let posts: Array<{
-    id: string;
+    id: number;
     title: string;
     author: string;
     date: string;
@@ -17,17 +17,16 @@ export default async function AdminPostsPage() {
   }> = [];
 
   try {
-    const authorName = await BlogRepository.getAuthorName();
-    const blogs = await BlogRepository.getAllBlogsAdmin();
+    const result = await PostRepository.getAdminPosts({ page: 1, limit: 500 });
 
-    posts = blogs.map((b) => ({
-      id: b.id,
-      title: b.title,
-      author: authorName,
-      date: new Date(b.updatedAt || b.createdAt).toLocaleDateString('zh-CN'),
-      status: b.status,
-      views: b.views,
-      tags: (b as { tagNames?: string[] }).tagNames || [],
+    posts = result.data.map((p) => ({
+      id: p.id,
+      title: p.title,
+      author: p.authorName || 'admin',
+      date: new Date(p.publishedAt || p.createdAt).toLocaleDateString('zh-CN'),
+      status: p.status,
+      views: p.views,
+      tags: p.tags.map((t) => t.name),
     }));
   } catch (error) {
     console.error('Error fetching posts:', error);

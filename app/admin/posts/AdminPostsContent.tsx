@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import AdminLayout from '../../../components/admin/AdminLayout';
 
 interface Post {
-  id: string;
+  id: number;
   title: string;
   author: string;
   date: string;
@@ -20,7 +20,7 @@ export default function AdminPostsContent({ posts, totalPosts }: { posts: Post[]
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
-  const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [publishingId, setPublishingId] = useState<number | null>(null);
 
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -29,9 +29,9 @@ export default function AdminPostsContent({ posts, totalPosts }: { posts: Post[]
     return matchesSearch && matchesFilter;
   });
 
-  const handlePreview = (id: string) => window.open(`/admin/posts/preview/${id}`, '_blank');
+  const handlePreview = (id: number) => window.open(`/admin/posts/preview/${id}`, '_blank');
 
-  const handlePublish = async (id: string) => {
+  const handlePublish = async (id: number) => {
     if (!confirm('确定要发布这篇文章吗？')) return;
     setPublishingId(id);
     try {
@@ -48,7 +48,7 @@ export default function AdminPostsContent({ posts, totalPosts }: { posts: Post[]
     finally { setPublishingId(null); }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (!confirm('确定要删除这篇文章吗？')) return;
     try {
       const token = localStorage.getItem('adminToken');

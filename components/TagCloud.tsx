@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 
 interface Tag {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   color: string;

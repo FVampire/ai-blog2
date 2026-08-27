@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth, isAuthError, getAuthUser } from '@/lib/auth-middleware-app';
-import { BlogRepository } from '@/lib/repositories/BlogRepository';
+import { PostRepository } from '@/lib/repositories/PostRepository';
 import { TagRepository } from '@/lib/repositories/TagRepository';
 
-// GET — public + admin; reads from `blogs` table
 export async function GET(request: NextRequest) {
   const user = getAuthUser(request);
   const searchParams = request.nextUrl.searchParams;
@@ -20,9 +19,9 @@ async function publicGetHandler(searchParams: URLSearchParams) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || undefined;
-    const authorName = await BlogRepository.getAuthorName();
 
-    const result = await BlogRepository.getPublicBlogs({ page, limit, search });
+    const result = await PostRepository.getPublicPosts({ page, limit, search });
+    const fallbackAuthor = await PostRepository.getAuthorName();
 
     const posts = result.data.map((row) => ({
       id: row.id,
@@ -30,13 +29,13 @@ async function publicGetHandler(searchParams: URLSearchParams) {
       slug: row.slug,
       excerpt: row.excerpt,
       image: row.imageUrl || '',
-      author: authorName,
-      date: new Date(row.updatedAt || row.createdAt).toLocaleDateString('en-US', {
+      author: row.authorName || fallbackAuthor,
+      date: new Date(row.publishedAt || Date.now()).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
       }),
-      tags: row.tags.map((t) => ({
+      tags: (row.tags as Array<{ name: string; slug: string; color?: string }>).map((t) => ({
         name: t.name,
         slug: t.slug,
         color: t.color || '#6C757D',
@@ -63,45 +62,32 @@ async function adminGetHandler(searchParams: URLSearchParams) {
   try {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '100');
-    const status = searchParams.get('status');
-    const search = searchParams.get('search')?.toLowerCase();
+    const status = searchParams.get('status') || 'all';
+    const search = searchParams.get('search') || undefined;
 
-    let blogs = await BlogRepository.getAllBlogsAdmin();
-
-    if (status && status !== 'all') {
-      blogs = blogs.filter((b) => b.status === status);
-    }
-    if (search) {
-      blogs = blogs.filter(
-        (b) => b.title.toLowerCase().includes(search) || b.slug.toLowerCase().includes(search)
-      );
-    }
-
-    const total = blogs.length;
-    const offset = (page - 1) * limit;
-    const pageData = blogs.slice(offset, offset + limit);
+    const result = await PostRepository.getAdminPosts({ page, limit, status, search });
 
     return NextResponse.json({
       success: true,
       data: {
-        posts: pageData.map((b) => ({
-          id: b.id,
-          title: b.title,
-          slug: b.slug,
-          excerpt: b.excerpt,
-          imageUrl: b.imageUrl,
-          status: b.status,
-          views: b.views,
-          author: { id: 0, name: 'admin' },
-          tags: (b as BlogWithTags).tagNames || [],
-          createdAt: b.createdAt,
-          publishedAt: b.published ? b.updatedAt : null,
+        posts: result.data.map((p) => ({
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+          excerpt: p.excerpt,
+          imageUrl: p.imageUrl,
+          status: p.status,
+          views: p.views,
+          author: { id: p.authorId, name: p.authorName || 'admin' },
+          tags: p.tags.map((t) => t.name),
+          createdAt: p.createdAt,
+          publishedAt: p.publishedAt,
         })),
         pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit) || 1,
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: result.totalPages,
         },
       },
     });
@@ -111,18 +97,14 @@ async function adminGetHandler(searchParams: URLSearchParams) {
   }
 }
 
-type BlogWithTags = Awaited<ReturnType<typeof BlogRepository.getAllBlogsAdmin>>[number] & {
-  tagNames?: string[];
-};
-
-// POST — create in `blogs` table
 export async function POST(request: NextRequest) {
   const authResult = requireAuth(request);
   if (isAuthError(authResult)) return authResult;
 
   try {
     const body = await request.json();
-    const { title, slug, excerpt, content, imageUrl, status, tagIds, tags } = body;
+    const { title, slug, excerpt, content, imageUrl, status, tagIds } = body;
+    const authorId = authResult.user.userId;
 
     if (!title || !slug) {
       return NextResponse.json(
@@ -131,24 +113,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let tagNames: string[] = tags || [];
-    if (tagIds?.length) {
-      const allTags = await TagRepository.getAllTags();
-      tagNames = tagIds.map((id: number) => allTags.find((t) => t.id === id)?.name).filter(Boolean) as string[];
-    }
-
-    const blog = await BlogRepository.createBlog({
+    const post = await PostRepository.createPost({
       title,
       slug,
       excerpt,
       content,
       imageUrl,
-      published: status === 'published',
-      tagNames,
+      status: status || 'draft',
+      authorId,
+      tagIds,
     });
 
     return NextResponse.json(
-      { success: true, message: '文章创建成功', data: { post: blog } },
+      { success: true, message: '文章创建成功', data: { post } },
       { status: 201 }
     );
   } catch (error) {

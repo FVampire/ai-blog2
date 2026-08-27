@@ -1,10 +1,10 @@
-import { TagLegacyRepository } from '../../../lib/repositories/TagLegacyRepository';
-import { BlogRepository } from '../../../lib/repositories/BlogRepository';
+import { TagRepository } from '../../../lib/repositories/TagRepository';
+import { PostRepository } from '../../../lib/repositories/PostRepository';
 import TagPageContent from './TagPageContent';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const tag = await TagLegacyRepository.getTagBySlug(slug);
+  const tag = await TagRepository.getTagBySlug(slug);
   if (tag) {
     return {
       title: `${tag.name} - 五月的火`,
@@ -25,26 +25,26 @@ export default async function TagSlugPage({
   const page = parseInt((await searchParams).page || '1') || 1;
   const postsPerPage = 6;
 
-  const result = await TagLegacyRepository.getBlogsByTagSlug(slug, page, postsPerPage);
-  const authorName = await BlogRepository.getAuthorName();
+  const result = await TagRepository.getPostsByTagSlug(slug, page, postsPerPage);
+  const authorName = await PostRepository.getAuthorName();
 
   if (!result) {
     return <TagPageContent tag={null as any} posts={[]} currentPage={1} totalPages={0} />;
   }
 
-  const posts = result.blogs.map((b) => ({
-    id: b.id,
-    title: b.title,
-    date: new Date(b.updatedAt).toLocaleDateString('zh-CN', {
+  const posts = result.posts.map((p) => ({
+    id: p.id,
+    title: p.title,
+    date: new Date(p.publishedAt || Date.now()).toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     }),
     author: authorName,
-    excerpt: b.excerpt,
-    slug: b.slug,
-    image: b.imageUrl,
-    tags: b.tags.map((t) => ({
+    excerpt: p.excerpt,
+    slug: p.slug,
+    image: p.imageUrl,
+    tags: p.tags.map((t) => ({
       name: t.name,
       slug: t.slug,
       color: t.color || '#6C757D',

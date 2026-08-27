@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 
-import { TagLegacyRepository } from '@/lib/repositories/TagLegacyRepository';
+import { TagRepository } from '@/lib/repositories/TagRepository';
 
 export async function GET() {
   try {
-    const tags = await TagLegacyRepository.getPopularTags(10);
+    const tags = await TagRepository.getPopularTags(10);
     const data = tags.map((t) => ({
       id: t.id,
       name: t.name,

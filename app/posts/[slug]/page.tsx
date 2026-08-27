@@ -9,16 +9,16 @@ import CommentsSection from '../../../components/CommentsSection';
 import Footer from '../../../components/Footer';
 import Header from '../../../components/Header';
 import TableOfContents from '../../../components/TableOfContents';
-import { BlogRepository } from '../../../lib/repositories/BlogRepository';
+import { PostRepository } from '../../../lib/repositories/PostRepository';
 import ArticleTracker from './ArticleTracker';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const blog = await BlogRepository.getBlogBySlug(slug);
-  if (blog) {
+  const post = await PostRepository.getPostBySlug(slug);
+  if (post) {
     return {
-      title: `${blog.title} - 五月的火`,
-      description: blog.excerpt || `Read ${blog.title} on 五月的火`,
+      title: `${post.title} - 五月的火`,
+      description: post.excerpt || `Read ${post.title} on 五月的火`,
     };
   }
   return { title: '文章未找到 - 五月的火' };
@@ -36,10 +36,10 @@ function formatDate(dateString: string | Date) {
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  const blog = await BlogRepository.getBlogBySlug(slug);
-  const authorName = await BlogRepository.getAuthorName();
+  const post = await PostRepository.getPostBySlug(slug);
+  const authorName = post?.authorName || await PostRepository.getAuthorName();
 
-  if (!blog) {
+  if (!post) {
     return (
       <div>
         <Header />
@@ -57,17 +57,17 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     );
   }
 
-  const relatedPosts = await BlogRepository.getRelatedBlogs(blog.id);
-  const { prevBlog, nextBlog } = await BlogRepository.getAdjacentBlogs(blog.id);
+  const relatedPosts = await PostRepository.getRelatedPosts(post.id);
+  const { prevPost, nextPost } = await PostRepository.getAdjacentPosts(post.id);
 
   const trackerPost = {
-    id: blog.id,
-    title: blog.title,
-    slug: blog.slug,
-    excerpt: blog.excerpt,
-    content: blog.content,
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    content: post.content,
     author_name: authorName,
-    tags: blog.tags.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
+    tags: post.tags.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
   };
 
   return (
@@ -81,32 +81,30 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <div className="main-content">
             <div className="blog-section">
               <article className="blog-card">
-                {blog.imageUrl && (
+                {post.imageUrl && (
                   <div className="blog-image-container">
                     <img
-                      src={blog.imageUrl}
-                      alt={blog.title}
+                      src={post.imageUrl}
+                      alt={post.title}
                       className="blog-image"
                     />
                   </div>
                 )}
 
                 <div className="blog-card-content">
-                  <h1 className="blog-title mb-4">
-                    {blog.title}
-                  </h1>
+                  <h1 className="blog-title mb-4">{post.title}</h1>
 
                   <div className="blog-meta">
                     <span className="meta-text">
-                      {formatDate(blog.updatedAt || blog.createdAt)}
+                      {formatDate(post.publishedAt || post.createdAt)}
                     </span>
                     <span className="meta-text">作者: {authorName}</span>
-                    <span className="meta-text">👁️ {blog.views} 次阅读</span>
+                    <span className="meta-text">👁️ {post.views} 次阅读</span>
                   </div>
 
-                  {blog.tags.length > 0 && (
+                  {post.tags.length > 0 && (
                     <div className="article-tags">
-                      {blog.tags.map((tag) => (
+                      {post.tags.map((tag) => (
                         <a
                           key={tag.id}
                           href={`/tags/${tag.slug}`}
@@ -128,35 +126,35 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeSlug]}
                     >
-                      {blog.content}
+                      {post.content}
                     </ReactMarkdown>
                   </div>
 
-                  {(prevBlog || nextBlog) && (
-                    <div className={`post-navigation ${!prevBlog || !nextBlog ? 'single-nav' : ''}`}>
-                      {prevBlog && (
-                        <a href={`/posts/${prevBlog.slug}`} className="nav-post prev">
+                  {(prevPost || nextPost) && (
+                    <div className={`post-navigation ${!prevPost || !nextPost ? 'single-nav' : ''}`}>
+                      {prevPost && (
+                        <a href={`/posts/${prevPost.slug}`} className="nav-post prev">
                           <div className="nav-label">← 上一篇</div>
-                          <div className="nav-title">{prevBlog.title}</div>
+                          <div className="nav-title">{prevPost.title}</div>
                         </a>
                       )}
-                      {nextBlog && (
-                        <a href={`/posts/${nextBlog.slug}`} className="nav-post next">
+                      {nextPost && (
+                        <a href={`/posts/${nextPost.slug}`} className="nav-post next">
                           <div className="nav-label">下一篇 →</div>
-                          <div className="nav-title">{nextBlog.title}</div>
+                          <div className="nav-title">{nextPost.title}</div>
                         </a>
                       )}
                     </div>
                   )}
 
-                  <CommentsSection postId={blog.id} />
+                  <CommentsSection postId={post.id} />
                 </div>
               </article>
             </div>
           </div>
 
           <div className="sidebar">
-            <TableOfContents content={blog.content} />
+            <TableOfContents content={post.content} />
 
             {relatedPosts.length > 0 && (
               <div className="card">

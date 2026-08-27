@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAgentAuth } from '@/lib/auth-middleware-app';
-import { generateSlug } from '@/lib/agent-utils';
-import { BlogRepository } from '@/lib/repositories/BlogRepository';
+import { generateSlug, resolveTagIds } from '@/lib/agent-utils';
+import { PostRepository } from '@/lib/repositories/PostRepository';
+import { TagRepository } from '@/lib/repositories/TagRepository';
 import { query } from '@/lib/db';
 
-/**
- * Agent API: One-click blog publishing
- *
- * POST /api/agent/publish
- * Headers: Authorization: Bearer <AGENT_API_KEY> or X-Agent-Key: <key>
- */
+const DEFAULT_AUTHOR_ID = parseInt(process.env.AGENT_AUTHOR_ID || '1', 10);
+
 export async function POST(request: NextRequest) {
   const authResult = requireAgentAuth(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -35,29 +32,34 @@ export async function POST(request: NextRequest) {
     }
 
     const slug = customSlug || generateSlug(title);
-    const tagNames = Array.isArray(tags) ? tags : [];
 
-    const blog = await BlogRepository.createBlog({
+    let tagIds: number[] = [];
+    if (tags.length > 0) {
+      tagIds = await resolveTagIds(tags, TagRepository, TagRepository.createTag);
+    }
+
+    const post = await PostRepository.createPost({
       title,
       slug,
       excerpt: excerpt || title.slice(0, 200),
       content: content || '',
       imageUrl: imageUrl || '',
-      published: status === 'published',
-      tagNames,
+      status: status as 'draft' | 'published' | 'archived',
+      authorId: DEFAULT_AUTHOR_ID,
+      tagIds,
     });
 
     const siteUrl = process.env.SITE_URL || '';
-    const postUrl = `/posts/${blog.slug}`;
+    const postUrl = `/posts/${post.slug}`;
 
     return NextResponse.json({
       success: true,
       message: status === 'published' ? '文章已发布' : '文章已保存为草稿',
       data: {
-        id: blog.id,
-        slug: blog.slug,
-        title: blog.title,
-        status: blog.status,
+        id: post.id,
+        slug: post.slug,
+        title: post.title,
+        status: post.status,
         url: postUrl,
         fullUrl: siteUrl ? `${siteUrl}${postUrl}` : postUrl,
       },
@@ -78,8 +80,8 @@ export async function GET(request: NextRequest) {
 
   let postCount = 0;
   try {
-    const result = await query('SELECT COUNT(*) FROM blogs WHERE published = true');
-    postCount = parseInt(result.rows[0].count as string);
+    const result = await query('SELECT COUNT(*) FROM posts WHERE status = $1', ['published']);
+    postCount = parseInt(result.rows[0].count as string, 10);
   } catch {
     // DB may not be ready
   }

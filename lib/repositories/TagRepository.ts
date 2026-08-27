@@ -93,7 +93,7 @@ export class TagRepository extends BaseRepository {
   /**
    * 创建标签
    */
-  static async createTag(data: { name: string; slug: string }): Promise<TagDTO> {
+  static async createTag(data: { name: string; slug: string; color?: string }): Promise<TagDTO> {
     const repo = await this.getRepo(Tag);
 
     const existing = await repo.createQueryBuilder('t')
@@ -103,7 +103,11 @@ export class TagRepository extends BaseRepository {
       throw new Error('标签名称或slug已存在');
     }
 
-    const tag = repo.create({ name: data.name, slug: data.slug });
+    const tag = repo.create({
+      name: data.name,
+      slug: data.slug,
+      color: data.color || '#FF6B6B',
+    });
     const saved = await repo.save(tag);
     return toDTO(saved);
   }
@@ -111,7 +115,10 @@ export class TagRepository extends BaseRepository {
   /**
    * 更新标签
    */
-  static async updateTag(id: number, data: { name?: string; slug?: string }): Promise<TagDTO> {
+  static async updateTag(
+    id: number,
+    data: { name?: string; slug?: string; color?: string }
+  ): Promise<TagDTO> {
     const repo = await this.getRepo(Tag);
 
     const tag = await repo.findOne({ where: { id } });
@@ -119,6 +126,7 @@ export class TagRepository extends BaseRepository {
 
     if (data.name !== undefined) tag.name = data.name;
     if (data.slug !== undefined) tag.slug = data.slug;
+    if (data.color !== undefined) tag.color = data.color;
 
     const saved = await repo.save(tag);
     return toDTO(saved);
@@ -153,24 +161,117 @@ export class TagRepository extends BaseRepository {
   /**
    * 获取热门标签
    */
-  static async getPopularTags(limit: number = 10): Promise<TagDTO[]> {
+  static async getPopularTags(limit: number = 10): Promise<Array<TagDTO & { postCount: number }>> {
     const ds = await this.getDataSource();
     const result = await ds.query(`
-      SELECT t.id, t.name, t.slug, t.color, t.created_at, t.updated_at
+      SELECT t.id, t.name, t.slug, t.color, t.created_at, t.updated_at,
+             COUNT(DISTINCT p.id) as post_count
       FROM tags t
-      LEFT JOIN post_tags pt ON t.id = pt.tag_id
+      INNER JOIN post_tags pt ON t.id = pt.tag_id
+      INNER JOIN posts p ON pt.post_id = p.id AND p.status = 'published'
       GROUP BY t.id
-      ORDER BY COUNT(pt.post_id) DESC
+      ORDER BY post_count DESC
       LIMIT $1
     `, [limit]);
 
-    return result.map((row: any) => ({
-      id: row.id,
-      name: row.name,
-      slug: row.slug,
-      color: row.color,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
+    return result.map((row: Record<string, unknown>) => ({
+      id: row.id as number,
+      name: row.name as string,
+      slug: row.slug as string,
+      color: row.color as string | undefined,
+      createdAt: row.created_at as Date,
+      updatedAt: row.updated_at as Date,
+      postCount: parseInt(String(row.post_count), 10),
     }));
+  }
+
+  static async getAllTagsWithCount(): Promise<Array<TagDTO & { postCount: number }>> {
+    const ds = await this.getDataSource();
+    const result = await ds.query(`
+      SELECT t.id, t.name, t.slug, t.color, t.created_at, t.updated_at,
+             COUNT(p.id) FILTER (WHERE p.status = 'published') as post_count
+      FROM tags t
+      LEFT JOIN post_tags pt ON t.id = pt.tag_id
+      LEFT JOIN posts p ON pt.post_id = p.id
+      GROUP BY t.id
+      ORDER BY t.name ASC
+    `);
+
+    return result.map((row: Record<string, unknown>) => ({
+      id: row.id as number,
+      name: row.name as string,
+      slug: row.slug as string,
+      color: row.color as string | undefined,
+      createdAt: row.created_at as Date,
+      updatedAt: row.updated_at as Date,
+      postCount: parseInt(String(row.post_count), 10),
+    }));
+  }
+
+  static async getPostsByTagSlug(
+    slug: string,
+    page = 1,
+    limit = 6
+  ): Promise<{
+    tag: TagDTO & { postCount: number };
+    posts: Array<{
+      id: number;
+      title: string;
+      slug: string;
+      excerpt: string;
+      imageUrl: string;
+      publishedAt: Date | null;
+      tags: Array<{ name: string; slug: string; color: string }>;
+    }>;
+    total: number;
+    totalPages: number;
+  } | null> {
+    const tag = await this.getTagBySlug(slug);
+    if (!tag) return null;
+
+    const ds = await this.getDataSource();
+    const offset = (page - 1) * limit;
+
+    const countResult = await ds.query(`
+      SELECT COUNT(DISTINCT p.id) as count
+      FROM posts p
+      INNER JOIN post_tags pt ON p.id = pt.post_id
+      INNER JOIN tags t ON pt.tag_id = t.id AND t.slug = $1
+      WHERE p.status = 'published'
+    `, [slug]);
+    const total = parseInt(countResult[0].count as string, 10);
+
+    const rows = await ds.query(`
+      SELECT p.id, p.title, p.slug, p.excerpt, p.image_url, p.published_at,
+             COALESCE(
+               json_agg(
+                 json_build_object('name', t2.name, 'slug', t2.slug, 'color', t2.color)
+               ) FILTER (WHERE t2.id IS NOT NULL), '[]'
+             ) as tags
+      FROM posts p
+      INNER JOIN post_tags pt ON p.id = pt.post_id
+      INNER JOIN tags t ON pt.tag_id = t.id AND t.slug = $1
+      LEFT JOIN post_tags pt2 ON p.id = pt2.post_id
+      LEFT JOIN tags t2 ON pt2.tag_id = t2.id
+      WHERE p.status = 'published'
+      GROUP BY p.id
+      ORDER BY p.published_at DESC NULLS LAST, p.created_at DESC
+      LIMIT $2 OFFSET $3
+    `, [slug, limit, offset]);
+
+    return {
+      tag: { ...tag, postCount: total },
+      posts: rows.map((r: Record<string, unknown>) => ({
+        id: r.id as number,
+        title: r.title as string,
+        slug: r.slug as string,
+        excerpt: (r.excerpt as string) || '',
+        imageUrl: (r.image_url as string) || '',
+        publishedAt: r.published_at as Date | null,
+        tags: (r.tags as Array<{ name: string; slug: string; color: string }>) || [],
+      })),
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
   }
 }

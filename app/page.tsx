@@ -11,7 +11,7 @@ import Header from "../components/Header";
 import ProjectsSection from "../components/ProjectsSection";
 import SearchWidget from "../components/SearchWidget";
 import TagCloud from "../components/TagCloud";
-import { BlogRepository } from "../lib/repositories/BlogRepository";
+import { PostRepository } from "../lib/repositories/PostRepository";
 import { ProjectRepository } from "../lib/repositories/ProjectRepository";
 import { SettingsRepository } from "../lib/repositories/SettingsRepository";
 
@@ -64,8 +64,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     currentPage = page;
     const postsPerPage = 6;
 
-    const result = await BlogRepository.getPublicBlogs({ page, limit: postsPerPage });
-    const authorName = await BlogRepository.getAuthorName();
+    const result = await PostRepository.getPublicPosts({ page, limit: postsPerPage });
+    const authorName = await PostRepository.getAuthorName();
 
     totalPosts = result.total;
     totalPages = result.totalPages;
@@ -73,16 +73,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     posts = result.data.map((row) => ({
       id: row.id,
       title: row.title,
-      date: new Date((row.updatedAt || row.createdAt) as Date).toLocaleDateString("en-US", {
+      date: new Date(row.publishedAt || Date.now()).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
       }),
-      author: row.authorName || "",
+      author: row.authorName || authorName,
       excerpt: row.excerpt,
       slug: row.slug,
       image: row.imageUrl || "",
-      tags: Array.isArray(row.tags) ? row.tags.map((t: { name: string; slug?: string; color?: string }) => ({
+      tags: Array.isArray(row.tags) ? (row.tags as Array<{ name: string; slug?: string; color?: string }>).map((t) => ({
         name: t.name,
         slug: t.slug,
         color: t.color || '#6C757D',

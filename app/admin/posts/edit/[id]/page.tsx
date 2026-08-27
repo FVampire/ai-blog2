@@ -10,7 +10,7 @@ import EnhancedImageUpload from '../../../../../components/EnhancedImageUpload';
 import MarkdownEditor from '../../../../../components/MarkdownEditor';
 
 interface Tag { id: number; name: string; slug: string; }
-interface PostOption { id: string; title: string; }
+interface PostOption { id: number; title: string; }
 
 const editPostStyles = `
   .vector-section { background: #f9fafb; border-radius: 8px; padding: 16px; border: 1px solid #e5e7eb; }
@@ -46,7 +46,7 @@ export default function EditPost() {
   const [formData, setFormData] = useState({
     title: '', slug: '', excerpt: '', content: '', imageUrl: '',
     status: 'draft' as 'draft' | 'published' | 'archived',
-    tagIds: [] as number[], prevPostId: null as string | null, nextPostId: null as string | null,
+    tagIds: [] as number[], prevPostId: null as number | null, nextPostId: null as number | null,
   });
 
   const loadPost = async () => {
@@ -84,8 +84,8 @@ export default function EditPost() {
       const data = await response.json();
       if (data.success) {
         const posts = data.data.posts
-          .filter((p: { id: string }) => p.id !== id)
-          .map((p: { id: string; title: string }) => ({ id: p.id, title: p.title }));
+          .filter((p: { id: number }) => p.id !== Number(id))
+          .map((p: { id: number; title: string }) => ({ id: p.id, title: p.title }));
         setAvailablePosts(posts);
       }
     } catch (error) { console.error('Load posts error:', error); }
@@ -181,12 +181,12 @@ export default function EditPost() {
           </div>
           <div className="form-row">
             <div className="form-group" style={{ flex: 1 }}><label>上一篇文章</label>
-              <select value={formData.prevPostId || ''} onChange={(e) => setFormData({ ...formData, prevPostId: e.target.value || null })}>
+              <select value={formData.prevPostId || ''} onChange={(e) => setFormData({ ...formData, prevPostId: e.target.value ? Number(e.target.value) : null })}>
                 <option value="">无</option>{availablePosts.map(post => (<option key={post.id} value={post.id}>{post.title}</option>))}
               </select><small>上一篇文章导航链接</small>
             </div>
             <div className="form-group" style={{ flex: 1 }}><label>下一篇文章</label>
-              <select value={formData.nextPostId || ''} onChange={(e) => setFormData({ ...formData, nextPostId: e.target.value || null })}>
+              <select value={formData.nextPostId || ''} onChange={(e) => setFormData({ ...formData, nextPostId: e.target.value ? Number(e.target.value) : null })}>
                 <option value="">无</option>{availablePosts.map(post => (<option key={post.id} value={post.id}>{post.title}</option>))}
               </select><small>下一篇文章导航链接</small>
             </div>

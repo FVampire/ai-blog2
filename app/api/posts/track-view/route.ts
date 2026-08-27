@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { BlogRepository } from '@/lib/repositories/BlogRepository';
+import { PostRepository } from '@/lib/repositories/PostRepository';
 
 export async function POST(request: NextRequest) {
   try {
     const { postId } = await request.json();
+    const id = parseInt(String(postId), 10);
 
-    if (!postId) {
+    if (!postId || Number.isNaN(id)) {
       return NextResponse.json(
         { success: false, message: '文章ID不能为空' },
         { status: 400 }
       );
     }
 
-    const views = await BlogRepository.incrementViews(String(postId));
+    const views = await PostRepository.incrementViews(id);
 
     return NextResponse.json({
       success: true,

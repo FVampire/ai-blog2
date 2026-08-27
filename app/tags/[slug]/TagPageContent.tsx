@@ -9,7 +9,7 @@ import Header from '../../../components/Header';
 import TagCloud from '../../../components/TagCloud';
 
 interface Post {
-  id: string;
+  id: number;
   title: string;
   date: string;
   author: string;
@@ -20,7 +20,7 @@ interface Post {
 }
 
 interface Tag {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   post_count: number;

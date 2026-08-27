@@ -3,20 +3,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { needsModeration, getFilterReason } from '@/lib/content-filter';
 import { query } from '@/lib/db';
 
-// GET — approved comments for a blog (id = blog uuid)
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const postId = parseInt(id, 10);
+  if (Number.isNaN(postId)) {
+    return NextResponse.json({ success: false, message: '无效的文章ID' }, { status: 400 });
+  }
 
   try {
     const result = await query(
       `SELECT id, visitor_id, content, city, created_at
        FROM comments
-       WHERE blog_id = $1::uuid AND status = 'approved'
+       WHERE post_id = $1 AND status = 'approved'
        ORDER BY created_at DESC`,
-      [id]
+      [postId]
     );
 
     return NextResponse.json({ success: true, data: result.rows });
@@ -26,12 +29,15 @@ export async function GET(
   }
 }
 
-// POST — submit comment on blog
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: blogId } = await params;
+  const { id } = await params;
+  const postId = parseInt(id, 10);
+  if (Number.isNaN(postId)) {
+    return NextResponse.json({ success: false, message: '无效的文章ID' }, { status: 400 });
+  }
 
   try {
     const { visitorId, content } = await request.json();
@@ -77,10 +83,10 @@ export async function POST(
     }
 
     const result = await query(
-      `INSERT INTO comments (blog_id, visitor_id, ip_address, city, content, status)
-       VALUES ($1::uuid, $2, $3, $4, $5, $6)
+      `INSERT INTO comments (post_id, visitor_id, ip_address, city, content, status)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, visitor_id, content, city, status, created_at`,
-      [blogId, visitorId, ipAddress, city, content.trim(), status]
+      [postId, visitorId, ipAddress, city, content.trim(), status]
     );
 
     if (needsReview) {
