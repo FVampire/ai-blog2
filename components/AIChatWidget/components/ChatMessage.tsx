@@ -3,9 +3,9 @@
 import React, { useState, useCallback } from 'react';
 
 import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
-import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
+
+import { previewRehypePlugins } from '../../../lib/markdown/plugins';
 
 import CodeBlock from './CodeBlock';
 import { BotIcon, CheckIcon, CopyIcon, UserIcon } from './Icons';
@@ -72,7 +72,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             <>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw, rehypeHighlight]}
+                rehypePlugins={previewRehypePlugins}
                 components={{
                   pre: ({ children }) => <>{children}</>,
                   code: ({ className, children, ...props }) => {

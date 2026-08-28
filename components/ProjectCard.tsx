@@ -34,7 +34,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, variant = 'default' 
               fill
               sizes="(max-width: 768px) 100vw, 400px"
               className="project-card-image"
-              unoptimized
             />
           ) : (
             <div className="project-card-placeholder">

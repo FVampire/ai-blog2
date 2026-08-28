@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { query } from '@/lib/db';
 import { generateEmbedding } from '@/lib/embedding';
+import { enforceRateLimit } from '@/lib/rate-limit-api';
 import { VectorRepository } from '@/lib/repositories/VectorRepository';
+
+const SEARCH_RATE_LIMIT = 20;
+const SEARCH_RATE_WINDOW_MS = 60_000;
 
 interface SearchResult {
   id: number;
@@ -19,6 +23,15 @@ interface SearchResult {
 }
 
 export async function GET(request: NextRequest) {
+  const rateLimited = enforceRateLimit(
+    request,
+    'search:vector',
+    SEARCH_RATE_LIMIT,
+    SEARCH_RATE_WINDOW_MS,
+    '搜索过于频繁，请稍后再试'
+  );
+  if (rateLimited) return rateLimited;
+
   const searchParams = request.nextUrl.searchParams;
   const q = searchParams.get('q');
   const limit = parseInt(searchParams.get('limit') || '10') || 10;
@@ -28,6 +41,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimited = enforceRateLimit(
+    request,
+    'search:vector',
+    SEARCH_RATE_LIMIT,
+    SEARCH_RATE_WINDOW_MS,
+    '搜索过于频繁，请稍后再试'
+  );
+  if (rateLimited) return rateLimited;
+
   const body = await request.json();
   const q = body.q;
   const limit = parseInt(body.limit) || 10;

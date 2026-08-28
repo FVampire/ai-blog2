@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import styles from './forgetting-tide.module.css';
 
@@ -52,12 +52,19 @@ export default function MusicPlayer() {
 
   const current = tracks[active];
 
-  const toggle = () => {
+  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (playing) audio.pause();
-    else audio.play().catch(() => setPlaying(false));
-    setPlaying(!playing);
+
+    if (playing) {
+      audio.play().catch(() => setPlaying(false));
+    } else {
+      audio.pause();
+    }
+  }, [active, playing]);
+
+  const toggle = () => {
+    setPlaying((value) => !value);
   };
 
   const choose = (index: number) => {
@@ -77,11 +84,10 @@ export default function MusicPlayer() {
       <audio
         ref={audioRef}
         src={current.src}
-        autoPlay={playing}
+        loop
         onLoadStart={() => setProgress(0)}
         onTimeUpdate={(event) => setProgress(event.currentTarget.currentTime)}
         onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
-        onEnded={() => setPlaying(false)}
       />
 
       <div className={styles.nowPlaying}>

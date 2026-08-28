@@ -13,8 +13,8 @@ export class Tag {
   @Column({ type: 'varchar', length: 50, unique: true })
   slug!: string;
 
-  @Column({ type: 'varchar', length: 7, default: '#FF6B6B' })
-  color!: string;
+  @Column({ type: 'varchar', length: 7, nullable: true, default: '#FF6B6B' })
+  color?: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

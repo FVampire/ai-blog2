@@ -2,10 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import bcrypt from 'bcryptjs';
 
+import { ADMIN_TOKEN_COOKIE, adminCookieOptions } from '@/lib/auth-cookie';
 import { query } from '@/lib/db';
 import { generateToken } from '@/lib/jwt';
+import { enforceRateLimit } from '@/lib/rate-limit-api';
 
 export async function POST(request: NextRequest) {
+  const rateLimited = enforceRateLimit(
+    request,
+    'auth:login',
+    10,
+    15 * 60_000,
+    '登录尝试过于频繁，请稍后再试'
+  );
+  if (rateLimited) return rateLimited;
+
   try {
     const { username, password } = await request.json();
 
@@ -51,7 +62,7 @@ export async function POST(request: NextRequest) {
       role: user.role,
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: '登录成功',
       data: {
@@ -64,6 +75,8 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+    response.cookies.set(ADMIN_TOKEN_COOKIE, token, adminCookieOptions());
+    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

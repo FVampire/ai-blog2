@@ -10,6 +10,7 @@ interface Comment {
   content: string;
   city?: string;
   created_at: string;
+  status?: string;
 }
 
 interface CommentsProps {
@@ -85,17 +86,25 @@ const CommentsSection: React.FC<CommentsProps> = ({ postId }) => {
       const data = await response.json();
 
       if (data.success) {
-        if (data.needsReview) {
-          setMessage({ type: 'success', text: '评论提交成功，包含敏感内容，需等待审核' });
-        } else {
-          setMessage({ type: 'success', text: '评论发表成功！' });
-        }
+        const created = data.data as Partial<Comment> | undefined;
+        const isPending = data.needsReview === true || created?.status === 'pending';
+
+        const newComment: Comment = {
+          id: created?.id ?? Date.now(),
+          visitor_id: created?.visitor_id ?? visitorId,
+          content: created?.content ?? content.trim(),
+          city: created?.city || undefined,
+          created_at: created?.created_at ?? new Date().toISOString(),
+          status: isPending ? 'pending' : 'approved',
+        };
+
+        setComments((previous) => [newComment, ...previous]);
         setContent('');
-        // 刷新评论列表
-        setTimeout(() => {
-          loadComments();
-          setMessage(null);
-        }, 2000);
+
+        setMessage({
+          type: 'success',
+          text: isPending ? '评论提交成功，审核通过后公开显示' : '评论发表成功！',
+        });
       } else {
         setMessage({ type: 'error', text: data.message || '提交失败' });
       }
@@ -107,8 +116,9 @@ const CommentsSection: React.FC<CommentsProps> = ({ postId }) => {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '';
     return date.toLocaleString('zh-CN', {
       year: 'numeric',
       month: '2-digit',
@@ -129,8 +139,10 @@ const CommentsSection: React.FC<CommentsProps> = ({ postId }) => {
       {/* 评论表单 */}
       <form onSubmit={handleSubmit} className="comment-form">
         <div className="form-group">
-          <label>发表评论</label>
+          <label htmlFor="comment-content">发表评论</label>
           <textarea
+            id="comment-content"
+            name="comment-content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="说点什么..."
@@ -169,19 +181,25 @@ const CommentsSection: React.FC<CommentsProps> = ({ postId }) => {
           <div className="comments-empty">暂无评论，快来发表第一条评论吧！</div>
         ) : (
           comments.map((comment) => (
-            <div key={comment.id} className="comment-item">
+            <div
+              key={comment.id}
+              className={`comment-item ${comment.status === 'pending' ? 'comment-item-pending' : ''}`}
+            >
               <div className="comment-header">
                 <span className="comment-author">
                   {truncateVisitorId(comment.visitor_id)}
                 </span>
-                <span>{comment.city}</span>
+                {comment.city && <span className="comment-city">{comment.city}</span>}
                 <span className="comment-date">
-                  {formatDate(comment.created_at)}
+                  {formatDateTime(comment.created_at)}
                 </span>
               </div>
               <div className="comment-content">
                 {comment.content}
               </div>
+              {comment.status === 'pending' && (
+                <div className="comment-pending-badge">审核后公开</div>
+              )}
             </div>
           ))
         )}

@@ -2,6 +2,9 @@
 
 import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
 
+import { authJson, authUpload } from './admin/authFetch';
+import { toast } from './admin/Toast';
+
 interface ImageItem {
   filename: string;
   url: string;
@@ -36,18 +39,14 @@ const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
 
   // 加载已上传的图片列表
   const loadImages = async () => {
-    try {
-      setLoadingImages(true);
-      const response = await fetch('/api/media/list');
-      const data = await response.json();
+    setLoadingImages(true);
+    const result = await authJson<{ images: ImageItem[] }>('/api/media/list?page=1&limit=100');
+    setLoadingImages(false);
 
-      if (data.success) {
-        setImages(data.data.images);
-      }
-    } catch (error) {
-      console.error('Load images error:', error);
-    } finally {
-      setLoadingImages(false);
+    if (result.success && result.data) {
+      setImages(result.data.images);
+    } else {
+      toast.error(result.message || '加载图片列表失败');
     }
   };
 
@@ -63,7 +62,7 @@ const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
     // 验证文件类型
     if (!file.type.startsWith('image/')) {
       const errorMsg = '请选择图片文件';
-      alert(errorMsg);
+      toast.error(errorMsg);
       if (onUploadError) onUploadError(errorMsg);
       return;
     }
@@ -71,7 +70,7 @@ const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
     // 验证文件大小 (10MB)
     if (file.size > 10 * 1024 * 1024) {
       const errorMsg = '图片大小不能超过10MB';
-      alert(errorMsg);
+      toast.error(errorMsg);
       if (onUploadError) onUploadError(errorMsg);
       return;
     }
@@ -92,52 +91,17 @@ const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
     setUploadProgress(0);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      const { url: imageUrl } = await authUpload('/api/upload', file, setUploadProgress);
 
-      // 创建XMLHttpRequest以跟踪上传进度
-      const xhr = new XMLHttpRequest();
-
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const percentComplete = (e.loaded / e.total) * 100;
-          setUploadProgress(percentComplete);
-        }
-      });
-
-      const uploadPromise = new Promise<string>((resolve, reject) => {
-        xhr.addEventListener('load', () => {
-          if (xhr.status === 200) {
-            const response = JSON.parse(xhr.responseText);
-            if (response.success) {
-              resolve(response.data.url);
-            } else {
-              reject(new Error(response.message || '上传失败'));
-            }
-          } else {
-            reject(new Error('上传失败'));
-          }
-        });
-
-        xhr.addEventListener('error', () => {
-          reject(new Error('网络错误'));
-        });
-
-        xhr.open('POST', '/api/upload');
-        xhr.send(formData);
-      });
-
-      const imageUrl = await uploadPromise;
+      setPreview(imageUrl);
 
       if (onUploadSuccess) {
         onUploadSuccess(imageUrl);
       }
-
-      console.log('✅ 上传成功:', imageUrl);
     } catch (error) {
-      console.error('❌ 上传失败:', error);
+      console.error('上传失败:', error);
       const errorMsg = error instanceof Error ? error.message : '上传失败';
-      alert(errorMsg);
+      toast.error(errorMsg);
       if (onUploadError) {
         onUploadError(errorMsg);
       }

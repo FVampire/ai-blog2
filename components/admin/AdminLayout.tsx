@@ -5,39 +5,70 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 
+import { authJson, clearAdminCredentials } from './authFetch';
+import ToastContainer from './Toast';
+
 interface AdminLayoutProps {
   children: React.ReactNode;
+}
+
+interface AdminUser {
+  username: string;
+  role: string;
 }
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<{ username: string; role: string } | null>(null);
+  const [user, setUser] = useState<AdminUser | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    // 检查是否已登录
     const token = localStorage.getItem('adminToken');
     const userStr = localStorage.getItem('adminUser');
 
     if (!token || !userStr) {
+      clearAdminCredentials();
       router.push('/admin/login');
       return;
     }
 
-    setUser(JSON.parse(userStr));
+    try {
+      setUser(JSON.parse(userStr));
+    } catch {
+      clearAdminCredentials();
+      router.push('/admin/login');
+      return;
+    }
+
+    let cancelled = false;
+
+    // 令牌可能已在服务端失效：拉一次当前用户，401 由 authFetch 统一处理（清凭据 + 回登录页）
+    authJson<{ user: AdminUser }>('/api/auth/me').then((result) => {
+      if (cancelled || !result.success || !result.data?.user) return;
+      setUser(result.data.user);
+      localStorage.setItem('adminUser', JSON.stringify(result.data.user));
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
+    clearAdminCredentials();
     router.push('/admin/login');
   };
 
   const isActive = (path: string) => pathname === path;
 
   if (!user) {
-    return <div className="admin-loading">加载中...</div>;
+    return (
+      <>
+        <div className="admin-loading">加载中...</div>
+        <ToastContainer />
+      </>
+    );
   }
 
   return (
@@ -125,6 +156,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           {children}
         </main>
       </div>
+
+      <ToastContainer />
     </div>
   );
 };

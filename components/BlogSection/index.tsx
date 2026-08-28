@@ -23,7 +23,7 @@ interface BlogSectionProps {
 const BlogSection: React.FC<BlogSectionProps> = ({ posts, currentPage, totalPages }) => {
   return (
     <div className="blog-section">
-      <h1 className="section-title">Latest Articles</h1>
+      <h1 className="section-title">最新文章</h1>
       <BlogList posts={posts} />
       <Pagination currentPage={currentPage} totalPages={totalPages} />
     </div>

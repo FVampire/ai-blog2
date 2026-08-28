@@ -1,44 +1,57 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { authJson } from '../../../components/admin/authFetch';
+import { toast } from '../../../components/admin/Toast';
 import ImageUpload from '../../../components/ImageUpload';
 
 interface ImageItem { filename: string; url: string; size: number; uploadedAt: string; modifiedAt: string; }
+interface Pagination { page: number; limit: number; total: number; totalPages: number; }
+
+const PAGE_SIZE = 50;
 
 export default function AdminMedia() {
   const [images, setImages] = useState<ImageItem[]>([]);
+  const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 });
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  const loadImages = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/media/list');
-      const data = await response.json();
-      if (data.success) setImages(data.data.images);
-      else alert('加载图片列表失败');
-    } catch (error) { console.error('Load images error:', error); alert('加载图片列表失败'); }
-    finally { setLoading(false); }
-  };
+  const loadImages = useCallback(async () => {
+    setLoading(true);
+    const result = await authJson<{ images: ImageItem[]; total: number; pagination: Pagination }>(
+      `/api/media/list?page=${page}&limit=${PAGE_SIZE}`
+    );
+    setLoading(false);
 
-  useEffect(() => { loadImages(); }, []);
+    if (!result.success || !result.data) {
+      toast.error(result.message || '加载图片列表失败');
+      return;
+    }
 
-  const handleUploadSuccess = (imageUrl: string) => { setShowUploadModal(false); loadImages(); };
+    setImages(result.data.images);
+    setPagination(result.data.pagination);
+  }, [page]);
+
+  useEffect(() => { loadImages(); }, [loadImages]);
+
+  const handleUploadSuccess = () => { setShowUploadModal(false); setPage(1); loadImages(); };
 
   const handleDelete = async (filename: string) => {
     if (!confirm('确定要删除这张图片吗？')) return;
-    try {
-      const response = await fetch('/api/media/delete', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ filename }) });
-      const data = await response.json();
-      if (data.success) { alert('删除成功'); setSelectedImage(null); loadImages(); }
-      else alert(data.message || '删除失败');
-    } catch (error) { console.error('Delete error:', error); alert('删除失败'); }
+    const result = await authJson('/api/media/delete', { method: 'DELETE', body: JSON.stringify({ filename }) });
+    if (result.success) {
+      toast.success('删除成功');
+      setSelectedImage(null);
+      setImages(prev => prev.filter(image => image.filename !== filename));
+      loadImages();
+    } else toast.error(result.message || '删除失败');
   };
 
-  const handleCopyUrl = (url: string) => { navigator.clipboard.writeText(window.location.origin + url); alert('链接已复制到剪贴板'); };
+  const handleCopyUrl = (url: string) => { navigator.clipboard.writeText(window.location.origin + url); toast.success('链接已复制到剪贴板'); };
   const formatSize = (bytes: number) => bytes < 1024 ? bytes + ' B' : bytes < 1024 * 1024 ? (bytes / 1024).toFixed(2) + ' KB' : (bytes / (1024 * 1024)).toFixed(2) + ' MB';
   const formatDate = (dateString: string) => new Date(dateString).toLocaleString('zh-CN');
 
@@ -50,20 +63,29 @@ export default function AdminMedia() {
           <button className="btn-primary" onClick={() => setShowUploadModal(true)}><span>📤</span> 上传图片</button>
         </div>
         <div className="media-stats">
-          <div className="stat-item"><span className="stat-label">总图片数</span><span className="stat-value">{images.length}</span></div>
-          <div className="stat-item"><span className="stat-label">总大小</span><span className="stat-value">{formatSize(images.reduce((sum, img) => sum + img.size, 0))}</span></div>
+          <div className="stat-item"><span className="stat-label">总图片数</span><span className="stat-value">{pagination.total}</span></div>
+          <div className="stat-item"><span className="stat-label">本页大小</span><span className="stat-value">{formatSize(images.reduce((sum, img) => sum + img.size, 0))}</span></div>
         </div>
         {loading ? (<div className="loading-state">加载中...</div>) : images.length === 0 ? (
           <div className="empty-state"><p>还没有上传任何图片</p><button className="btn-primary" onClick={() => setShowUploadModal(true)}>上传第一张图片</button></div>
         ) : (
-          <div className="media-grid">
-            {images.map((image) => (
-              <div key={image.filename} className="media-item" onClick={() => setSelectedImage(image)}>
-                <div className="media-thumbnail"><img src={image.url} alt={image.filename} /></div>
-                <div className="media-info"><div className="media-filename">{image.filename}</div><div className="media-size">{formatSize(image.size)}</div></div>
+          <>
+            <div className="media-grid">
+              {images.map((image) => (
+                <div key={image.filename} className="media-item" onClick={() => setSelectedImage(image)}>
+                  <div className="media-thumbnail"><img src={image.url} alt={image.filename} /></div>
+                  <div className="media-info"><div className="media-filename">{image.filename}</div><div className="media-size">{formatSize(image.size)}</div></div>
+                </div>
+              ))}
+            </div>
+            {pagination.totalPages > 1 && (
+              <div className="pagination-admin">
+                <button className="pagination-btn-admin" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>上一页</button>
+                <span className="pagination-info">第 {pagination.page} / {pagination.totalPages} 页，共 {pagination.total} 张</span>
+                <button className="pagination-btn-admin" onClick={() => setPage(p => p + 1)} disabled={page >= pagination.totalPages}>下一页</button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
         {showUploadModal && (
           <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>

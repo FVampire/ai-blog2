@@ -3,7 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+import { requireRoles, isAuthError } from '@/lib/auth-middleware-app';
+
 export async function DELETE(request: NextRequest) {
+  const authResult = requireRoles(request, ['admin', 'editor']);
+  if (isAuthError(authResult)) return authResult;
+
   try {
     const { filename } = await request.json();
 

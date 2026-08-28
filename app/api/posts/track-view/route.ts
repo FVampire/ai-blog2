@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { enforceRateLimit } from '@/lib/rate-limit-api';
 import { PostRepository } from '@/lib/repositories/PostRepository';
 
 export async function POST(request: NextRequest) {
@@ -13,6 +14,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const rateLimited = enforceRateLimit(
+      request,
+      `posts:track-view:${id}`,
+      1,
+      10 * 60_000,
+      '浏览记录过于频繁，请稍后再试'
+    );
+    if (rateLimited) return rateLimited;
 
     const views = await PostRepository.incrementViews(id);
 

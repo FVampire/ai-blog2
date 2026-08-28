@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { authJson } from '../../../components/admin/authFetch';
+import { toast } from '../../../components/admin/Toast';
 
 interface Post {
   id: number;
@@ -16,54 +18,99 @@ interface Post {
   tags: string[];
 }
 
-export default function AdminPostsContent({ posts, totalPosts }: { posts: Post[]; totalPosts: number }) {
-  const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft' | 'archived'>('all');
-  const [publishingId, setPublishingId] = useState<number | null>(null);
+type StatusFilter = 'all' | 'published' | 'draft' | 'archived';
 
-  const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.author.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || post.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+interface AdminPostsContentProps {
+  posts: Post[];
+  totalPosts: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  status: StatusFilter;
+  search: string;
+}
+
+export default function AdminPostsContent({
+  posts,
+  totalPosts,
+  page,
+  pageSize,
+  totalPages,
+  status,
+  search,
+}: AdminPostsContentProps) {
+  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState(search);
+  const [publishingId, setPublishingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    setSearchTerm(search);
+  }, [search]);
+
+  const buildUrl = (next: { page?: number; status?: StatusFilter; search?: string }) => {
+    const query = new URLSearchParams();
+    const nextPage = next.page ?? page;
+    const nextStatus = next.status ?? status;
+    const nextSearch = next.search ?? searchTerm;
+
+    if (nextPage > 1) query.set('page', String(nextPage));
+    if (nextStatus !== 'all') query.set('status', nextStatus);
+    if (nextSearch.trim()) query.set('search', nextSearch.trim());
+
+    const queryString = query.toString();
+    return queryString ? `/admin/posts?${queryString}` : '/admin/posts';
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.push(buildUrl({ page: 1 }));
+  };
+
+  const handleStatusChange = (nextStatus: StatusFilter) => {
+    router.push(buildUrl({ page: 1, status: nextStatus }));
+  };
 
   const handlePreview = (id: number) => window.open(`/admin/posts/preview/${id}`, '_blank');
 
   const handlePublish = async (id: number) => {
     if (!confirm('确定要发布这篇文章吗？')) return;
     setPublishingId(id);
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/posts/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ status: 'published' }),
-      });
-      const data = await response.json();
-      if (data.success) { alert('文章发布成功'); window.location.reload(); }
-      else { alert(data.message || '发布失败'); }
-    } catch (error) { console.error('Publish error:', error); alert('发布失败'); }
-    finally { setPublishingId(null); }
+    const result = await authJson(`/api/posts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status: 'published' }),
+    });
+    setPublishingId(null);
+
+    if (result.success) {
+      toast.success('文章发布成功');
+      router.refresh();
+    } else {
+      toast.error(result.message || '发布失败');
+    }
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm('确定要删除这篇文章吗？')) return;
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/posts/${id}`, {
-        method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (response.ok) { alert('删除成功'); window.location.reload(); }
-      else alert('删除失败');
-    } catch (error) { console.error('Error deleting post:', error); alert('删除失败'); }
+    setDeletingId(id);
+    const result = await authJson(`/api/posts/${id}`, { method: 'DELETE' });
+    setDeletingId(null);
+
+    if (result.success) {
+      toast.success('删除成功');
+      router.refresh();
+    } else {
+      toast.error(result.message || '删除失败');
+    }
   };
 
-  const getStatusLabel = (status: string) => {
-    const statusMap: { [key: string]: string } = { 'published': '已发布', 'draft': '草稿', 'archived': '已归档' };
-    return statusMap[status] || status;
+  const getStatusLabel = (value: string) => {
+    const statusMap: { [key: string]: string } = { published: '已发布', draft: '草稿', archived: '已归档' };
+    return statusMap[value] || value;
   };
+
+  const rangeStart = totalPosts === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeEnd = totalPosts === 0 ? 0 : (page - 1) * pageSize + posts.length;
 
   return (
     <AdminLayout>
@@ -76,14 +123,15 @@ export default function AdminPostsContent({ posts, totalPosts }: { posts: Post[]
         </div>
 
         <div className="filters">
-          <div className="search-box-admin">
+          <form className="search-box-admin" onSubmit={handleSearchSubmit}>
             <span className="search-icon-admin">🔍</span>
             <input type="text" placeholder="搜索文章标题或作者..." value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)} className="search-input-admin" />
-          </div>
+            <button type="submit" className="search-submit-admin">搜索</button>
+          </form>
           <div className="filter-group">
             <label>状态筛选：</label>
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as any)} className="filter-select">
+            <select value={status} onChange={(e) => handleStatusChange(e.target.value as StatusFilter)} className="filter-select">
               <option value="all">全部</option>
               <option value="published">已发布</option>
               <option value="draft">草稿</option>
@@ -101,7 +149,7 @@ export default function AdminPostsContent({ posts, totalPosts }: { posts: Post[]
               </tr>
             </thead>
             <tbody>
-              {filteredPosts.map((post) => (
+              {posts.map((post) => (
                 <tr key={post.id}>
                   <td className="post-title">{post.title}</td>
                   <td>{post.author}</td>
@@ -122,19 +170,37 @@ export default function AdminPostsContent({ posts, totalPosts }: { posts: Post[]
                         {publishingId === post.id ? '发布中...' : '发布'}
                       </button>
                     )}
-                    <button className="action-btn delete" onClick={() => handleDelete(post.id)}>删除</button>
+                    <button className="action-btn delete" onClick={() => handleDelete(post.id)} disabled={deletingId === post.id}>
+                      {deletingId === post.id ? '删除中...' : '删除'}
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {filteredPosts.length === 0 && (<div className="empty-state"><p>没有找到匹配的文章</p></div>)}
+          {posts.length === 0 && (<div className="empty-state"><p>没有找到匹配的文章</p></div>)}
         </div>
 
         <div className="pagination-admin">
-          <button className="pagination-btn-admin">上一页</button>
-          <span className="pagination-info">显示 {filteredPosts.length} / {totalPosts} 篇文章</span>
-          <button className="pagination-btn-admin">下一页</button>
+          <button
+            className="pagination-btn-admin"
+            onClick={() => router.push(buildUrl({ page: page - 1 }))}
+            disabled={page <= 1}
+          >
+            上一页
+          </button>
+          <span className="pagination-info">
+            {totalPosts === 0
+              ? '共 0 篇文章'
+              : `第 ${rangeStart}-${rangeEnd} 篇 / 共 ${totalPosts} 篇（第 ${page} / ${Math.max(totalPages, 1)} 页）`}
+          </span>
+          <button
+            className="pagination-btn-admin"
+            onClick={() => router.push(buildUrl({ page: page + 1 }))}
+            disabled={totalPages === 0 || page >= totalPages}
+          >
+            下一页
+          </button>
         </div>
       </div>
     </AdminLayout>

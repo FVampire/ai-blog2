@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface Heading {
   id: string;
@@ -12,7 +12,10 @@ interface TableOfContentsProps {
   content: string;
 }
 
-/** Match rehype-slug: lowercase, spaces to hyphens, collapse dashes */
+const ARTICLE_CONTAINER_SELECTOR = '.markdown-preview';
+const HEADING_SELECTOR = 'h1, h2, h3';
+const SCROLL_OFFSET = 80;
+
 function slugifyHeading(text: string): string {
   return text
     .trim()
@@ -22,63 +25,105 @@ function slugifyHeading(text: string): string {
     .replace(/^-|-$/g, '');
 }
 
+function parseHeadingsFromMarkdown(content: string): Heading[] {
+  const headingRegex = /^(#{1,3})\s+(.+)$/gm;
+
+  return Array.from(content.matchAll(headingRegex)).map((match) => {
+    const level = match[1].length;
+    const text = match[2].trim().replace(/\s+#+\s*$/, '');
+    return { id: slugifyHeading(text), text, level };
+  });
+}
+
+function sameHeadings(a: Heading[], b: Heading[]): boolean {
+  return a.length === b.length && a.every((heading, index) => heading.id === b[index].id && heading.text === b[index].text);
+}
+
 const TableOfContents: React.FC<TableOfContentsProps> = ({ content }) => {
-  const [headings, setHeadings] = useState<Heading[]>([]);
+  const initialHeadings = useMemo(() => parseHeadingsFromMarkdown(content), [content]);
+  const [headings, setHeadings] = useState<Heading[]>(initialHeadings);
   const [activeId, setActiveId] = useState<string>('');
 
   useEffect(() => {
-    const headingRegex = /^(#{1,6})\s+(.+)$/gm;
-    const matches = Array.from(content.matchAll(headingRegex));
+    setHeadings(initialHeadings);
+  }, [initialHeadings]);
 
-    const extractedHeadings: Heading[] = matches.map((match) => {
-      const level = match[1].length;
-      const text = match[2].trim().replace(/\s+#+\s*$/, '');
-      return { id: slugifyHeading(text), text, level };
-    });
+  useEffect(() => {
+    const container = document.querySelector(ARTICLE_CONTAINER_SELECTOR);
+    if (!container) return;
 
-    setHeadings(extractedHeadings);
+    const collect = () => {
+      const fromDom = Array.from(container.querySelectorAll<HTMLElement>(HEADING_SELECTOR))
+        .filter((element) => element.id)
+        .map((element) => ({
+          id: element.id,
+          text: element.textContent?.trim() ?? '',
+          level: Number(element.tagName.slice(1)) || 1,
+        }));
+
+      setHeadings((previous) => (sameHeadings(previous, fromDom) ? previous : fromDom));
+    };
+
+    collect();
+
+    const mutationObserver = new MutationObserver(collect);
+    mutationObserver.observe(container, { childList: true, subtree: true });
+
+    return () => mutationObserver.disconnect();
   }, [content]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const headingElements = headings
-        .map((h) => document.getElementById(h.id))
-        .filter(Boolean) as HTMLElement[];
+    if (headings.length === 0) return;
 
-      const currentHeading = headingElements.find((element, index) => {
-        const rect = element.getBoundingClientRect();
-        const nextElement = headingElements[index + 1];
+    const elements = headings
+      .map((heading) => document.getElementById(heading.id))
+      .filter((element): element is HTMLElement => element !== null);
 
-        if (nextElement) {
-          const nextRect = nextElement.getBoundingClientRect();
-          return rect.top <= 100 && nextRect.top > 100;
+    if (elements.length === 0) return;
+
+    const visibleIds = new Set<string>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            visibleIds.add(entry.target.id);
+          } else {
+            visibleIds.delete(entry.target.id);
+          }
+        });
+
+        const firstVisible = headings.find((heading) => visibleIds.has(heading.id));
+        if (firstVisible) {
+          setActiveId(firstVisible.id);
+          return;
         }
 
-        return rect.top <= 100;
-      });
+        const passed = elements.filter(
+          (element) => element.getBoundingClientRect().top < SCROLL_OFFSET
+        );
+        if (passed.length > 0) {
+          setActiveId(passed[passed.length - 1].id);
+        }
+      },
+      { rootMargin: `-${SCROLL_OFFSET}px 0px -65% 0px`, threshold: 0 }
+    );
 
-      if (currentHeading) {
-        setActiveId(currentHeading.id);
-      }
-    };
+    elements.forEach((element) => observer.observe(element));
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => observer.disconnect();
   }, [headings]);
 
-  const scrollToHeading = (id: string) => {
+  const scrollToHeading = useCallback((id: string) => {
     const element = document.getElementById(id);
-    if (element) {
-      const offset = 80;
-      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({
-        top: elementPosition - offset,
-        behavior: 'smooth',
-      });
-    }
-  };
+    if (!element) return;
+
+    const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({
+      top: elementPosition - SCROLL_OFFSET,
+      behavior: 'smooth',
+    });
+  }, []);
 
   if (headings.length === 0) {
     return null;
@@ -97,6 +142,7 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({ content }) => {
               <a
                 href={`#${heading.id}`}
                 className="toc-link"
+                aria-current={activeId === heading.id ? 'location' : undefined}
                 onClick={(e) => {
                   e.preventDefault();
                   scrollToHeading(heading.id);

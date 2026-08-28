@@ -1,13 +1,18 @@
 import React from 'react';
 
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 
 import Footer from '../../../components/Footer';
 import Header from '../../../components/Header';
+import { formatDate } from '../../../lib/format';
 import { ProjectRepository } from '../../../lib/repositories/ProjectRepository';
 
 export const dynamic = 'force-dynamic';
+
+const SITE_NAME = '五月的火';
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 
 interface ProjectPageProps {
   params: Promise<{ slug: string }>;
@@ -18,15 +23,34 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
   try {
     const project = await ProjectRepository.getProjectBySlug(slug);
     if (project) {
+      const description = project.description || `${project.name} - 项目详情`;
+      const url = `${SITE_URL}/projects/${project.slug}`;
+      const image = project.imageUrl || '/og-default.png';
       return {
         title: project.name,
-        description: project.description || `${project.name} - 项目详情`,
+        description,
+        alternates: { canonical: url },
+        openGraph: {
+          type: 'article',
+          title: project.name,
+          description,
+          url,
+          siteName: SITE_NAME,
+          locale: 'zh_CN',
+          images: [{ url: image, alt: project.name }],
+        },
+        twitter: {
+          card: 'summary_large_image',
+          title: project.name,
+          description,
+          images: [image],
+        },
       };
     }
   } catch {
     // ignore
   }
-  return { title: 'Project' };
+  return { title: '项目未找到' };
 }
 
 export default async function ProjectDetailPage({ params }: ProjectPageProps) {
@@ -71,14 +95,23 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
 
             <div className="project-detail-hero card">
               {project.imageUrl && (
-                <img src={project.imageUrl} alt={project.name} className="project-detail-hero-image" />
+                <Image
+                  src={project.imageUrl}
+                  alt={project.name}
+                  width={1200}
+                  height={630}
+                  priority
+                  sizes="(max-width: 768px) 100vw, 760px"
+                  className="project-detail-hero-image"
+                  unoptimized
+                />
               )}
 
               <h1 className="section-title">{project.name}</h1>
 
               {project.featured && (
                 <span className="project-card-badge" style={{ position: 'static', display: 'inline-block', marginBottom: 16 }}>
-                  Featured
+                  精选
                 </span>
               )}
 
@@ -118,7 +151,14 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                     <Link key={post.id} href={`/posts/${post.slug}`} className="card block" style={{ textDecoration: 'none' }}>
                       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
                         {post.imageUrl && (
-                          <img src={post.imageUrl} alt="" style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 8 }} />
+                          <Image
+                            src={post.imageUrl}
+                            alt=""
+                            width={80}
+                            height={60}
+                            unoptimized
+                            style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 8 }}
+                          />
                         )}
                         <div>
                           <h3 style={{ fontWeight: 600, marginBottom: 8, color: 'var(--text-primary)' }}>{post.title}</h3>
@@ -127,7 +167,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                           )}
                           {post.publishedAt && (
                             <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                              {new Date(post.publishedAt).toLocaleDateString('zh-CN')}
+                              {formatDate(post.publishedAt)}
                             </span>
                           )}
                         </div>

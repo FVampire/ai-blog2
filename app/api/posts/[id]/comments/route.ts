@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { needsModeration, getFilterReason } from '@/lib/content-filter';
 import { query } from '@/lib/db';
+import { enforceRateLimit, getClientIp } from '@/lib/rate-limit-api';
 
 export async function GET(
   _request: NextRequest,
@@ -39,6 +40,15 @@ export async function POST(
     return NextResponse.json({ success: false, message: '无效的文章ID' }, { status: 400 });
   }
 
+  const rateLimited = enforceRateLimit(
+    request,
+    'comments:create',
+    5,
+    10 * 60_000,
+    '评论过于频繁，请稍后再试'
+  );
+  if (rateLimited) return rateLimited;
+
   try {
     const { visitorId, content } = await request.json();
 
@@ -66,8 +76,7 @@ export async function POST(
     const needsReview = needsModeration(content);
     const status = needsReview ? 'pending' : 'approved';
 
-    const forwarded = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip');
-    const ipAddress = forwarded ? forwarded.split(',')[0] : 'unknown';
+    const ipAddress = getClientIp(request);
 
     let city = '';
     if (ipAddress && ipAddress !== 'unknown') {

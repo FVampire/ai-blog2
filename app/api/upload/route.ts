@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { requireAuth, isAuthError, requireAgentAuth } from '@/lib/auth-middleware-app';
+import { validateImageFile } from '@/lib/upload-image';
 
 function isAuthorized(request: NextRequest): boolean {
   const jwtResult = requireAuth(request);
@@ -36,25 +37,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const ext = path.extname(file.name);
+    const validation = await validateImageFile(file);
+    if (!validation.ok) {
+      return NextResponse.json(
+        { success: false, message: validation.message },
+        { status: 400 }
+      );
+    }
+
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const filename = `${uniqueSuffix}${ext}`;
+    const filename = `${uniqueSuffix}${validation.extension}`;
     const filePath = path.join(uploadDir, filename);
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    fs.writeFileSync(filePath, buffer);
-
-    const fileUrl = `/uploads/${filename}`;
+    fs.writeFileSync(filePath, validation.buffer);
 
     return NextResponse.json({
       success: true,
       message: '上传成功',
       data: {
-        url: fileUrl,
-        filename: file.name,
-        size: file.size,
-        mimetype: file.type,
+        url: `/uploads/${filename}`,
+        filename: validation.originalName,
+        size: validation.size,
+        mimetype: validation.mimeType,
       },
     });
   } catch (error) {

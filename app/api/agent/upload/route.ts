@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { requireAgentAuth } from '@/lib/auth-middleware-app';
+import { validateImageFile } from '@/lib/upload-image';
 
 /**
  * Agent API: Image upload for blog posts
@@ -32,21 +33,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
-    if (!allowedTypes.includes(file.type)) {
+    const validation = await validateImageFile(file);
+    if (!validation.ok) {
       return NextResponse.json(
-        { success: false, message: '仅支持图片格式 (jpeg, png, gif, webp, svg)' },
+        { success: false, message: validation.message },
         { status: 400 }
       );
     }
 
-    const ext = path.extname(file.name) || '.jpg';
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const filename = `${uniqueSuffix}${ext}`;
+    const filename = `${uniqueSuffix}${validation.extension}`;
     const filePath = path.join(uploadDir, filename);
 
-    const bytes = await file.arrayBuffer();
-    fs.writeFileSync(filePath, Buffer.from(bytes));
+    fs.writeFileSync(filePath, validation.buffer);
 
     const fileUrl = `/uploads/${filename}`;
     const siteUrl = process.env.SITE_URL || '';
@@ -57,9 +56,9 @@ export async function POST(request: NextRequest) {
       data: {
         url: fileUrl,
         fullUrl: siteUrl ? `${siteUrl}${fileUrl}` : fileUrl,
-        filename: file.name,
-        size: file.size,
-        mimetype: file.type,
+        filename: validation.originalName,
+        size: validation.size,
+        mimetype: validation.mimeType,
       },
     });
   } catch (error) {

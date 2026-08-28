@@ -1,12 +1,21 @@
-'use client';
+import React from 'react';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import type { Metadata } from 'next';
+import Link from 'next/link';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-
-import BlogPostCard from '../../components/BlogPostCard';
+import ArticlesContent from './ArticlesContent';
 import Footer from '../../components/Footer';
 import Header from '../../components/Header';
+import { formatDate } from '../../lib/format';
+import { PostRepository } from '../../lib/repositories/PostRepository';
+import { TagRepository } from '../../lib/repositories/TagRepository';
+
+export const dynamic = 'force-dynamic';
+
+const PAGE_TITLE = '全部文章';
+const PAGE_DESCRIPTION = '浏览站点上的全部已发布文章。';
+const SITE_NAME = '五月的火';
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 
 interface Post {
   id: number;
@@ -16,79 +25,76 @@ interface Post {
   excerpt: string;
   slug: string;
   image: string;
-  tags: Array<{ name: string; color: string }>;
+  tags: Array<{ name: string; color: string; slug?: string }>;
 }
 
-interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  post_count: number;
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: PAGE_TITLE,
+    description: PAGE_DESCRIPTION,
+    alternates: { canonical: `${SITE_URL}/articles` },
+    openGraph: {
+      type: 'website',
+      title: PAGE_TITLE,
+      description: PAGE_DESCRIPTION,
+      url: `${SITE_URL}/articles`,
+      siteName: SITE_NAME,
+      locale: 'zh_CN',
+      images: [{ url: '/og-default.png', width: 1200, height: 630, alt: PAGE_TITLE }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: PAGE_TITLE,
+      description: PAGE_DESCRIPTION,
+      images: ['/og-default.png'],
+    },
+  };
 }
 
-function ArticlesContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [categories, setCategories] = useState<Category[]>([]);
+interface ArticlesPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
 
-  useEffect(() => {
-    const page = parseInt(searchParams.get('page') || '1') || 1;
-    setCurrentPage(page);
+export default async function ArticlesPage({ searchParams }: ArticlesPageProps) {
+  const currentPage = parseInt((await searchParams).page || '1') || 1;
+  const postsPerPage = 6;
 
-    fetch(`/api/posts?page=${page}&limit=6`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setPosts(data.data);
-          setTotalPages(data.pagination.totalPages);
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to fetch posts:', err);
-        setLoading(false);
-      });
+  let posts: Post[] = [];
+  let totalPages = 0;
+  let postsFailed = false;
 
-    fetch('/api/categories')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setCategories(data.data);
-        }
-      })
-      .catch(err => {
-        console.error('Failed to fetch categories:', err);
-      });
-  }, [searchParams]);
+  try {
+    const result = await PostRepository.getPublicPosts({ page: currentPage, limit: postsPerPage });
+    const authorName = await PostRepository.getAuthorName();
 
-  const handlePageChange = (page: number) => {
-    router.push(`/articles?page=${page}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    totalPages = result.totalPages;
+    posts = result.data.map((row) => ({
+      id: row.id,
+      title: row.title,
+      date: formatDate(row.publishedAt),
+      author: row.authorName || authorName,
+      excerpt: row.excerpt,
+      slug: row.slug,
+      image: row.imageUrl || '',
+      tags: Array.isArray(row.tags)
+        ? (row.tags as Array<{ name: string; slug?: string; color?: string }>).map((t) => ({
+            name: t.name,
+            slug: t.slug,
+            color: t.color || '#6C757D',
+          }))
+        : [],
+    }));
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    postsFailed = true;
+  }
 
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        pages.push(1, 2, 3, '...', totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, '...', currentPage, '...', totalPages);
-      }
-    }
-
-    return pages;
-  };
+  let tags: Array<{ id: number; name: string; slug: string; postCount: number }> = [];
+  try {
+    tags = (await TagRepository.getAllTagsWithCount()).filter((tag) => tag.postCount > 0);
+  } catch (error) {
+    console.error('Error fetching tags:', error);
+  }
 
   return (
     <div>
@@ -98,81 +104,37 @@ function ArticlesContent() {
         <div className="content-wrapper">
           <div className="main-content">
             <div className="blog-section">
-              <h1 className="section-title">All Articles</h1>
+              <h1 className="section-title">{PAGE_TITLE}</h1>
 
-              {loading ? (
-                <div className="text-center py-10 text-text-secondary">
-                  加载中...
-                </div>
-              ) : posts.length === 0 ? (
-                <div className="text-center py-10 text-text-secondary">
-                  暂无文章
+              {postsFailed ? (
+                <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+                  <p style={{ color: 'var(--text-primary)', fontWeight: 600, marginBottom: 8 }}>
+                    文章列表暂时无法加载
+                  </p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
+                    数据服务可能正在维护。请稍后刷新页面重试。
+                  </p>
                 </div>
               ) : (
-                <>
-                  {posts.map((post) => (
-                    <BlogPostCard
-                      key={post.id}
-                      title={post.title}
-                      date={post.date}
-                      author={post.author}
-                      excerpt={post.excerpt}
-                      slug={post.slug}
-                      image={post.image}
-                      tags={post.tags}
-                    />
-                  ))}
-
-                  {totalPages > 1 && (
-                    <div className="pagination">
-                      <button
-                        className="pagination-btn"
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                      >
-                        <span className="pagination-arrow">←</span>
-                      </button>
-
-                      {getPageNumbers().map((page, index) => (
-                        page === '...' ? (
-                          <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
-                        ) : (
-                          <button
-                            key={page}
-                            className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
-                            onClick={() => handlePageChange(page as number)}
-                          >
-                            {page}
-                          </button>
-                        )
-                      ))}
-
-                      <button
-                        className="pagination-btn"
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                      >
-                        <span className="pagination-arrow">→</span>
-                      </button>
-                    </div>
-                  )}
-                </>
+                <ArticlesContent posts={posts} currentPage={currentPage} totalPages={totalPages} />
               )}
             </div>
           </div>
 
           <div className="sidebar">
             <div className="card">
-              <h2 className="section-title">Categories</h2>
-              {categories.length === 0 ? (
-                <p className="text-center py-3 text-text-secondary">加载中...</p>
+              <h2 className="section-title">标签</h2>
+              {tags.length === 0 ? (
+                <p className="text-center py-3 text-text-secondary">暂无标签</p>
               ) : (
                 <ul className="pl-5">
-                  {categories.map((cat) => (
-                    <li key={cat.id} className="mb-2.5">
-                      <a href={`/tags/${cat.slug}`} className="hover:text-warm-orange transition-colors">{cat.name}</a>
+                  {tags.map((tag) => (
+                    <li key={tag.id} className="mb-2.5">
+                      <Link href={`/tags/${tag.slug}`} className="hover:text-warm-orange transition-colors">
+                        {tag.name}
+                      </Link>
                       <span className="ml-2 text-gray-400 text-xs">
-                        ({cat.post_count})
+                        ({tag.postCount})
                       </span>
                     </li>
                   ))}
@@ -185,13 +147,5 @@ function ArticlesContent() {
 
       <Footer />
     </div>
-  );
-}
-
-export default function ArticlesPage() {
-  return (
-    <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px' }}>加载中...</div>}>
-      <ArticlesContent />
-    </Suspense>
   );
 }

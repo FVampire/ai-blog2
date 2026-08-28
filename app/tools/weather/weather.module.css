@@ -1,0 +1,322 @@
+/* ==========================================================================
+   天气查询
+   ========================================================================== */
+
+/* ---------- 城市搜索 ---------- */
+
+.searchRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.searchWrap {
+  position: relative;
+  flex: 1 1 300px;
+  min-width: 0;
+}
+
+.searchInput { width: 100%; }
+
+.suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 6;
+  padding: 5px;
+  border: 1px solid #d2dbe4;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(22, 33, 44, .14);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.suggestion {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #16212c;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13.5px;
+}
+
+.suggestion:hover,
+.suggestion:focus-visible {
+  background: #eef7fa;
+  outline: none;
+}
+
+.suggestionName { font-weight: 600; }
+
+.suggestionMeta {
+  margin-left: auto;
+  color: #8492a0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ---------- 当前天气 ---------- */
+
+.current {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 24px 26px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #e2f6fd 0%, #eef0ff 55%, #fbeef8 100%);
+  border: 1px solid #dbe7f0;
+}
+
+.currentMain {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.currentIcon {
+  font-size: 58px;
+  line-height: 1;
+}
+
+.currentTemp {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.currentTemp strong {
+  color: #12212e;
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -.04em;
+}
+
+.currentLabel {
+  color: #2c4353;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.currentPlace {
+  margin: 0 0 3px;
+  color: #55707f;
+  font-size: 12.5px;
+}
+
+.currentMetrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 10px;
+}
+
+.metric {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .62);
+  border: 1px solid rgba(255, 255, 255, .9);
+}
+
+.metric span {
+  display: block;
+  color: #64798a;
+  font-size: 11.5px;
+}
+
+.metric b {
+  display: block;
+  margin-top: 3px;
+  color: #16212c;
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ---------- 24 小时 ---------- */
+
+.chart {
+  margin-top: 10px;
+  padding: 8px 0 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.chart svg {
+  display: block;
+  width: 100%;
+  min-width: 640px;
+}
+
+.hourRow {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-top: 10px;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #d2dbe4 transparent;
+}
+
+.hourRow::-webkit-scrollbar { height: 7px; }
+.hourRow::-webkit-scrollbar-track { background: transparent; }
+
+.hourRow::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #d2dbe4;
+}
+
+.hour {
+  flex: 0 0 auto;
+  width: 74px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 11px 6px;
+  border: 1px solid #e4eaf0;
+  border-radius: 13px;
+  background: #f6f8fa;
+  text-align: center;
+}
+
+.hourTime {
+  color: #8492a0;
+  font: 600 11px/1 var(--font-mono, monospace);
+}
+
+.hourIcon { font-size: 19px; line-height: 1; }
+
+.hourTemp {
+  color: #16212c;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.hourRain {
+  color: #3d87c4;
+  font: 600 11px/1 var(--font-mono, monospace);
+  /* 无降水时留白，避免一排 0% 抢注意力 */
+  min-height: 11px;
+}
+
+/* ---------- 7 日预报 ---------- */
+
+.daily {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  border: 1px solid #e4eaf0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.day {
+  display: grid;
+  grid-template-columns: 68px 30px minmax(78px, 1fr) 52px minmax(120px, 1.6fr);
+  gap: 12px;
+  align-items: center;
+  padding: 11px 14px;
+  background: #fff;
+}
+
+.day + .day { border-top: 1px solid #eef2f6; }
+.day:nth-child(odd) { background: #fafcfd; }
+
+.dayName {
+  color: #16212c;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dayDate {
+  display: block;
+  color: #8492a0;
+  font: 500 11px/1.4 var(--font-mono, monospace);
+}
+
+.dayIcon {
+  font-size: 20px;
+  line-height: 1;
+  text-align: center;
+}
+
+.dayLabel {
+  color: #55636f;
+  font-size: 13px;
+  /* 「雷暴伴大冰雹」这类长标签不折行，宁可省略 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dayRain {
+  color: #3d87c4;
+  font: 600 12px/1 var(--font-mono, monospace);
+  text-align: right;
+}
+
+/* 温度条：所有日期共用一条全局温标，条的位置和长度都有含义 */
+.dayRange {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dayMin,
+.dayMax {
+  flex: 0 0 34px;
+  font: 600 13px/1 var(--font-mono, monospace);
+}
+
+.dayMin { color: #7d8b98; text-align: right; }
+.dayMax { color: #16212c; }
+
+.dayTrack {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: #e8edf2;
+}
+
+.dayBar {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #52c5e8, #ffb454);
+}
+
+/* ---------- 响应式（按 .shell 容器宽度，而非视口） ---------- */
+
+@container (max-width: 760px) {
+  .current {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 18px;
+  }
+
+  .currentTemp strong { font-size: 46px; }
+  .currentIcon { font-size: 46px; }
+
+  .day {
+    grid-template-columns: 58px 26px minmax(0, 1fr) 44px;
+    gap: 8px;
+    row-gap: 8px;
+  }
+
+  .dayRange { grid-column: 1 / -1; }
+}

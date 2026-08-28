@@ -2,60 +2,66 @@
 
 import React from 'react';
 
-import Link from 'next/link';
+import Image from 'next/image';
+
+interface AuthorSocialLink {
+  platform?: string;
+  name?: string;
+  url?: string;
+}
 
 interface AuthorBioProps {
   name?: string;
   bio?: string;
   avatar?: string;
-  socialLinks?: Array<{ platform: string; url: string }>;
+  socialLinks?: AuthorSocialLink[];
 }
 
 const AuthorBio: React.FC<AuthorBioProps> = ({
-  name = 'John Doe',
-  bio = 'Full-stack developer with a passion for creating beautiful and functional web applications. I write about technology, design, and my journey in the tech industry.',
+  name = '博主',
+  bio = '记录技术、设计与开发路上的思考和实践。',
   avatar,
-  socialLinks = [
-    { platform: 'Twitter', url: '#' },
-    { platform: 'GitHub', url: '#' },
-    { platform: 'LinkedIn', url: '#' },
-  ]
+  socialLinks = [],
 }) => {
+  const visibleLinks = socialLinks.filter(
+    (link) => typeof link.url === 'string' && link.url.trim() !== '' && link.url !== '#'
+  );
+  const initial = name.trim().charAt(0).toUpperCase();
+
   return (
     <div className="author-bio-card">
-      {/* Section Title */}
-      <h2 className="author-bio-title">
-        About Me
-      </h2>
+      <h2 className="author-bio-title">关于我</h2>
 
-      {/* Avatar */}
-      {avatar && (
-        <div className="author-bio-avatar">
-          {avatar}
-        </div>
-      )}
+      <div className={`author-bio-avatar ${avatar ? 'author-bio-avatar-circle' : ''}`}>
+        {avatar ? (
+          <Image
+            src={avatar}
+            alt={name}
+            width={80}
+            height={80}
+            className="author-bio-avatar-img"
+          />
+        ) : (
+          <span className="author-bio-avatar-initial">{initial}</span>
+        )}
+      </div>
 
-      {/* Author Name */}
-      <h3 className="author-bio-name">
-        {name}
-      </h3>
+      <h3 className="author-bio-name">{name}</h3>
 
-      {/* Author Bio */}
-      <p className="author-bio-text">
-        {bio}
-      </p>
+      <p className="author-bio-text">{bio}</p>
 
-      {/* Social Links */}
-      {socialLinks && socialLinks.length > 0 && (
+      {visibleLinks.length > 0 && (
         <div className="author-bio-socials">
-          {socialLinks.map((link, index) => (
-            <Link
-              key={index}
+          {visibleLinks.map((link, index) => (
+            <a
+              key={`${link.url}-${index}`}
               href={link.url}
               className="author-bio-social-link"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              {link.platform}
-            </Link>
+              {link.name || link.platform || link.url}
+            </a>
           ))}
         </div>
       )}

@@ -3,9 +3,12 @@
 import React, { useState, useEffect } from "react";
 
 import AdminLayout from "../../../components/admin/AdminLayout";
+import { authJson } from "../../../components/admin/authFetch";
 import MCPManager from "../../../components/admin/MCPManager";
 import AISettings from "../../../components/admin/settings/AISettings";
+import { collectMaskedKeys, MASKED_FIELD_PLACEHOLDER } from "../../../components/admin/settings/sensitive";
 import SocialSettings from "../../../components/admin/settings/SocialSettings";
+import { toast } from "../../../components/admin/Toast";
 import VectorManager from "../../../components/admin/VectorManager";
 
 interface SettingDetail { value: any; type: string; description: string; }
@@ -61,45 +64,60 @@ export default function AdminSettings() {
   const [details, setDetails] = useState<SettingsDetails>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
   const [activeTab, setActiveTab] = useState("basic");
   const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; name: string; url: string }>>([]);
+  const [maskedKeys, setMaskedKeys] = useState<string[]>([]);
 
   useEffect(() => { fetchSettings(); }, []);
 
   const fetchSettings = async () => {
-    try {
-      const token = localStorage.getItem("adminToken");
-      const response = await fetch("/api/settings", { headers: { Authorization: `Bearer ${token}` } });
-      const data = await response.json();
-      if (data.success) {
-        setSettings(data.data.settings); setDetails(data.data.details);
-        if (data.data.settings.about_social_links) setSocialLinks(data.data.settings.about_social_links);
-      } else setMessage({ type: "error", text: data.message || "获取设置失败" });
-    } catch (error) { console.error("Fetch settings error:", error); setMessage({ type: "error", text: "获取设置失败" }); }
-    finally { setLoading(false); }
+    const result = await authJson<{ settings: Record<string, any>; details: SettingsDetails }>("/api/settings");
+    setLoading(false);
+
+    if (!result.success || !result.data) {
+      toast.error(result.message || "获取设置失败");
+      return;
+    }
+
+    setSettings(result.data.settings);
+    setDetails(result.data.details);
+    setMaskedKeys(collectMaskedKeys(result.data.details));
+    if (result.data.settings.about_social_links) setSocialLinks(result.data.settings.about_social_links);
   };
 
   const handleChange = (key: string, value: any) => setSettings((prev) => ({ ...prev, [key]: value }));
   const handleSocialLinksChange = (links: Array<{ platform: string; name: string; url: string }>) => setSocialLinks(links);
 
   const handleSave = async () => {
-    setSaving(true); setMessage({ type: "", text: "" });
-    try {
-      const token = localStorage.getItem("adminToken");
-      if (!token) { setMessage({ type: "error", text: "登录已过期" }); window.location.href = "/admin/login"; return; }
-      const settingsToSave = { ...settings, about_social_links: socialLinks };
-      const response = await fetch("/api/settings", { method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ settings: settingsToSave }) });
-      const data = await response.json();
-      if (data.success) setMessage({ type: "success", text: "设置已保存" });
-      else setMessage({ type: "error", text: data.message || "保存失败" });
-    } catch (error) { console.error("Save settings error:", error); setMessage({ type: "error", text: "保存失败" }); }
-    finally { setSaving(false); }
+    setSaving(true);
+
+    // 脱敏字段的 value 是 null，不能当成"用户清空"写回数据库
+    const settingsToSave: Record<string, any> = {};
+    Object.entries(settings).forEach(([key, value]) => {
+      if (maskedKeys.includes(key)) return;
+      settingsToSave[key] = value;
+    });
+    settingsToSave.about_social_links = socialLinks;
+
+    const result = await authJson<{ updatedKeys: string[]; ignoredKeys: string[] }>("/api/settings", {
+      method: "PUT",
+      body: JSON.stringify({ settings: settingsToSave }),
+    });
+    setSaving(false);
+
+    if (!result.success) {
+      toast.error(result.message || "保存失败");
+      return;
+    }
+
+    const ignoredKeys = result.data?.ignoredKeys || [];
+    toast.success(ignoredKeys.length > 0 ? `设置已保存（已忽略未知配置项：${ignoredKeys.join("、")}）` : "设置已保存");
   };
 
   const renderInput = (key: string, detail: SettingDetail) => {
     const { type } = detail; const value = settings[key];
     if (key === "about_social_links") return <SocialSettings initialLinks={socialLinks} onChange={handleSocialLinksChange} />;
+    if (maskedKeys.includes(key)) return <input type="password" value="" disabled placeholder={MASKED_FIELD_PLACEHOLDER} className="settings-input settings-input-masked" />;
     if (type === "boolean") return (<label className="toggle-switch"><input type="checkbox" checked={value === true} onChange={(e) => handleChange(key, e.target.checked)} /><span className="toggle-slider"></span></label>);
     if (type === "number") return <input type="number" value={value || ""} onChange={(e) => handleChange(key, parseInt(e.target.value) || 0)} className="settings-input" />;
     if (key === "ai_provider") return (<select value={value || "openai"} onChange={(e) => handleChange(key, e.target.value)} className="settings-select"><option value="openai">OpenAI</option><option value="anthropic">Anthropic (Claude)</option><option value="deepseek">DeepSeek</option><option value="moonshot">Moonshot</option><option value="qwen">通义千问</option><option value="other">其他</option></select>);

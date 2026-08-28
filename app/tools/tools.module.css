@@ -1,0 +1,246 @@
+/* ==========================================================================
+   /tools 列表页
+   搜索与分类筛选在常驻侧边栏里，这里只负责卡片网格。
+   ========================================================================== */
+
+.page {
+  --ink: #16212c;
+  --ink-2: #55636f;
+  --ink-3: #8492a0;
+  --line: #e4eaf0;
+  --line-strong: #d2dbe4;
+  --surface: #ffffff;
+  --surface-2: #f6f8fa;
+
+  /* 与 .shell 同理：侧边栏让内容列窄于视口，页内断点与字号都按容器宽度算 */
+  container-type: inline-size;
+
+  width: min(1240px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 28px 0 80px;
+  color: var(--ink);
+}
+
+/* ---------- 分类区块 ---------- */
+
+.category { margin-top: 36px; }
+
+.category:first-child { margin-top: 0; }
+
+.categoryHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.categoryHeading h2 {
+  margin: 0;
+  font-size: clamp(18px, 2.6cqi, 22px);
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+
+.categoryDesc {
+  margin: 0 0 0 auto;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+/* ---------- 工具卡片 ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 186px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  color: inherit;
+  background: var(--surface);
+  text-decoration: none;
+  transition: transform .18s, box-shadow .18s, border-color .18s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  box-shadow: 0 2px 4px rgba(22, 33, 44, .04), 0 18px 40px rgba(22, 33, 44, .09);
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.cardIcon {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #fff;
+  background: var(--accent);
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  /* 图标文本长度不一（{ }、TS、64、MCP），按字符数收敛字号，保证视觉重量一致 */
+  font-size: clamp(11px, calc(46px / max(var(--icon-len), 1)), 17px);
+  line-height: 1;
+  letter-spacing: -.02em;
+}
+
+/* 仅在有信息量时才显示徽章：稳定态不显示 */
+.badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font: 700 10px/1.3 var(--font-mono, monospace);
+  letter-spacing: .07em;
+}
+
+.badgeBeta {
+  color: #8a4b00;
+  background: #fff4e2;
+  border-color: #ffd7a3;
+}
+
+.badgePlanned {
+  color: var(--ink-3);
+  background: var(--surface-2);
+}
+
+.card h3 {
+  margin: 0 0 3px;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -.01em;
+}
+
+.enName {
+  margin: 0;
+  color: var(--ink-3);
+  font: 500 11px/1.4 var(--font-mono, monospace);
+  letter-spacing: .02em;
+}
+
+.tagline {
+  margin: 10px 0 14px;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: auto;
+}
+
+.tags span {
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink-3);
+  font: 600 10.5px/1.4 var(--font-mono, monospace);
+}
+
+/* 只有依赖第三方或走服务端时才值得说明，本地处理是默认情况，不必每张卡片重复 */
+.provider {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-3);
+  font-size: 11.5px;
+}
+
+.provider::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* ---------- 规划中卡片 ---------- */
+
+.planned {
+  cursor: not-allowed;
+  background: var(--surface-2);
+  border-style: dashed;
+}
+
+.planned:hover {
+  transform: none;
+  border-color: var(--line-strong);
+  box-shadow: none;
+}
+
+.planned .cardIcon {
+  color: var(--ink-3);
+  background: var(--line);
+}
+
+.planned h3 { color: var(--ink-2); }
+
+.plannedNote {
+  margin: 10px 0 0;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+/* ---------- 空结果 ---------- */
+
+.empty {
+  padding: 72px 20px;
+  text-align: center;
+  color: var(--ink-3);
+  border: 1px dashed var(--line-strong);
+  border-radius: 18px;
+  background: var(--surface-2);
+}
+
+.empty strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-size: 16px;
+}
+
+@container (max-width: 860px) {
+  .categoryDesc { margin-left: 0; flex-basis: 100%; }
+
+  .grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+}
+
+@container (max-width: 520px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 860px) {
+  .page {
+    width: min(100% - 28px, 1240px);
+    padding-top: 24px;
+  }
+}

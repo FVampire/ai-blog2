@@ -141,6 +141,27 @@ const searchPageStyles = `
   border-radius: 12px;
   margin-bottom: 24px;
 }
+.sp-results-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+.sp-results-progress { font-size: 0.85rem; color: #6B7280; }
+.sp-load-more {
+  background: #FFFFFF;
+  color: #374151;
+  border: 1px solid #D1D5DB;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.sp-load-more:hover:not(:disabled) { background: #F3F4F6; border-color: #9CA3AF; }
+.sp-load-more:disabled { opacity: 0.6; cursor: not-allowed; }
 @media (max-width: 640px) {
   .sp-search-title { font-size: 1.75rem; }
   .sp-search-input-wrapper { flex-wrap: wrap; }
@@ -150,6 +171,8 @@ const searchPageStyles = `
   .sp-type-btn { justify-content: center; }
 }
 `;
+
+const PAGE_SIZE = 10;
 
 function SearchContent() {
   const router = useRouter();
@@ -161,59 +184,88 @@ function SearchContent() {
   const [searchType, setSearchType] = useState<'vector' | 'text'>('vector');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [total, setTotal] = useState(0);
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
 
-  useEffect(() => {
-    if (q) {
-      setQuery(q);
-      performSearch(q, (type as 'vector' | 'text') || 'vector');
-    }
-  }, [q, type]);
-
-  const performSearch = useCallback(async (searchQuery: string, searchType: 'vector' | 'text') => {
+  const performSearch = useCallback(async (
+    searchQuery: string,
+    nextSearchType: 'vector' | 'text',
+    nextLimit: number,
+  ) => {
     if (!searchQuery.trim()) return;
 
-    setIsLoading(true);
+    const loadingMore = nextLimit > PAGE_SIZE;
+    if (loadingMore) setIsLoadingMore(true);
+    else setIsLoading(true);
     setError('');
     setSearched(true);
 
     try {
-      const response = await apiClient.get<SearchData>(`/api/search?q=${encodeURIComponent(searchQuery)}&type=${searchType}`);
+      const response = await apiClient.get<SearchData>(
+        `/api/search?q=${encodeURIComponent(searchQuery)}&type=${nextSearchType}&limit=${nextLimit}`,
+      );
 
       if (response.success) {
-        setResults(response.data.results);
-        setTotal(response.data.total);
+        const list = response.data.results || [];
+        setResults(list);
+        setTotal(response.data.total ?? list.length);
+        setHasMore(list.length >= nextLimit);
       } else {
         setError(response.message || '搜索失败');
         setResults([]);
         setTotal(0);
+        setHasMore(false);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '搜索失败，请稍后重试';
       setError(message);
       setResults([]);
       setTotal(0);
+      setHasMore(false);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (type === 'text' || type === 'vector') setSearchType(type);
+  }, [type]);
+
+  useEffect(() => {
+    if (q) {
+      setQuery(q);
+      setLimit(PAGE_SIZE);
+      performSearch(q, (type as 'vector' | 'text') || 'vector', PAGE_SIZE);
+    }
+  }, [q, type, performSearch]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
 
+    setLimit(PAGE_SIZE);
     router.push(`/search?q=${encodeURIComponent(query)}&type=${searchType}`);
-    performSearch(query, searchType);
+    performSearch(query, searchType, PAGE_SIZE);
   };
 
   const handleTypeChange = (newType: 'vector' | 'text') => {
     setSearchType(newType);
     if (query.trim()) {
+      setLimit(PAGE_SIZE);
       router.push(`/search?q=${encodeURIComponent(query)}&type=${newType}`);
-      performSearch(query, newType);
+      performSearch(query, newType, PAGE_SIZE);
     }
+  };
+
+  const handleLoadMore = () => {
+    const nextLimit = limit + PAGE_SIZE;
+    setLimit(nextLimit);
+    performSearch(query, searchType, nextLimit);
   };
 
   return (
@@ -302,12 +354,34 @@ function SearchContent() {
             )}
 
             {!error && searched && (
-              <SearchResults
-                results={results}
-                query={q as string || ''}
-                searchType={searchType}
-                isLoading={isLoading}
-              />
+              <>
+                <SearchResults
+                  results={results}
+                  query={q as string || ''}
+                  searchType={searchType}
+                  isLoading={isLoading}
+                />
+
+                {!isLoading && results.length > 0 && (
+                  <div className="sp-results-footer">
+                    <span className="sp-results-progress">
+                      已显示 {results.length} 条{total > results.length ? ` / 共 ${total} 条` : ''}
+                    </span>
+                    {hasMore ? (
+                      <button
+                        type="button"
+                        className="sp-load-more"
+                        onClick={handleLoadMore}
+                        disabled={isLoadingMore}
+                      >
+                        {isLoadingMore ? '加载中…' : '加载更多'}
+                      </button>
+                    ) : (
+                      <span className="sp-results-progress">已经到底了</span>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

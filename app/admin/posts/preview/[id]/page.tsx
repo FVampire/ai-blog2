@@ -1,24 +1,28 @@
 import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
-import rehypeRaw from 'rehype-raw';
-import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
 
 import Footer from '../../../../../components/Footer';
 import Header from '../../../../../components/Header';
 import TableOfContents from '../../../../../components/TableOfContents';
+import { requireAdminPage } from '../../../../../lib/auth-page';
 import { query } from '../../../../../lib/db';
+import { articleRehypePlugins } from '../../../../../lib/markdown/plugins';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminPage();
   try {
     const result = await query(`SELECT p.title, p.excerpt FROM posts p WHERE p.id = $1`, [(await params).id]);
     if (result.rows.length > 0) {
-      return { title: `[预览] ${result.rows[0].title} - 五月的火`, description: result.rows[0].excerpt || `Preview` };
+      return {
+        title: `[预览] ${result.rows[0].title} - 五月的火`,
+        description: result.rows[0].excerpt || `Preview`,
+        robots: { index: false, follow: false },
+      };
     }
   } catch {
     // 忽略元数据生成错误
   }
-  return { title: '文章预览 - 五月的火' };
+  return { title: '文章预览 - 五月的火', robots: { index: false, follow: false } };
 }
 
 function formatDate(dateString: string) {
@@ -26,6 +30,7 @@ function formatDate(dateString: string) {
 }
 
 export default async function PreviewPostPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminPage();
   const { id } = await params;
   let post: any = null;
 
@@ -86,7 +91,7 @@ export default async function PreviewPostPage({ params }: { params: Promise<{ id
                       </div>
                     )}
                     <div className="markdown-preview" style={{ marginTop: '32px' }}>
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeSlug]}>{post.content}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={articleRehypePlugins}>{post.content}</ReactMarkdown>
                     </div>
                   </div>
                 </article>

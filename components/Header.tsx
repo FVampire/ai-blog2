@@ -7,15 +7,26 @@ import { usePathname } from 'next/navigation';
 
 interface NavLinkProps {
   href: string;
+  className?: string;
+  onNavigate?: () => void;
   children: React.ReactNode;
 }
 
-const NavLink: React.FC<NavLinkProps> = ({ href, children }) => {
+function useIsActive(href: string) {
   const pathname = usePathname();
-  const isActive = pathname === href || (href !== '/' && pathname?.startsWith(href));
+  return pathname === href || (href !== '/' && !!pathname?.startsWith(href));
+}
+
+const NavLink: React.FC<NavLinkProps> = ({ href, className = 'nav-link', onNavigate, children }) => {
+  const isActive = useIsActive(href);
 
   return (
-    <Link href={href} className={`nav-link ${isActive ? 'active' : ''}`}>
+    <Link
+      href={href}
+      className={`${className} ${isActive ? 'active' : ''}`}
+      aria-current={isActive ? 'page' : undefined}
+      onClick={onNavigate}
+    >
       {children}
     </Link>
   );
@@ -31,8 +42,10 @@ const Header: React.FC<HeaderProps> = ({
   projectsEnabled: propEnabled,
 }) => {
   const [siteName, setSiteName] = useState('BLOG');
-  const [fetchedNavLabel, setFetchedNavLabel] = useState('Projects');
+  const [fetchedNavLabel, setFetchedNavLabel] = useState('项目');
   const [fetchedEnabled, setFetchedEnabled] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   const projectsNavLabel = propNavLabel ?? fetchedNavLabel;
   const projectsEnabled = propEnabled ?? fetchedEnabled;
@@ -52,17 +65,76 @@ const Header: React.FC<HeaderProps> = ({
       });
   }, []);
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [menuOpen]);
+
+  const navItems: Array<{ href: string; label: string }> = [
+    { href: '/', label: '首页' },
+    { href: '/articles', label: '文章' },
+    ...(projectsEnabled ? [{ href: '/projects', label: projectsNavLabel }] : []),
+    { href: '/tools', label: '工具' },
+    { href: '/tags', label: '标签' },
+    { href: '/about', label: '关于' },
+  ];
+
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <header className="header">
-      <div className="logo">{siteName}</div>
-      <nav className="navigation">
-        <NavLink href="/">Home</NavLink>
-        <NavLink href="/articles">Articles</NavLink>
-        {projectsEnabled && (
-          <NavLink href="/projects">{projectsNavLabel}</NavLink>
-        )}
-        <NavLink href="/tags">Tags</NavLink>
-        <NavLink href="/about">About</NavLink>
+      <Link href="/" className="logo" aria-label="返回首页">
+        {siteName}
+      </Link>
+
+      <nav className="navigation" aria-label="主导航">
+        {navItems.map((item) => (
+          <NavLink key={item.href} href={item.href}>
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
+
+      <button
+        type="button"
+        className={`nav-toggle ${menuOpen ? 'is-open' : ''}`}
+        aria-label={menuOpen ? '关闭导航菜单' : '打开导航菜单'}
+        aria-expanded={menuOpen}
+        aria-controls="mobile-navigation"
+        onClick={() => setMenuOpen((open) => !open)}
+      >
+        <span className="nav-toggle-bar" />
+        <span className="nav-toggle-bar" />
+        <span className="nav-toggle-bar" />
+      </button>
+
+      {menuOpen && <div className="nav-overlay" onClick={closeMenu} aria-hidden="true" />}
+
+      <nav
+        id="mobile-navigation"
+        className={`nav-drawer ${menuOpen ? 'is-open' : ''}`}
+        aria-label="移动端导航"
+      >
+        {navItems.map((item) => (
+          <NavLink
+            key={item.href}
+            href={item.href}
+            className="nav-drawer-link"
+            onNavigate={closeMenu}
+          >
+            {item.label}
+          </NavLink>
+        ))}
       </nav>
     </header>
   );

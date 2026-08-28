@@ -13,14 +13,20 @@ export class User {
   @Column({ type: 'varchar', length: 100, unique: true })
   email!: string;
 
-  @Column({ name: 'password', type: 'varchar', length: 255 })
+  @Column({ name: 'password_hash', type: 'varchar', length: 255 })
   password!: string;
 
-  @Column({ type: 'varchar', length: 20, default: 'user' })
-  role!: 'admin' | 'author' | 'user';
+  @Column({ type: 'varchar', length: 20, default: 'author' })
+  role!: 'admin' | 'editor' | 'author';
 
   @Column({ type: 'varchar', length: 20, default: 'active' })
-  status!: 'active' | 'inactive' | 'suspended';
+  status!: 'active' | 'inactive';
+
+  @Column({ name: 'avatar_url', type: 'varchar', length: 255, nullable: true })
+  avatarUrl?: string;
+
+  @Column({ type: 'text', nullable: true })
+  bio?: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

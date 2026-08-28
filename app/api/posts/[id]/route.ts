@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth, isAuthError } from '@/lib/auth-middleware-app';
+import { JWTPayload } from '@/lib/jwt';
 import { PostRepository } from '@/lib/repositories/PostRepository';
+
+const MANAGER_ROLES = ['admin', 'editor'];
+
+async function ensureCanMutatePost(user: JWTPayload, postId: number): Promise<NextResponse | null> {
+  if (MANAGER_ROLES.includes(user.role)) return null;
+
+  const post = await PostRepository.getPostById(postId);
+  if (!post) {
+    return NextResponse.json({ success: false, message: '文章不存在' }, { status: 404 });
+  }
+
+  if (post.authorId !== user.userId) {
+    return NextResponse.json({ success: false, message: '无权操作此文章' }, { status: 403 });
+  }
+
+  return null;
+}
 
 export async function GET(
   request: NextRequest,
@@ -64,6 +82,9 @@ export async function PUT(
   }
 
   try {
+    const permissionError = await ensureCanMutatePost(authResult.user, postId);
+    if (permissionError) return permissionError;
+
     const body = await request.json();
     const post = await PostRepository.updatePost(postId, {
       title: body.title,
@@ -103,6 +124,9 @@ export async function DELETE(
   }
 
   try {
+    const permissionError = await ensureCanMutatePost(authResult.user, postId);
+    if (permissionError) return permissionError;
+
     await PostRepository.deletePost(postId);
     return NextResponse.json({ success: true, message: '文章删除成功' });
   } catch (error) {

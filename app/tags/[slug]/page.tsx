@@ -1,17 +1,46 @@
-import { TagRepository } from '../../../lib/repositories/TagRepository';
-import { PostRepository } from '../../../lib/repositories/PostRepository';
-import TagPageContent from './TagPageContent';
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+import TagPageContent from './TagPageContent';
+import { formatDate } from '../../../lib/format';
+import { PostRepository } from '../../../lib/repositories/PostRepository';
+import { TagRepository } from '../../../lib/repositories/TagRepository';
+
+const SITE_NAME = '五月的火';
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const tag = await TagRepository.getTagBySlug(slug);
-  if (tag) {
-    return {
-      title: `${tag.name} - 五月的火`,
-      description: `浏览标签为 ${tag.name} 的所有文章`,
-    };
+
+  if (!tag) {
+    return { title: '标签未找到' };
   }
-  return { title: '标签未找到 - 五月的火' };
+
+  const title = `标签：${tag.name}`;
+  const description = `浏览标签为 ${tag.name} 的所有文章`;
+  const url = `${SITE_URL}/tags/${tag.slug}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      title,
+      description,
+      url,
+      siteName: SITE_NAME,
+      locale: 'zh_CN',
+      images: [{ url: '/og-default.png', width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ['/og-default.png'],
+    },
+  };
 }
 
 export default async function TagSlugPage({
@@ -26,20 +55,17 @@ export default async function TagSlugPage({
   const postsPerPage = 6;
 
   const result = await TagRepository.getPostsByTagSlug(slug, page, postsPerPage);
-  const authorName = await PostRepository.getAuthorName();
 
   if (!result) {
-    return <TagPageContent tag={null as any} posts={[]} currentPage={1} totalPages={0} />;
+    notFound();
   }
+
+  const authorName = await PostRepository.getAuthorName();
 
   const posts = result.posts.map((p) => ({
     id: p.id,
     title: p.title,
-    date: new Date(p.publishedAt || Date.now()).toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }),
+    date: formatDate(p.publishedAt),
     author: authorName,
     excerpt: p.excerpt,
     slug: p.slug,

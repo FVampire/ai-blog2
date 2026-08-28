@@ -5,7 +5,25 @@ export const metadata = {
   title: '文章管理 - Blog Admin',
 };
 
-export default async function AdminPostsPage() {
+const PAGE_SIZE = 20;
+const VALID_STATUSES = ['all', 'published', 'draft', 'archived'] as const;
+
+type PostStatusFilter = (typeof VALID_STATUSES)[number];
+
+interface AdminPostsPageProps {
+  searchParams: Promise<{ page?: string; status?: string; search?: string }>;
+}
+
+export default async function AdminPostsPage({ searchParams }: AdminPostsPageProps) {
+  const params = await searchParams;
+
+  const parsedPage = parseInt(params.page || '1', 10);
+  const requestedPage = Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
+  const status: PostStatusFilter = VALID_STATUSES.includes(params.status as PostStatusFilter)
+    ? (params.status as PostStatusFilter)
+    : 'all';
+  const search = (params.search || '').trim();
+
   let posts: Array<{
     id: number;
     title: string;
@@ -15,9 +33,21 @@ export default async function AdminPostsPage() {
     views: number;
     tags: string[];
   }> = [];
+  let total = 0;
+  let totalPages = 0;
+  let page = requestedPage;
 
   try {
-    const result = await PostRepository.getAdminPosts({ page: 1, limit: 500 });
+    const result = await PostRepository.getAdminPosts({
+      page: requestedPage,
+      limit: PAGE_SIZE,
+      status,
+      search: search || undefined,
+    });
+
+    total = result.total;
+    totalPages = result.totalPages;
+    page = result.page;
 
     posts = result.data.map((p) => ({
       id: p.id,
@@ -32,5 +62,15 @@ export default async function AdminPostsPage() {
     console.error('Error fetching posts:', error);
   }
 
-  return <AdminPostsContent posts={posts} totalPosts={posts.length} />;
+  return (
+    <AdminPostsContent
+      posts={posts}
+      totalPosts={total}
+      page={page}
+      pageSize={PAGE_SIZE}
+      totalPages={totalPages}
+      status={status}
+      search={search}
+    />
+  );
 }

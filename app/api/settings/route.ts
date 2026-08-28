@@ -23,9 +23,22 @@ function serializeSettingValue(value: unknown, type: string): string {
   }
 }
 
+const SENSITIVE_SETTING_KEYS = ['ai_api_key', 'ai_embedding_api_key'];
+const SENSITIVE_KEY_PATTERNS = ['api_key', 'apikey', 'secret', 'token', 'password'];
+
+function isSensitiveKey(key: string): boolean {
+  const lowerKey = key.toLowerCase();
+  return (
+    SENSITIVE_SETTING_KEYS.includes(lowerKey) ||
+    SENSITIVE_KEY_PATTERNS.some((pattern) => lowerKey.includes(pattern))
+  );
+}
+
 export async function GET(request: NextRequest) {
   const authResult = requireAuth(request);
   if (isAuthError(authResult)) return authResult;
+
+  const canReadSecrets = authResult.user.role === 'admin';
 
   try {
     const result = await query(
@@ -36,9 +49,11 @@ export async function GET(request: NextRequest) {
     const settingsDetails: Record<string, { value: unknown; type: string; description: string }> = {};
 
     result.rows.forEach((row: any) => {
-      settings[row.key] = parseSettingValue(row.value, row.type);
+      const masked = !canReadSecrets && isSensitiveKey(row.key);
+      const value = masked ? null : parseSettingValue(row.value, row.type);
+      settings[row.key] = value;
       settingsDetails[row.key] = {
-        value: parseSettingValue(row.value, row.type),
+        value,
         type: row.type,
         description: row.description,
       };
@@ -78,19 +93,31 @@ export async function PUT(request: NextRequest) {
       typeMap[row.key] = row.type;
     });
 
+    const updatedKeys: string[] = [];
+    const ignoredKeys: string[] = [];
+
     const updates = Object.entries(settings);
     for (const [key, value] of updates) {
-      const type = typeMap[key] || 'string';
+      const type = typeMap[key];
+      if (!type) {
+        ignoredKeys.push(key);
+        continue;
+      }
+
       const serializedValue = serializeSettingValue(value, type);
       await query(
         'UPDATE settings SET value = $1 WHERE key = $2',
         [serializedValue, key]
       );
+      updatedKeys.push(key);
     }
 
     return NextResponse.json({
       success: true,
-      message: '设置已更新',
+      message: ignoredKeys.length > 0
+        ? `设置已更新，已忽略未知配置项：${ignoredKeys.join('、')}`
+        : '设置已更新',
+      data: { updatedKeys, ignoredKeys },
     });
   } catch (error) {
     console.error('Update settings error:', error);

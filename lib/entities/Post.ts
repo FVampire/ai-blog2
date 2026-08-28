@@ -19,8 +19,8 @@ export class Post {
   @Column({ type: 'text', nullable: true })
   excerpt?: string;
 
-  @Column({ type: 'text', nullable: true })
-  content?: string;
+  @Column({ type: 'text' })
+  content!: string;
 
   @Column({ name: 'image_url', type: 'varchar', length: 255, nullable: true })
   imageUrl?: string;

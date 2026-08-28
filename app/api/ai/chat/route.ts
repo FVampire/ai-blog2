@@ -5,6 +5,7 @@ import { ChatOpenAI, type ClientOptions } from "@langchain/openai";
 import { createAgent } from "langchain";
 
 import { generateEmbedding } from "@/lib/embedding";
+import { enforceRateLimit } from "@/lib/rate-limit-api";
 import { mcpRepository, MCPServerListItem } from "@/lib/repositories/MCPRepository";
 import { SettingsRepository } from "@/lib/repositories/SettingsRepository";
 import { VectorRepository } from "@/lib/repositories/VectorRepository";
@@ -92,6 +93,15 @@ async function generateAgentTools(selectedMCPServers: MCPServerListItem[]) {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimited = enforceRateLimit(
+    request,
+    "ai:chat",
+    10,
+    60_000,
+    "请求过于频繁，请稍后再试"
+  );
+  if (rateLimited) return rateLimited;
+
   try {
     const body = await request.json();
     const validation = validateRequest(body);

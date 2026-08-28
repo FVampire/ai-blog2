@@ -76,10 +76,6 @@ export default function AdminLogin() {
             <button type="submit" className="login-button" disabled={loading}>
               {loading ? '登录中...' : '登录'}
             </button>
-
-            <div className="login-hint">
-              <p>测试账号：admin / admin123</p>
-            </div>
           </form>
         </div>
       </div>

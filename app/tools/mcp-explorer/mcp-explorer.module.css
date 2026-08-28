@@ -1,0 +1,118 @@
+/* ==========================================================================
+   MCP 注册表查询
+   ========================================================================== */
+
+.searchRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.searchInput { flex: 1 1 320px; min-width: 0; }
+
+.resultMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  margin: 16px 0 0;
+  color: #8492a0;
+  font-size: 12.5px;
+}
+
+/* ---------- 服务器卡片 ---------- */
+
+.name {
+  margin: 0 0 4px;
+  color: #16212c;
+  font-size: 15.5px;
+  font-weight: 650;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* 完整包名（io.github.owner/pkg）作为第二行，单行省略而不是逐字断开 */
+.fullName {
+  display: block;
+  margin-bottom: 8px;
+  color: #8492a0;
+  font: 500 11.5px/1.4 var(--font-mono, monospace);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.desc {
+  margin: 0 0 12px;
+  color: #55636f;
+  font-size: 13px;
+  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.loadMore {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+/* ---------- 配置抽屉 ---------- */
+
+.detail {
+  margin-top: 18px;
+  border: 1px solid #d2dbe4;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(22, 33, 44, .08);
+}
+
+.detailHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 13px 16px;
+  border-bottom: 1px solid #e4eaf0;
+  background: #f6f8fa;
+}
+
+.detailTitle {
+  margin: 0;
+  margin-right: auto;
+  min-width: 0;
+  color: #16212c;
+  font-size: 15px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.detailBody { padding: 16px; }
+
+.hint {
+  margin: 0 0 10px;
+  color: #55636f;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.hint code {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #eef2f6;
+  font: 12px/1.6 var(--font-mono, monospace);
+}
+
+.versions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 14px 0 0;
+  color: #8492a0;
+  font-size: 12.5px;
+}

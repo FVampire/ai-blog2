@@ -1,61 +1,29 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
-interface Tag {
-  id: number;
-  name: string;
-  slug: string;
-  color: string;
-  post_count: number;
+import Link from 'next/link';
+
+import { useTags } from './useTags';
+
+function adjustBrightness(color: string, percent: number): string {
+  if (!color) return color;
+  const num = parseInt(color.replace('#', ''), 16);
+  const r = Math.min(255, Math.max(0, (num >> 16) + percent));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + percent));
+  const b = Math.min(255, Math.max(0, (num & 0x0000FF) + percent));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 }
 
 const TagCloud: React.FC = () => {
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { tags, loading } = useTags();
 
-  useEffect(() => {
-    // Fetch tags from API
-    fetch('/api/tags')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setTags(data.data);
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to fetch tags:', err);
-        setLoading(false);
-      });
-  }, []);
-
-  // 辅助函数：调整颜色亮度
-  const adjustBrightness = (color: string, percent: number): string => {
-    const num = parseInt(color.replace('#', ''), 16);
-    const r = Math.min(255, Math.max(0, (num >> 16) + percent));
-    const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + percent));
-    const b = Math.min(255, Math.max(0, (num & 0x0000FF) + percent));
-    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-  };
-
-  if (loading) {
+  if (loading || tags.length === 0) {
     return (
       <div className="card">
-        <h2 className="section-title">Tags</h2>
+        <h2 className="section-title">标签</h2>
         <div className="tags-container">
-          <p style={{ color: '#6C757D', textAlign: 'center' }}>加载中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (tags.length === 0) {
-    return (
-      <div className="card">
-        <h2 className="section-title">Tags</h2>
-        <div className="tags-container">
-          <p style={{ color: '#6C757D', textAlign: 'center' }}>暂无标签</p>
+          <p className="widget-placeholder">{loading ? '加载中...' : '暂无标签'}</p>
         </div>
       </div>
     );
@@ -63,10 +31,10 @@ const TagCloud: React.FC = () => {
 
   return (
     <div className="card">
-      <h2 className="section-title">Tags</h2>
+      <h2 className="section-title">标签</h2>
       <div className="tags-container">
-        {tags.map((tag, index) => (          
-          <a
+        {tags.map((tag, index) => (
+          <Link
             key={tag.id}
             href={`/tags/${tag.slug}`}
             className="tag tag-with-count no-underline cursor-pointer relative"
@@ -82,7 +50,7 @@ const TagCloud: React.FC = () => {
                 {tag.post_count}
               </span>
             )}
-          </a>
+          </Link>
         ))}
       </div>
     </div>

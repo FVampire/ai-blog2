@@ -6,3 +6,4 @@ export { Comment } from './Comment';
 export { Setting } from './Setting';
 export { MCPServer } from './MCPServer';
 export { PostVector } from './PostVector';
+export { Project } from './Project';

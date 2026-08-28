@@ -1,6 +1,7 @@
 import { createHmac } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { ADMIN_TOKEN_COOKIE } from './auth-cookie';
 import { verifyToken, JWTPayload } from './jwt';
 
 export interface AuthResult {
@@ -14,13 +15,12 @@ export interface AuthResult {
 export function getAuthUser(request: NextRequest): JWTPayload | null {
   const authHeader = request.headers.get('authorization');
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
+  if (authHeader?.startsWith('Bearer ')) {
+    return verifyToken(authHeader.substring(7));
   }
 
-  const token = authHeader.substring(7);
-  const decoded = verifyToken(token);
-  return decoded;
+  const cookieToken = request.cookies.get(ADMIN_TOKEN_COOKIE)?.value;
+  return cookieToken ? verifyToken(cookieToken) : null;
 }
 
 /**

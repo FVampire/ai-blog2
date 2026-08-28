@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 
 import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
-import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
+
+import { previewRehypePlugins } from '../lib/markdown/plugins';
 
 interface MarkdownEditorProps {
   value: string;
@@ -117,7 +117,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             {value ? (
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw, rehypeHighlight]}
+                rehypePlugins={previewRehypePlugins}
               >
                 {value}
               </ReactMarkdown>
