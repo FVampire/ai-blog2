@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 
 const SITE_NAME = '五月的火';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
+const STATIC_CASE_SLUGS = ['moling', 'forgetting-tide'] as const;
 
 function buildMetadata(title: string, description: string): Metadata {
   const url = `${SITE_URL}/projects`;
@@ -63,13 +64,13 @@ export default async function ProjectsPage() {
     console.error('Error fetching projects:', error);
   }
 
-  const managedProjects = projects.filter((project) => project.slug !== 'forgetting-tide');
+  const managedProjects = projects.filter((project) => !STATIC_CASE_SLUGS.includes(project.slug as typeof STATIC_CASE_SLUGS[number]));
   const featured = managedProjects.filter((project) => project.featured);
   const regular = managedProjects.filter((project) => !project.featured);
-  const total = managedProjects.length + 1;
+  const total = managedProjects.length + STATIC_CASE_SLUGS.length;
 
   return (
-    <div>
+    <div className={styles.shell}>
       <Header projectsNavLabel={settings.navLabel} projectsEnabled={settings.enabled} />
       <main className={styles.page}>
         <header className={styles.intro}>
@@ -78,24 +79,60 @@ export default async function ProjectsPage() {
             <h1>作品集｜设计、开发<br />与视听创作案例</h1>
             <div className={styles.introCopy}>
               <p>{settings.intro}</p>
-              <p>每个案例单独标注项目类型、负责范围与核心交付物，不把作品集限定在某一种媒介里。</p>
+              <p>从产品与 AI、游戏与交互设计，到视觉叙事和声音制作，每个案例都呈现完整问题、系统与交付结果。</p>
             </div>
           </div>
         </header>
 
         <div className={styles.portfolioMap}>
-          <div><span>01</span><b>产品与 Web</b><small>架构 / 前后端 / AI 工具</small></div>
-          <div><span>02</span><b>游戏与交互</b><small>企划 / 系统 / 产品实现</small></div>
+          <div><span>01</span><b>产品与 AI</b><small>桌面产品 / 智能系统 / 工程实现</small></div>
+          <div><span>02</span><b>游戏与交互设计</b><small>企划 / 系统 / 产品实现</small></div>
           <div><span>03</span><b>视觉与声音</b><small>世界设定 / 概念美术 / 配乐</small></div>
         </div>
 
-        <div className={styles.projectIndex} aria-label="项目索引">
-          <span>01</span><b>遗忘潮汐</b><p>独立游戏设计</p><p>主创 / 企划 / 系统 / 音乐</p><p>完整产品案例</p><i>2026</i>
+        <div className={styles.projectIndexList} aria-label="项目索引">
+          <Link className={styles.projectIndex} href="/projects/moling">
+            <span>01</span><b>墨灵 Moling</b><p>长篇 AI 工作台</p><p>产品 / 设计 / 智能系统</p><p>桌面产品案例</p><i>2026</i>
+          </Link>
+          <Link className={styles.projectIndex} href="/projects/forgetting-tide">
+            <span>02</span><b>遗忘潮汐</b><p>独立游戏设计</p><p>主创 / 企划 / 系统 / 音乐</p><p>完整产品案例</p><i>2026</i>
+          </Link>
         </div>
 
         <section className={styles.workGroup}>
           <div className={styles.workGroupHeading}>
-            <div><span>01 / GAME &amp; INTERACTIVE</span><h2>游戏与交互设计</h2></div>
+            <div><span>01 / PRODUCT &amp; AI</span><h2>产品与 AI</h2></div>
+            <p>把故事规划、章节创作、长篇记忆与审稿修订组织成一套完整、可信赖的桌面产品体验。</p>
+          </div>
+          <Link className={styles.projectCard} href="/projects/moling">
+            <div className={styles.cover}>
+              <Image
+                src="/projects/moling/hero.png"
+                alt="墨灵工作台正在编辑《南岸无灯》第七章《灯册》"
+                fill
+                priority
+                sizes="(max-width: 900px) 100vw, 62vw"
+              />
+              <span className={styles.status}>LONGFORM AI STUDIO</span>
+              <span className={styles.index}>01 / {String(total).padStart(2, '0')}</span>
+            </div>
+            <div className={styles.cardInfo}>
+              <div>
+                <p className={styles.cardKicker}>DESKTOP PRODUCT · AI SYSTEM · 2026</p>
+                <h3>墨灵 <i>Moling</i></h3>
+              </div>
+              <p className={styles.summary}>集故事规划、章节创作、长篇记忆与智能审稿于一体的桌面小说创作系统。</p>
+              <ul className={styles.deliverables}>
+                <li>故事规划</li><li>智能创作</li><li>角色与 Canon</li><li>审稿修订</li><li>本地数据</li>
+              </ul>
+              <span className={styles.caseLink}>查看完整案例 <i aria-hidden="true">↗</i></span>
+            </div>
+          </Link>
+        </section>
+
+        <section className={styles.workGroup}>
+          <div className={styles.workGroupHeading}>
+            <div><span>02 / GAME &amp; INTERACTIVE</span><h2>游戏与交互设计</h2></div>
             <p>完整产品案例：企划、系统、剧情、美术、界面与声音在同一套世界规则下落地。</p>
           </div>
           <Link className={styles.projectCard} href="/projects/forgetting-tide">
@@ -108,7 +145,7 @@ export default async function ProjectsPage() {
                 sizes="(max-width: 900px) 100vw, 62vw"
               />
               <span className={styles.status}>COMPLETE PRODUCT CASE</span>
-              <span className={styles.index}>01 / {String(total).padStart(2, '0')}</span>
+              <span className={styles.index}>02 / {String(total).padStart(2, '0')}</span>
             </div>
             <div className={styles.cardInfo}>
               <div>
@@ -116,10 +153,10 @@ export default async function ProjectsPage() {
                 <h3>遗忘潮汐 <i>The Forgetting Tide</i></h3>
               </div>
               <p className={styles.summary}>
-                一款关于记忆、见证与现实选择的叙事构筑游戏。完整展示玩法循环、首章剧情、最终界面、场景美术与原创配乐。
+                一款关于记忆、见证与现实选择的叙事构筑游戏。完整展示世界设定、角色档案、玩法循环、最终界面、场景美术与原创配乐。
               </p>
               <ul className={styles.deliverables}>
-                <li>游戏与战斗企划</li><li>世界设定与首章剧情</li><li>最终产品界面</li><li>原创配乐与场景美术</li>
+                <li>世界与角色设定</li><li>游戏与战斗企划</li><li>最终产品界面</li><li>原创配乐与场景美术</li>
               </ul>
               <span className={styles.caseLink}>查看完整案例 <i aria-hidden="true">↗</i></span>
             </div>

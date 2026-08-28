@@ -97,7 +97,7 @@ const sealedChapters = [
 
 export default function ForgettingTidePage() {
   return (
-    <div>
+    <div className={styles.shell}>
       <Header />
       <main className={styles.page}>
         <section className={styles.hero}>
@@ -126,7 +126,7 @@ export default function ForgettingTidePage() {
               <div><h2>玩家不是判断谁说了真话，<br />而是决定哪一种现实会留下来。</h2><p>《遗忘潮汐》把剧情选择放进核心循环：队伍构筑决定调查能力，远征路线决定能找到哪些旁证，章节结尾的映照再把选择写回地图、生态与战斗规则。</p></div>
               <div className={styles.deliveryList}><span>本案例覆盖</span><p>商业企划与世界设定</p><p>序章、首章与事件链</p><p>战斗、技能池与生物生态</p><p>Godot 游戏版本与数据工具</p><p>最终界面与原创配乐</p></div>
             </div>
-            <div className={styles.factStrip}><div><strong>20</strong><span>只阵容生物 · 三阶段成长</span></div><div><strong>5</strong><span>种资源 · 五套行动语法</span></div><div><strong>6</strong><span>段首章流程 · 三种永久现实</span></div><div><strong>4</strong><span>首场景循环配乐 · 完整试听</span></div></div>
+            <div className={styles.factStrip}><div><strong>80</strong><span>只可召回生物 · 三阶段成长</span></div><div><strong>5</strong><span>种属性资源 · 全队行动语法</span></div><div><strong>15</strong><span>种永久现实 · 五座主遗迹</span></div><div><strong>12</strong><span>首原创配乐 · 全场景循环</span></div></div>
           </section>
 
           <section className={styles.worldChapter} id="world">
@@ -213,7 +213,7 @@ export default function ForgettingTidePage() {
             <details className={styles.galleryDisclosure}><summary><div><span>ASSET LIBRARY</span><b>展开查看游戏画面、Boss 与世界资产</b></div><i>＋</i></summary><div className={styles.galleryGrid}>{gallery.map((item) => <figure key={item.src}><div><Image src={item.src} alt={item.label} fill sizes="(max-width: 700px) 100vw, 50vw" /></div><figcaption><span>{item.label}</span><i>{item.kind}</i></figcaption></figure>)}</div></details>
           </section>
 
-          <section className={styles.musicSection} id="soundtrack"><details className={styles.musicDisclosure} open><summary><div><span>10 / ORIGINAL SOUNDTRACK</span><h2>4 首场景循环配乐</h2><p>营地、探索、战斗与映照各自拥有可无缝循环的主题 · 点击收起试听</p></div><i>＋</i></summary><MusicPlayer /></details></section>
+          <section className={styles.musicSection} id="soundtrack"><details className={styles.musicDisclosure} open><summary><div><span>10 / ORIGINAL SOUNDTRACK</span><h2>12 首场景循环配乐</h2><p>完整配乐覆盖营地、探索、战斗与映照；此处试听四首代表主题 · 点击收起</p></div><i>＋</i></summary><MusicPlayer /></details></section>
 
           <section className={styles.nextTidesSection} id="next-tides">
             <div className={styles.sectionMark}>11 / NEXT TIDES</div>

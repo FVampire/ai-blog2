@@ -550,3 +550,153 @@
   .companionChapter .creatureSection { padding-top: 64px; padding-bottom: 32px; }
   .codexEvidence { margin: 0 20px 64px; }
 }
+
+/* Page chrome + readable type */
+.shell :global(.header),
+.shell :global(.footer),
+.shell :global(.nav-drawer) {
+  background: #071419;
+  box-shadow: none;
+}
+.shell :global(.header) {
+  border-bottom: 1px solid #29464b;
+}
+.shell :global(.header)::before,
+.shell :global(.header)::after {
+  display: none;
+}
+.shell :global(.logo) {
+  color: #dce9e4;
+  background: none;
+  -webkit-text-fill-color: #dce9e4;
+}
+.shell :global(.logo:hover) {
+  -webkit-text-fill-color: #65d2c2;
+}
+.shell :global(.nav-link),
+.shell :global(.nav-drawer-link) {
+  color: #9bb3ae;
+}
+.shell :global(.nav-link.active),
+.shell :global(.nav-link:hover),
+.shell :global(.nav-drawer-link.active),
+.shell :global(.nav-drawer-link:hover) {
+  color: #e7f3ee;
+}
+.shell :global(.nav-link.active)::after,
+.shell :global(.nav-link:hover)::before {
+  background: #65d2c2;
+}
+.shell :global(.nav-toggle) {
+  background: rgba(12, 32, 38, .7);
+  border-color: #31575b;
+}
+.shell :global(.nav-toggle-bar) {
+  background: #dce9e4;
+}
+.shell :global(.nav-drawer) {
+  border-bottom: 1px solid #29464b;
+}
+.shell :global(.nav-drawer-link) {
+  border-bottom-color: #29464b;
+}
+.shell :global(.nav-drawer-link.active) {
+  border-left-color: #65d2c2;
+}
+.shell :global(.footer) {
+  border-top: 1px solid #29464b;
+}
+.shell :global(.footer-col-title) {
+  font-style: normal;
+  color: #dce9e4;
+}
+.shell :global(.footer-link),
+.shell :global(.footer-text),
+.shell :global(.footer-empty) {
+  color: #7f9994;
+}
+.shell :global(.footer-link:hover) {
+  color: #65d2c2;
+}
+
+.hero h1,
+.overviewGrid h2,
+.sectionHeading h2,
+.creatureCopy h2,
+.outcomeSection h2,
+.nextTidesHeading h2,
+.musicDisclosure summary h2,
+.closingQuote strong,
+.worldChapter > .worldRule,
+.nowCopy h3,
+.visionCopy h3,
+.storyAside h3,
+.factionGrid h3 {
+  font-style: normal;
+}
+
+.heroTopline,
+.heroEyebrow { font-size: 11px; }
+.englishTitle { font-size: 13px; letter-spacing: .38em; }
+.lead { font-size: 16px; }
+.heroMeta span { font-size: 10px; }
+.heroMeta b { font-size: 13px; }
+.sectionMark { font-size: 11px; }
+.factStrip span { font-size: 13px; line-height: 1.45; }
+.deliveryList > span { font-size: 11px; }
+.deliveryList p { font-size: 13px; }
+.sectionHeading > div p { font-size: 11px; }
+.sectionHeading > p { font-size: 14px; }
+.worldCopy > p { font-size: 15px; }
+.memoryLayers span { font-size: 13px; line-height: 1.65; }
+.regionGrid span { font-size: 11px; }
+.regionGrid p { font-size: 13px; line-height: 1.7; }
+.regionNote { font-size: 13px; }
+.castCardCopy > span { font-size: 11px; }
+.castCardCopy dt { font-size: 11px; }
+.castCardCopy dd { font-size: 13px; }
+.featureCopy > span, .dualFeatures article > span { font-size: 11px; }
+.featureCopy p, .dualFeatures p { font-size: 14px; }
+.creatureCopy > p { font-size: 15px; }
+.creatureTags span { font-size: 12px; }
+.evolution > div > span { font-size: 11px; }
+.caseNav { min-height: 54px; }
+.caseNav > * { font-size: 12px; letter-spacing: .08em; padding: 0 16px; }
+.loopCopy > span, .loopCopy dt, .loopCopy > p, .loopCopy dd { font-size: 12px; }
+.loopCopy > p, .loopCopy dd { line-height: 1.7; }
+.loopImage > span, .visionImage > span, .mediaBadge { font-size: 10px; }
+.storyTimeline summary small { font-size: 12px; }
+.storyTimeline details > p { font-size: 13px; }
+.storyTimeline details > p strong { font-size: 11px; }
+.storyAside li { font-size: 13px; }
+.realityCompare article p { font-size: 13px; }
+.processRail article > span { font-size: 11px; }
+.processRail p { font-size: 13px; }
+.visionCopy > span { font-size: 11px; }
+.visionCopy > p { font-size: 14px; }
+.visionCopy li { font-size: 13px; }
+.atlasList summary small { font-size: 13px; }
+.atlasNote { font-size: 14px; }
+.factionGrid b, .factionGrid p, .systemNumbers span { font-size: 12px; }
+.ecologyPaths p { font-size: 13px; }
+.outcomes p { font-size: 14px; }
+.closingQuote p { font-size: 13px; }
+.backLink { font-size: 11px; }
+.nextTidesHeading p { font-size: 14px; }
+.sealedGrid small { font-size: 12px; }
+.galleryGrid figcaption { font-size: 12px; }
+.nowCopy > p:first-child { font-size: 11px; }
+.nowCopy .trackNote { font-size: 13px; }
+.trackTitle small { font-size: 11px; }
+.trackScene { font-size: 12px; }
+.trackAction { font-size: 10px; }
+.musicDisclosure summary span { font-size: 11px; }
+.musicDisclosure summary p { font-size: 13px; }
+.galleryDisclosure summary span { font-size: 11px; }
+
+@media (max-width: 700px) {
+  .lead { font-size: 14px; }
+  .heroCopy { bottom: 186px; }
+  .caseNav > * { font-size: 12px; padding: 0 14px; }
+  .evolution > div > span { font-size: 10px; }
+}
