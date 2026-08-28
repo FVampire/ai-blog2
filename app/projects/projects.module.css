@@ -1,0 +1,78 @@
+.page {
+  --ink: #14262a;
+  --paper: #edf1ed;
+  --cyan: #3bbbab;
+  min-height: calc(100vh - 140px);
+  padding: 88px max(32px, calc((100vw - 1360px) / 2));
+  color: var(--ink);
+  background:
+    linear-gradient(rgba(20, 38, 42, .045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 38, 42, .045) 1px, transparent 1px),
+    var(--paper);
+  background-size: 48px 48px;
+  position: relative;
+  z-index: 1;
+}
+
+.intro { margin-bottom: 56px; }
+.eyebrow, .cardKicker, .archiveNote span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+.eyebrow { color: #4e827c; margin-bottom: 24px; }
+.introGrid { display: grid; grid-template-columns: 1.6fr .8fr; gap: 64px; align-items: end; }
+.intro h1 {
+  font: italic 400 clamp(44px, 6.7vw, 96px)/.94 var(--font-display);
+  letter-spacing: -.045em;
+}
+.introCopy { max-width: 410px; color: #52666a; font-size: 15px; line-height: 1.85; }
+.introCopy p + p { margin-top: 8px; }
+
+.projectCard { display: block; text-decoration: none !important; }
+.cover { aspect-ratio: 16 / 8.2; position: relative; overflow: hidden; background: #07171d; }
+.cover img { object-fit: cover; transition: transform .9s cubic-bezier(.16, 1, .3, 1), filter .5s ease; }
+.projectCard:hover .cover img { transform: scale(1.025); filter: saturate(1.08); }
+.cover::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px rgba(225, 244, 239, .18); pointer-events: none; }
+.status, .index {
+  position: absolute;
+  top: 20px;
+  z-index: 1;
+  padding: 9px 12px;
+  color: #d8f4ee;
+  background: rgba(3, 19, 24, .72);
+  border: 1px solid rgba(99, 211, 192, .35);
+  backdrop-filter: blur(10px);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+.status { left: 20px; }
+.index { right: 20px; }
+
+.cardInfo { display: grid; grid-template-columns: 1.25fr .8fr auto; gap: 36px; align-items: start; padding: 28px 0 52px; border-bottom: 1px solid #9caaa7; }
+.cardKicker { color: #51817b; margin-bottom: 9px; }
+.cardInfo h2 { font: 400 clamp(27px, 3vw, 42px)/1.15 var(--font-display); }
+.cardInfo h2 i { color: #6a7e7d; font-weight: 400; }
+.summary { color: #53676a; line-height: 1.75; font-size: 14px; }
+.arrow { display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid #88a19d; border-radius: 50%; font-size: 22px; transition: .25s ease; }
+.projectCard:hover .arrow { color: #f4f6f0; background: #153f40; transform: rotate(45deg); }
+.archiveNote { display: flex; justify-content: space-between; gap: 32px; padding-top: 24px; color: #677878; }
+.archiveNote p { font-size: 12px; }
+.managedProjects { display: flex; flex-direction: column; gap: 64px; padding-top: 64px; }
+.managedSection { display: flex; flex-direction: column; gap: 28px; }
+.managedHeading { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 15px; border-bottom: 1px solid #9caaa7; }
+.managedHeading span { color: #51817b; font-size: 10px; font-weight: 700; letter-spacing: .18em; }
+.managedHeading h2 { font: italic 400 31px/1 var(--font-display); }
+
+@media (max-width: 760px) {
+  .page { padding: 56px 20px; }
+  .introGrid, .cardInfo { grid-template-columns: 1fr; gap: 20px; }
+  .intro h1 br { display: none; }
+  .cover { aspect-ratio: 4 / 3; }
+  .cover img { object-position: 56% center; }
+  .cardInfo { position: relative; padding-bottom: 36px; }
+  .arrow { position: absolute; right: 0; bottom: 30px; }
+  .summary { padding-right: 70px; }
+  .archiveNote { flex-direction: column; gap: 8px; }
+}

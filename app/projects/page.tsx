@@ -1,14 +1,13 @@
-import React from 'react';
-
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 
-import BlogPostCard from '../../components/BlogPostCard';
 import Footer from '../../components/Footer';
 import Header from '../../components/Header';
 import ProjectCard from '../../components/ProjectCard';
 import { ProjectRepository } from '../../lib/repositories/ProjectRepository';
 import { SettingsRepository } from '../../lib/repositories/SettingsRepository';
+import styles from './projects.module.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,18 +15,21 @@ export async function generateMetadata(): Promise<Metadata> {
   try {
     const settings = await SettingsRepository.getProjectDisplaySettings();
     return {
-      title: settings.navLabel,
+      title: `${settings.navLabel} - 五月的火`,
       description: settings.intro,
     };
   } catch {
-    return { title: 'Projects' };
+    return {
+      title: 'Projects - 五月的火',
+      description: '游戏、设计与技术项目成果。',
+    };
   }
 }
 
 export default async function ProjectsPage() {
   let projects: Awaited<ReturnType<typeof ProjectRepository.getAllProjects>> = [];
   let settings = {
-    intro: '我的项目与开发成果',
+    intro: '这里收录从概念、系统、视觉到可运行原型的完整创作。',
     navLabel: 'Projects',
     enabled: true,
   };
@@ -39,56 +41,83 @@ export default async function ProjectsPage() {
     console.error('Error fetching projects:', error);
   }
 
-  const featured = projects.filter((p) => p.featured);
-  const regular = projects.filter((p) => !p.featured);
+  const managedProjects = projects.filter((project) => project.slug !== 'forgetting-tide');
+  const featured = managedProjects.filter((project) => project.featured);
+  const regular = managedProjects.filter((project) => !project.featured);
+  const total = managedProjects.length + 1;
 
   return (
     <div>
-      <Header />
-
-      <div className="container">
-        <div className="content-wrapper projects-page-layout">
-          <div className="main-content">
-            <div className="projects-page-hero">
-              <h1 className="section-title projects-page-title">{settings.navLabel}</h1>
-              <p className="projects-section-intro">{settings.intro}</p>
+      <Header projectsNavLabel={settings.navLabel} projectsEnabled={settings.enabled} />
+      <main className={styles.page}>
+        <header className={styles.intro}>
+          <p className={styles.eyebrow}>SELECTED WORK · {String(total).padStart(2, '0')}</p>
+          <div className={styles.introGrid}>
+            <h1>项目不是清单，<br />而是一段被完成的思考。</h1>
+            <div className={styles.introCopy}>
+              <p>{settings.intro}</p>
+              <p>第一项是一款关于记忆、见证与现实选择的叙事构筑游戏。</p>
             </div>
+          </div>
+        </header>
 
-            {projects.length === 0 ? (
-              <div className="card">
-                <p className="author-bio">暂无项目。在管理后台「项目管理」中创建，或通过 Agent API 注册。</p>
-              </div>
-            ) : (
-              <>
-                {featured.length > 0 && (
-                  <section className="projects-section">
-                    <h2 className="section-title" style={{ fontSize: '20px' }}>精选项目</h2>
-                    <div className="projects-grid">
-                      {featured.map((project) => (
-                        <ProjectCard key={project.id} project={project} />
-                      ))}
-                    </div>
-                  </section>
-                )}
+        <Link className={styles.projectCard} href="/projects/forgetting-tide">
+          <div className={styles.cover}>
+            <Image
+              src="/projects/forgetting-tide/hero.png"
+              alt="寻潮者与残响生物望向记忆灯塔"
+              fill
+              priority
+              sizes="(max-width: 900px) 100vw, 72vw"
+            />
+            <span className={styles.status}>PLAYABLE PROTOTYPE</span>
+            <span className={styles.index}>01 / {String(total).padStart(2, '0')}</span>
+          </div>
+          <div className={styles.cardInfo}>
+            <div>
+              <p className={styles.cardKicker}>GAME DESIGN · GODOT · ORIGINAL SOUNDTRACK</p>
+              <h2>遗忘潮汐 <i>The Forgetting Tide</i></h2>
+            </div>
+            <p className={styles.summary}>
+              带领三只残响生物进入不断改写自身的遗迹，让彼此矛盾的证词共同塑造现实。
+            </p>
+            <span className={styles.arrow} aria-hidden="true">↗</span>
+          </div>
+        </Link>
 
-                {regular.length > 0 && (
-                  <section className="projects-section">
-                    {featured.length > 0 && (
-                      <h2 className="section-title" style={{ fontSize: '20px' }}>全部项目</h2>
-                    )}
-                    <div className="projects-grid">
-                      {regular.map((project) => (
-                        <ProjectCard key={project.id} project={project} />
-                      ))}
-                    </div>
-                  </section>
-                )}
-              </>
+        {managedProjects.length > 0 ? (
+          <div className={styles.managedProjects}>
+            {featured.length > 0 && (
+              <section className={styles.managedSection}>
+                <div className={styles.managedHeading}>
+                  <span>FEATURED</span>
+                  <h2>更多精选项目</h2>
+                </div>
+                <div className="projects-grid">
+                  {featured.map((project) => <ProjectCard key={project.id} project={project} />)}
+                </div>
+              </section>
+            )}
+
+            {regular.length > 0 && (
+              <section className={styles.managedSection}>
+                <div className={styles.managedHeading}>
+                  <span>ARCHIVE</span>
+                  <h2>{featured.length > 0 ? '全部项目' : '更多项目'}</h2>
+                </div>
+                <div className="projects-grid">
+                  {regular.map((project) => <ProjectCard key={project.id} project={project} />)}
+                </div>
+              </section>
             )}
           </div>
-        </div>
-      </div>
-
+        ) : (
+          <div className={styles.archiveNote}>
+            <span>ARCHIVE STATUS</span>
+            <p>更多实验与作品会在完成可展示的叙事闭环后加入。</p>
+          </div>
+        )}
+      </main>
       <Footer />
     </div>
   );
