@@ -142,7 +142,7 @@ export default function AdminSettings() {
     comments: ["comments_enabled", "comments_moderation", "comments_guest_allowed"],
     users: ["registration_enabled", "default_user_role"],
     upload: ["upload_max_size", "upload_allowed_types"],
-    social: ["about_author_name", "about_author_bio", "author_avatar", "about_social_links"],
+    social: ["about_author_name", "about_author_bio_short", "about_author_bio", "about_author_bio_2", "about_author_bio_3", "about_author_bio_4", "author_avatar", "about_social_links"],
     ai: [], vector: ["ai_vector_search_enabled", "ai_vector_search_threshold", "ai_vector_search_weight_title", "ai_vector_search_weight_content", "ai_vector_search_weight_excerpt"],
     mcp: ["mcp_enabled", "mcp_allow_user_select"], other: ["footer_text", "analytics_code"],
   };
@@ -152,7 +152,8 @@ export default function AdminSettings() {
     posts_per_page: "每页文章数", comments_per_page: "每页评论数", excerpt_length: "摘要字数",
     comments_enabled: "开启评论", comments_moderation: "评论需审核", comments_guest_allowed: "允许游客评论",
     registration_enabled: "开放注册", default_user_role: "默认用户角色", upload_max_size: "最大上传大小(MB)", upload_allowed_types: "允许的文件类型",
-    author_name: "作者名称", author_bio: "作者简介", author_avatar: "作者头像 URL", about_social_links: "社交链接",
+    about_author_name: "作者名称", about_author_bio_short: "首页简介", about_author_bio: "个人定位", about_author_bio_2: "行业项目", about_author_bio_3: "工作流与当前方向", about_author_bio_4: "代表作品",
+    author_avatar: "作者头像 URL", about_social_links: "社交链接",
     footer_text: "页脚文字", analytics_code: "统计代码",
     projects_enabled: "启用项目展示", projects_show_on_home: "首页显示精选项目",
     projects_home_count: "首页项目数量", projects_intro: "项目页介绍文字", projects_nav_label: "导航栏项目名称",

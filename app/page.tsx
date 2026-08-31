@@ -112,7 +112,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     const authorAvatar = await SettingsRepository.getSettingValue('author_avatar', '');
     authorSettings = {
       name: authorName || aboutSettings.authorName,
-      bio: aboutSettings.authorBio,
+      bio: aboutSettings.authorBioShort,
       avatar: typeof authorAvatar === 'string' && authorAvatar.trim() ? authorAvatar.trim() : undefined,
       socialLinks: aboutSettings.socialLinks.map((link) => ({
         platform: link.platform,

@@ -53,7 +53,7 @@ export default async function ProjectsPage() {
   let projects: Awaited<ReturnType<typeof ProjectRepository.getAllProjects>> = [];
   let settings = {
     intro: '这里收录从概念、系统、视觉到可运行原型的完整创作。',
-    navLabel: '作品集',
+    navLabel: '项目',
     enabled: true,
   };
 
@@ -107,8 +107,8 @@ export default async function ProjectsPage() {
           <Link className={styles.projectCard} href="/projects/moling">
             <div className={styles.cover}>
               <Image
-                src="/projects/moling/moling-authentic-hero.png"
-                alt="墨灵实机工作台正在编辑《南岸无灯》第七章《灯册》"
+                src="/projects/moling/moling-chapter-studio-full-v3.png"
+                alt="墨灵真实三章创作流程，包含章节编辑、大纲工作台与任务中心"
                 fill
                 priority
                 sizes="(max-width: 900px) 100vw, 62vw"

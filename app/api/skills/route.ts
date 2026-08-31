@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
 
-import { query } from '@/lib/db';
+import { getSkills } from '@/lib/skills';
 
 export async function GET() {
   try {
-    const result = await query(
-      `SELECT id, name, category, sort_order FROM skills ORDER BY sort_order, id`
-    );
-
+    const data = await getSkills();
     return NextResponse.json({
       success: true,
-      data: result.rows,
+      data,
     });
   } catch (error) {
     console.error('Get skills error:', error);

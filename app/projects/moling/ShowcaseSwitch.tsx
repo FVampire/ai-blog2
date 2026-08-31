@@ -8,30 +8,59 @@ import styles from './moling.module.css';
 
 const showcases = [
   {
-    id: 'planning',
-    label: '故事规划',
-    kicker: '01 · OUTLINE WORKBENCH',
-    title: '先看清影响边界，再决定改哪里。',
-    description: '总纲、分卷、故事弧与章节目标沿同一条规划链展开。页面直接展示结构与状态，不再用模糊横杠代替信息。',
+    id: 'run',
+    label: '真实三章',
+    kicker: '01 · AUTHENTIC RUN',
+    title: '不是一张孤立截图，而是一条跑完的长篇工作流。',
+    description: '同一真实项目连续完成第 9–11 章。正文、章节标题和任务信息全部来自实际流程，并保持可读。',
+    src: '/projects/moling/moling-chapter-studio-full-v3.png',
+    alt: '墨灵真实三章项目的完整章节编辑器截图',
+    caption: '3 CHAPTERS · ORIGINAL UI · FULL TEXT',
   },
   {
-    id: 'world',
-    label: '角色档案',
-    kicker: '02 · CHARACTER ARTIFACT',
-    title: '角色不仅被记住，也能被整理成可交付的档案。',
-    description: '这是墨灵真实导出的角色卡样张：基础设定、关系、经历与视觉形象被组织到同一张可保存的创作资料中。',
+    id: 'studio',
+    label: '正文定稿',
+    kicker: '02 · CHAPTER STUDIO',
+    title: '从章节树到正文与协作面板，完整工作台一次看清。',
+    description: '真实 11 章项目的全屏编辑状态。正文、章节树、字数、工具栏和本地保存状态都能直接查看。',
+    src: '/projects/moling/moling-chapter-studio-full-v3.png',
+    alt: '墨灵真实章节工作台完整截图',
+    caption: 'CHAPTER 11 · FINALIZED · LOCAL SAVE',
   },
   {
-    id: 'memory',
-    label: '长篇记忆',
-    kicker: '03 · CANON MEMORY',
-    title: '事实、证据与伏笔状态一起进入下一章。',
-    description: 'Canon 不是装饰性的关系图，而是带来源、状态与影响范围的记录。定稿之后，变化会回写到后续创作上下文。',
+    id: 'chapter-outline',
+    label: '章节细纲',
+    kicker: '03 · CHAPTER OUTLINE',
+    title: '场景、节拍与约束，不再藏在正文背后。',
+    description: '第 11 章真实细纲完整展示支线目标、场景节拍、角色参与和校验状态，可直接对照成稿效果。',
+    src: '/projects/moling/moling-chapter-outline-full-v3.png',
+    alt: '墨灵第十一章真实细纲界面',
+    caption: 'SCENES · BEATS · CONSTRAINTS · VALIDATION',
+  },
+  {
+    id: 'outline',
+    label: '全书大纲',
+    kicker: '04 · OUTLINE WORKBENCH',
+    title: '单章写完以后，仍能回到全书结构中检查位置。',
+    description: '纵向大纲同时显示 11 章历史、下一章目标、角色出场计划与必须发生事项，局部修改有明确边界。',
+    src: '/projects/moling/moling-outline-workbench-full-v3.png',
+    alt: '墨灵真实全书大纲工作台',
+    caption: '11 CHAPTERS · NEXT GOAL · CHARACTER PLAN',
+  },
+  {
+    id: 'tasks',
+    label: '任务收束',
+    kicker: '05 · TASK COMMAND',
+    title: '完成不等于消失：影响、提醒与时间线继续可追踪。',
+    description: '任务中心真实记录 11/11 章完成度、项目字数、后处理提醒和历史时间线，具体提醒内容也保持可读。',
+    src: '/projects/moling/moling-task-center-full-v3.png',
+    alt: '墨灵真实任务中心完整截图',
+    caption: '11 / 11 FINALIZED · TRACEABLE HISTORY',
   },
 ] as const;
 
 export default function ShowcaseSwitch() {
-  const [activeId, setActiveId] = useState<(typeof showcases)[number]['id']>('planning');
+  const [activeId, setActiveId] = useState<(typeof showcases)[number]['id']>('run');
   const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const activeIndex = Math.max(0, showcases.findIndex((item) => item.id === activeId));
   const active = showcases[activeIndex];
@@ -69,49 +98,19 @@ export default function ShowcaseSwitch() {
       </div>
 
       <div id={`moling-panel-${active.id}`} role="tabpanel" aria-labelledby={`moling-tab-${active.id}`} className={styles.showcasePanel}>
-        <div className={styles.systemVisual}>
-          {active.id === 'planning' && <PlanningProof />}
-          {active.id === 'world' && (
-            <figure className={styles.characterArtifact}>
-              <Image src="/projects/moling/character-card-authentic.png" alt="墨灵真实导出的角色卡样张，包含人物形象、档案、关系和经历" fill sizes="(max-width: 768px) 100vw, 62vw" />
-              <figcaption>REAL EXPORT · CHARACTER DOSSIER</figcaption>
-            </figure>
-          )}
-          {active.id === 'memory' && <CanonProof />}
-        </div>
+        <figure className={styles.finalShowcaseImage}>
+          <a href={active.src} target="_blank" rel="noreferrer" className={styles.fullImageLink} aria-label={`打开原始分辨率：${active.label}`}>
+            <Image src={active.src} alt={active.alt} fill sizes="(max-width: 768px) 100vw, 68vw" />
+          </a>
+          <figcaption>{active.caption} · 点击查看原图</figcaption>
+        </figure>
         <div className={styles.showcaseCopy}>
           <span>{active.kicker}</span>
           <h3>{active.title}</h3>
           <p>{active.description}</p>
-          <small>真实产品结构 · 页面级信息重组</small>
+          <small>真实实机截图 · 完整正文 · 仅做构图与光影精修</small>
         </div>
       </div>
-    </div>
-  );
-}
-
-function PlanningProof() {
-  return (
-    <div className={styles.planningProof} aria-label="故事规划结构示意">
-      <div className={styles.proofTop}><span>南岸无灯 · 故事规划</span><b>已保存</b></div>
-      <div className={styles.planTree}>
-        <div><small>总纲</small><b>一座逐渐遗忘河流的城</b><span>当前版本</span></div>
-        <div><small>卷一</small><b>入城</b><span>7 / 10 章</span></div>
-        <div className={styles.activePlan}><small>第七章</small><b>灯册</b><span>正在编辑</span></div>
-      </div>
-      <div className={styles.impactCard}><small>本次调整影响</small><strong>2</strong><p>第七章目标 · 卷二顾衡出场</p></div>
-      <div className={styles.safeCard}><span>✓</span><div><b>其余 18 章不受影响</b><p>未关联内容保持原版本</p></div></div>
-    </div>
-  );
-}
-
-function CanonProof() {
-  return (
-    <div className={styles.canonProof} aria-label="Canon 事实与伏笔状态">
-      <div className={styles.proofTop}><span>Canon · 第七章同步结果</span><b>3 条变化</b></div>
-      <article><span className={styles.canonIndex}>01</span><div><small>事实</small><b>灯册存在双重署名</b><p>证据：第三章《夜班记录》、第七章《灯册》</p></div><i>已确认</i></article>
-      <article><span className={styles.canonIndex}>02</span><div><small>伏笔</small><b>双重署名</b><p>埋设 → 推进；后续章节自动携带</p></div><i>推进中</i></article>
-      <article><span className={styles.canonIndex}>03</span><div><small>影响</small><b>顾衡的档案库出场</b><p>卷二相关场景需要与门槛场景对齐</p></div><i>待处理</i></article>
     </div>
   );
 }

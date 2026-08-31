@@ -13,7 +13,7 @@ interface ProjectsSectionProps {
 
 const ProjectsSection: React.FC<ProjectsSectionProps> = ({
   projects,
-  title = 'Projects',
+  title = '项目',
   intro,
   showViewAll = true,
   variant = 'default',

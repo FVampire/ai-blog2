@@ -36,7 +36,7 @@ const WRITABLE_SETTING_KEYS = new Set([
   'registration_enabled', 'default_user_role',
   'upload_max_size', 'upload_allowed_types',
   'social_github', 'social_twitter', 'social_weibo',
-  'about_author_name', 'about_author_bio', 'about_author_bio_2', 'about_author_bio_3',
+  'about_author_name', 'about_author_bio_short', 'about_author_bio', 'about_author_bio_2', 'about_author_bio_3', 'about_author_bio_4',
   'author_avatar', 'about_social_links', 'footer_text', 'analytics_code',
   'ai_enabled', 'ai_provider', 'ai_api_key', 'ai_api_base_url', 'ai_model',
   'ai_model_light', 'ai_embedding_model', 'ai_embedding_api_key',

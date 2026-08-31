@@ -2,14 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 
-interface Skill {
-  id: number;
-  name: string;
-  category: string;
-}
+import { DEFAULT_SKILLS, type SkillItem } from '../lib/skills';
 
 const SkillsList: React.FC = () => {
-  const [skills, setSkills] = useState<Skill[]>([]);
+  const [skills, setSkills] = useState<SkillItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,6 +19,7 @@ const SkillsList: React.FC = () => {
       })
       .catch(err => {
         console.error('Failed to fetch skills:', err);
+        setSkills(DEFAULT_SKILLS);
         setLoading(false);
       });
   }, []);
@@ -41,11 +38,7 @@ const SkillsList: React.FC = () => {
       <div className="card">
         <h2 className="section-title">Skills</h2>
         <ul style={{ paddingLeft: '20px', fontSize: '14px', color: '#495057', lineHeight: '1.8' }}>
-          <li style={{ marginBottom: '10px' }}>Frontend: React, Next.js, TypeScript, CSS</li>
-          <li style={{ marginBottom: '10px' }}>Backend: Node.js, Express, Python</li>
-          <li style={{ marginBottom: '10px' }}>Database: PostgreSQL, MongoDB</li>
-          <li style={{ marginBottom: '10px' }}>Cloud: AWS, Docker, Kubernetes</li>
-          <li>UI/UX Design</li>
+          <li>No skills available.</li>
         </ul>
       </div>
     );

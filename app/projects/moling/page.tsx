@@ -1,10 +1,10 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import type { Metadata } from 'next';
 
 import styles from './moling.module.css';
 import PipelinePlayer from './PipelinePlayer';
-import ProductWindow from './ProductWindow';
 import ShowcaseSwitch from './ShowcaseSwitch';
 import Footer from '../../../components/Footer';
 import Header from '../../../components/Header';
@@ -13,7 +13,7 @@ const PAGE_TITLE = '墨灵 Moling · 长篇 AI 创作工作台 - 五月的火';
 const PAGE_DESCRIPTION = '为长篇小说而生的桌面创作系统。墨灵持续维护角色、设定、伏笔与章节状态，让每一次生成都建立在完整故事上下文之上。';
 const SITE_NAME = '五月的火';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
-const PAGE_IMAGE = '/projects/moling/moling-authentic-hero.png';
+const PAGE_IMAGE = '/projects/moling/moling-chapter-studio-full-v3.png';
 
 export const metadata: Metadata = {
   title: { absolute: PAGE_TITLE },
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'article', title: PAGE_TITLE, description: PAGE_DESCRIPTION,
     url: `${SITE_URL}/projects/moling`, siteName: SITE_NAME, locale: 'zh_CN',
-    images: [{ url: PAGE_IMAGE, width: 1536, height: 1024, alt: '墨灵长篇 AI 创作工作台' }],
+    images: [{ url: PAGE_IMAGE, width: 1600, height: 1000, alt: '墨灵长篇 AI 创作工作台' }],
   },
   twitter: { card: 'summary_large_image', title: PAGE_TITLE, description: PAGE_DESCRIPTION, images: [PAGE_IMAGE] },
 };
@@ -35,6 +35,13 @@ const valueCards = [
 ];
 
 const architecture = ['创作界面', '桌面运行时', '智能创作引擎', '本地故事数据库'];
+
+const runFacts = [
+  ['03', '连续生成章节', '第 9–11 章'],
+  ['27', '流程步骤记录', '24 成功 · 3 自动跳过'],
+  ['14,000', '三章正文总字数', '4,291 · 4,911 · 4,798'],
+  ['0', '失败工作流', '三章全部定稿'],
+] as const;
 
 export default function MolingPage() {
   return (
@@ -53,14 +60,16 @@ export default function MolingPage() {
             <h2>让一部长篇，<br />始终记得自己。</h2>
             <p>为长篇小说而生的 AI 创作工作台。</p>
           </div>
-          <div className={styles.heroWindow}>
-            <ProductWindow
-              src="/projects/moling/moling-authentic-hero.png"
-              alt="墨灵实机界面正在编辑《南岸无灯》第七章《灯册》，正文编辑器与 AI 对话面板同屏"
-              label="墨灵实机 · 南岸无灯 · 第七章《灯册》"
+          <figure className={styles.heroWindow}>
+            <Image
+              src="/projects/moling/moling-chapter-studio-full-v3.png"
+              alt="墨灵真实章节编辑器，第 11 章正文、章节树和 AI 协作面板完整可读"
+              fill
               priority
+              sizes="(max-width: 760px) 100vw, 1260px"
             />
-          </div>
+            <figcaption>REAL RUN · CHAPTER 09—11 · ORIGINAL SCREENSHOT</figcaption>
+          </figure>
           <ul className={styles.heroTags} aria-label="产品能力">
             <li>长篇记忆</li><li>故事规划</li><li>智能审稿</li><li>本地创作</li>
           </ul>
@@ -84,15 +93,22 @@ export default function MolingPage() {
               <h2>一章之内，完成从目标到定稿的全部工作。</h2>
               <p>根据章节目标生成正文，引用人物、伏笔和前文事实；经过审稿、局部重写与多路竞态选择后，再把定稿同步回故事状态。</p>
             </div>
-            <ProductWindow
-              src="/projects/moling/moling-authentic-hero.png"
-              alt="墨灵真实章节编辑器展示《灯册》正文与右侧 AI 协作入口"
-              label="真实应用界面 · 已替换为公开演示文本"
-            />
+            <figure className={styles.studioVisual}>
+              <Image
+                src="/projects/moling/moling-chapter-studio-full-v3.png"
+                alt="墨灵真实章节工作台，显示 11 章项目、正文编辑器与 AI 协作面板"
+                fill
+                sizes="(max-width: 760px) 100vw, 1220px"
+              />
+              <figcaption>真实应用全屏截图 · 正文、章节树与协作面板完整可读</figcaption>
+            </figure>
             <div className={styles.studioNotes}>
-              <article><b>真实编辑器</b><p>章节树、正文、行号、字数与保存状态来自墨灵当前实机界面，不再使用生成式占位 UI。</p></article>
-              <article><b>同屏协作</b><p>对话、大纲、角色卡与日历维持原产品的信息结构，写作时不需要频繁切换窗口。</p></article>
-              <article><b>公开演示文本</b><p>截图只保留《南岸无灯》的两句短文；原项目名、人物名和正文均已隐私化处理。</p></article>
+              <article><b>真实三章</b><p>基于现有长篇项目连续生成第 9、10、11 章，不是为展示页拼出的空壳数据。</p></article>
+              <article><b>完整界面</b><p>章节树、正文、行号、完成状态与协作面板整屏展示，不再只露出产品的一小角。</p></article>
+              <article><b>内容可读</b><p>真实正文、章节标题、细纲和任务记录全部保留，只在构图、光影与剪辑层面精修。</p></article>
+            </div>
+            <div className={styles.realRunStrip} aria-label="真实三章运行数据">
+              {runFacts.map(([value, label, detail]) => <article key={label}><strong>{value}</strong><b>{label}</b><span>{detail}</span></article>)}
             </div>
           </section>
 
@@ -109,7 +125,7 @@ export default function MolingPage() {
             <div className={styles.sectionHeading}>
               <div><span>04</span><p>CREATIVE PIPELINE</p></div>
               <h2>从章节目标，到世界记住这一章。</h2>
-              <p>八步创作闭环使用《南岸无灯》的预设稿回放。候选、审稿和修订在几秒内完成演示，页面不请求模型。</p>
+              <p>视频由真实三章工作流的实机画面剪辑而成。17.2 秒压缩回放完整展示正文、章节细纲、全书大纲与任务收束，不把模型等待伪装成秒级生成。</p>
             </div>
             <PipelinePlayer />
           </section>

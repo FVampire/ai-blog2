@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { query } from '@/lib/db';
+import { normalizeProjectNavLabel } from '@/lib/project-nav-label';
 
 function parseSettingValue(value: string | null, type: string): unknown {
   if (value === null) return null;
@@ -34,7 +35,7 @@ export async function GET() {
         footerText: settings.footer_text || `© ${new Date().getFullYear()} 五月的火. All rights reserved.`,
         socialLinks: settings.about_social_links || [],
         projectsEnabled: settings.projects_enabled !== false,
-        projectsNavLabel: settings.projects_nav_label || 'Projects',
+        projectsNavLabel: normalizeProjectNavLabel(settings.projects_nav_label),
         projectsIntro: settings.projects_intro || '我的项目与开发成果',
         projectsShowOnHome: settings.projects_show_on_home !== false,
         projectsHomeCount: settings.projects_home_count || 3,
@@ -50,6 +51,8 @@ export async function GET() {
           siteDescription: 'A blog about technology, design, and development',
           footerText: `© ${new Date().getFullYear()} 五月的火. All rights reserved.`,
           socialLinks: [],
+          projectsEnabled: true,
+          projectsNavLabel: '项目',
         },
       }
     );

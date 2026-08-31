@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { useTheme } from '../contexts/ThemeContext';
+import { DEFAULT_PROJECT_NAV_LABEL, normalizeProjectNavLabel } from '../lib/project-nav-label';
 import { getPublicSettings } from '../lib/public-settings-client';
 
 interface NavLinkProps {
@@ -45,14 +46,14 @@ const Header: React.FC<HeaderProps> = ({
   projectsEnabled: propEnabled,
 }) => {
   const [siteName, setSiteName] = useState('BLOG');
-  const [fetchedNavLabel, setFetchedNavLabel] = useState('项目');
+  const [fetchedNavLabel, setFetchedNavLabel] = useState(DEFAULT_PROJECT_NAV_LABEL);
   const [fetchedEnabled, setFetchedEnabled] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
 
-  const projectsNavLabel = propNavLabel ?? fetchedNavLabel;
+  const projectsNavLabel = normalizeProjectNavLabel(propNavLabel ?? fetchedNavLabel);
   const projectsEnabled = propEnabled ?? fetchedEnabled;
   const section = pathname?.startsWith('/projects')
     ? 'projects'
@@ -64,7 +65,9 @@ const Header: React.FC<HeaderProps> = ({
     getPublicSettings()
       .then((settings) => {
           if (settings.siteName) setSiteName(settings.siteName);
-          if (settings.projectsNavLabel) setFetchedNavLabel(settings.projectsNavLabel);
+          if (settings.projectsNavLabel) {
+            setFetchedNavLabel(normalizeProjectNavLabel(settings.projectsNavLabel));
+          }
           if (settings.projectsEnabled !== undefined) setFetchedEnabled(settings.projectsEnabled);
       })
       .catch((err) => {

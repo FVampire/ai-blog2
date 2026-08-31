@@ -58,8 +58,10 @@ INSERT INTO settings (key, value, type, description) VALUES
 
   -- 关于页面设置
   ('about_author_name', 'John Doe', 'string', '作者名称'),
-  ('about_author_bio', 'I am a full-stack developer with over 10 years of experience building web applications. My passion lies in creating beautiful, functional, and user-friendly digital experiences.', 'string', '作者简介（第一段）'),
-  ('about_author_bio_2', 'Throughout my career, I have worked with startups and enterprises alike, helping them transform their ideas into successful products. I specialize in modern JavaScript frameworks like React and Node.js.', 'string', '作者简介（第二段）'),
-  ('about_author_bio_3', 'When I am not coding, you can find me hiking in the mountains, reading science fiction novels, or experimenting with new cooking recipes.', 'string', '作者简介（第三段）'),
+  ('about_author_bio_short', '全栈与 AI 应用工程师，专注于将图形引擎、智能工作流与模型能力转化为可落地的产品，当前聚焦虚拟试穿、智能搭配与服装自动打版。', 'string', '首页作者简介'),
+  ('about_author_bio', '全栈与 AI 应用工程师，长期专注于复杂业务系统的产品化与工程落地。技术实践横跨图形引擎、医疗 AI、智能工作流与服装科技，擅长将交互体验、服务架构、模型能力与业务流程组装成稳定、可扩展的产品系统。', 'string', '作者简介（第一段）'),
+  ('about_author_bio_2', '曾参与在线 CAD 编辑器的核心研发，基于 Vue 3、Three.js、NestJS 与 MongoDB 构建浏览器端图形编辑与数据服务。在医疗 AI 领域，搭建过从扫码问卷、病历与影像资料上传，到语义解析、结构化数据生成和自研模型推理的完整链路，自动归纳现病史、既往史与主诉等临床信息，为医生提供诊疗决策的辅助参考。', 'string', '作者简介（第二段）'),
+  ('about_author_bio_3', '也曾负责桌面办公软件的工作流平台建设，在 n8n 基础上进行深度定制，统一集成内外部工具、MCP、Agent 与各类服务，并将工作流封装为 API 和 MCP 能力，供公司其他系统复用，完成与桌面端的端到端打通。目前聚焦 AI 与服装产业的深度融合，推进虚拟试穿、智能搭配与服装自动打版等方向的研发与落地。', 'string', '作者简介（第三段）'),
+  ('about_author_bio_4', '除行业项目外，我也持续用完整作品验证对产品、AI 与交互设计的理解。《墨灵 Moling》是一套面向长篇小说创作的桌面 AI 工作台，将故事规划、章节生产、Canon 记忆、审稿与修订组织为可追踪的创作闭环；《遗忘潮汐 The Forgetting Tide》则是一个从世界观、角色与核心玩法，到产品界面、场景美术与原创配乐的完整叙事构筑游戏案例。它们代表了我对“从概念到可运行产品”的长期坚持。', 'string', '作者简介（代表项目）'),
   ('about_social_links', '[{"platform":"twitter","name":"Twitter","url":"https://twitter.com"},{"platform":"github","name":"GitHub","url":"https://github.com"},{"platform":"linkedin","name":"LinkedIn","url":"https://linkedin.com"}]', 'json', '社交链接列表')
 ON CONFLICT (key) DO NOTHING;

@@ -1,6 +1,9 @@
-import { BaseRepository } from './BaseRepository';
-import { Setting } from '../entities/Setting';
 import { In } from 'typeorm';
+
+import { ABOUT_PROFILE_BIO, HOME_ABOUT_BIO, LEGACY_ABOUT_BIO } from '../about-profile';
+import { Setting } from '../entities/Setting';
+import { normalizeProjectNavLabel } from '../project-nav-label';
+import { BaseRepository } from './BaseRepository';
 
 interface SettingDTO {
   id: number;
@@ -265,14 +268,16 @@ export class SettingsRepository extends BaseRepository {
    */
   static async getAboutSettings(): Promise<{
     authorName: string;
+    authorBioShort: string;
     authorBio: string;
     authorBio2: string;
     authorBio3: string;
+    authorBio4: string;
     socialLinks: Array<{ platform: string; name: string; url: string }>;
   }> {
     const keys = [
-      'about_author_name', 'about_author_bio', 'about_author_bio_2',
-      'about_author_bio_3', 'about_social_links',
+      'about_author_name', 'about_author_bio_short', 'about_author_bio', 'about_author_bio_2',
+      'about_author_bio_3', 'about_author_bio_4', 'about_social_links',
     ];
     const settings = await this.getSettingsByKeys(keys);
 
@@ -303,9 +308,17 @@ export class SettingsRepository extends BaseRepository {
 
     return {
       authorName: settingsMap['about_author_name'] || 'John Doe',
-      authorBio: settingsMap['about_author_bio'] || '',
-      authorBio2: settingsMap['about_author_bio_2'] || '',
-      authorBio3: settingsMap['about_author_bio_3'] || '',
+      authorBioShort: settingsMap['about_author_bio_short'] || HOME_ABOUT_BIO,
+      authorBio: !settingsMap['about_author_bio'] || settingsMap['about_author_bio'] === LEGACY_ABOUT_BIO.authorBio
+        ? ABOUT_PROFILE_BIO.authorBio
+        : settingsMap['about_author_bio'],
+      authorBio2: !settingsMap['about_author_bio_2'] || settingsMap['about_author_bio_2'] === LEGACY_ABOUT_BIO.authorBio2
+        ? ABOUT_PROFILE_BIO.authorBio2
+        : settingsMap['about_author_bio_2'],
+      authorBio3: !settingsMap['about_author_bio_3'] || settingsMap['about_author_bio_3'] === LEGACY_ABOUT_BIO.authorBio3
+        ? ABOUT_PROFILE_BIO.authorBio3
+        : settingsMap['about_author_bio_3'],
+      authorBio4: settingsMap['about_author_bio_4'] || ABOUT_PROFILE_BIO.authorBio4,
       socialLinks,
     };
   }
@@ -318,6 +331,7 @@ export class SettingsRepository extends BaseRepository {
     authorBio?: string;
     authorBio2?: string;
     authorBio3?: string;
+    authorBio4?: string;
     socialLinks?: Array<{ platform: string; name: string; url: string }>;
   }): Promise<void> {
     const updates: Promise<SettingDTO>[] = [];
@@ -333,6 +347,9 @@ export class SettingsRepository extends BaseRepository {
     }
     if (data.authorBio3 !== undefined) {
       updates.push(this.upsertSetting({ key: 'about_author_bio_3', value: data.authorBio3, type: 'string', description: '作者简介（第三段）' }));
+    }
+    if (data.authorBio4 !== undefined) {
+      updates.push(this.upsertSetting({ key: 'about_author_bio_4', value: data.authorBio4, type: 'string', description: '作者简介（代表项目）' }));
     }
     if (data.socialLinks !== undefined) {
       updates.push(this.upsertSetting({ key: 'about_social_links', value: JSON.stringify(data.socialLinks), type: 'json', description: '社交链接列表' }));
@@ -361,7 +378,7 @@ export class SettingsRepository extends BaseRepository {
       showOnHome: map['projects_show_on_home'] !== 'false',
       homeCount: parseInt(map['projects_home_count']) || 3,
       intro: map['projects_intro'] || '我的项目与开发成果',
-      navLabel: map['projects_nav_label'] || 'Projects',
+      navLabel: normalizeProjectNavLabel(map['projects_nav_label']),
     };
   }
 }

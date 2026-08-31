@@ -14,7 +14,7 @@ type ProductWindowProps = {
   className?: string;
 };
 
-export default function ProductWindow({ src, alt, label = '墨灵 · 南岸无灯', priority = false, className = '' }: ProductWindowProps) {
+export default function ProductWindow({ src, alt, label = '墨灵 · 真实长篇项目', priority = false, className = '' }: ProductWindowProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [motionAllowed, setMotionAllowed] = useState(false);
 
