@@ -107,8 +107,8 @@ export default async function ProjectsPage() {
           <Link className={styles.projectCard} href="/projects/moling">
             <div className={styles.cover}>
               <Image
-                src="/projects/moling/hero.png"
-                alt="墨灵工作台正在编辑《南岸无灯》第七章《灯册》"
+                src="/projects/moling/moling-authentic-hero.png"
+                alt="墨灵实机工作台正在编辑《南岸无灯》第七章《灯册》"
                 fill
                 priority
                 sizes="(max-width: 900px) 100vw, 62vw"

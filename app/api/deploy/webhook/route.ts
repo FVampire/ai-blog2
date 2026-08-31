@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   const deployScript = process.env.DEPLOY_SCRIPT || 'scripts/deploy.sh';
-  const branch = resolveDeployBranch(body, process.env.DEPLOY_BRANCH || 'main');
+  const branch = resolveDeployBranch(body, process.env.DEPLOY_BRANCH || 'master');
   const logFile = `${process.cwd()}/deploy.log`;
 
   console.log(`[Deploy] Trigger async deployment for branch: ${branch}`);
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     message: 'Deploy webhook is ready',
     data: {
       deployScript: process.env.DEPLOY_SCRIPT || 'scripts/deploy.sh',
-      deployBranch: process.env.DEPLOY_BRANCH || 'main',
+      deployBranch: process.env.DEPLOY_BRANCH || 'master',
     },
   });
 }

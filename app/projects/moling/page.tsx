@@ -13,7 +13,7 @@ const PAGE_TITLE = '墨灵 Moling · 长篇 AI 创作工作台 - 五月的火';
 const PAGE_DESCRIPTION = '为长篇小说而生的桌面创作系统。墨灵持续维护角色、设定、伏笔与章节状态，让每一次生成都建立在完整故事上下文之上。';
 const SITE_NAME = '五月的火';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
-const PAGE_IMAGE = '/projects/moling/hero.png';
+const PAGE_IMAGE = '/projects/moling/moling-authentic-hero.png';
 
 export const metadata: Metadata = {
   title: { absolute: PAGE_TITLE },
@@ -55,9 +55,9 @@ export default function MolingPage() {
           </div>
           <div className={styles.heroWindow}>
             <ProductWindow
-              src="/projects/moling/hero.png"
-              alt="《南岸无灯》第七章《灯册》的墨灵工作台，章节导航、正文、故事上下文和 AI 协作面板同屏"
-              label="墨灵 Moling · 南岸无灯 · 第七章《灯册》"
+              src="/projects/moling/moling-authentic-hero.png"
+              alt="墨灵实机界面正在编辑《南岸无灯》第七章《灯册》，正文编辑器与 AI 对话面板同屏"
+              label="墨灵实机 · 南岸无灯 · 第七章《灯册》"
               priority
             />
           </div>
@@ -85,14 +85,14 @@ export default function MolingPage() {
               <p>根据章节目标生成正文，引用人物、伏笔和前文事实；经过审稿、局部重写与多路竞态选择后，再把定稿同步回故事状态。</p>
             </div>
             <ProductWindow
-              src="/projects/moling/showcase/chapter-studio.png"
-              alt="《南岸无灯》第七章智能工作台展示四个场景 Slot、三路写作候选和右侧一致性提示"
-              label="智能章节工作台 · 第七章《灯册》"
+              src="/projects/moling/moling-authentic-hero.png"
+              alt="墨灵真实章节编辑器展示《灯册》正文与右侧 AI 协作入口"
+              label="真实应用界面 · 已替换为公开演示文本"
             />
             <div className={styles.studioNotes}>
-              <article><b>完整上下文</b><p>章节目标、沈晚白、顾衡、阿苔、双重署名与城北档案库同时进入当前任务。</p></article>
-              <article><b>多路竞态</b><p>文笔、结构与审慎三种任务角色并行给出候选，由作者决定写入哪一路。</p></article>
-              <article><b>只改该改的</b><p>审稿意见定位到冲突句；局部修订保留段落其余部分的语气与节奏。</p></article>
+              <article><b>真实编辑器</b><p>章节树、正文、行号、字数与保存状态来自墨灵当前实机界面，不再使用生成式占位 UI。</p></article>
+              <article><b>同屏协作</b><p>对话、大纲、角色卡与日历维持原产品的信息结构，写作时不需要频繁切换窗口。</p></article>
+              <article><b>公开演示文本</b><p>截图只保留《南岸无灯》的两句短文；原项目名、人物名和正文均已隐私化处理。</p></article>
             </div>
           </section>
 

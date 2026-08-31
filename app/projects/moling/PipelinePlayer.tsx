@@ -1,77 +1,38 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
-import Image from 'next/image';
+import { useState } from 'react';
 
 import styles from './moling.module.css';
 
 const steps = [
-  ['理解章节目标', '沈晚白发现双重署名，决定是否把南岸的河写回灯册。'],
-  ['选择故事上下文', '角色、伏笔与城北档案库五张引用卡同时就位。'],
-  ['构建场景计划', '夜至档案库 → 对读笔迹 → 顾衡来访 → 湿石子。'],
-  ['多模型竞态', '文笔、结构、审慎三路候选并行，选择“结构”。'],
-  ['审稿与一致性', '识别顾衡到访与第三章夜班记录之间的冲突。'],
-  ['进行局部修订', '只改动冲突句，保留其余段落的节奏与笔触。'],
-  ['用户确认定稿', '第七章《灯册》进入已定稿状态。'],
-  ['同步故事记忆', '双重署名推进中，卷二顾衡出场收到影响通知。'],
-];
+  ['理解目标', '章节目标', '沈晚白发现双重署名，决定是否把南岸的河写回灯册。'],
+  ['选择上下文', '5 项引用', '沈晚白、顾衡、阿苔、双重署名、城北档案库'],
+  ['构建计划', '4 个场景', '夜至档案库 → 对读笔迹 → 顾衡来访 → 湿石子'],
+  ['多路竞态', '3 路候选', '文笔 / 结构 / 审慎；作者选择“结构”写入正文'],
+  ['审稿检查', '1 个冲突', '顾衡到访与第三章夜班记录的 Canon 表述冲突'],
+  ['局部修订', '只改 1 句', '顾衡又一次停在门槛外，像在等他把其中一行涂掉。'],
+  ['确认定稿', '版本锁定', '第七章《灯册》进入已定稿状态'],
+  ['同步记忆', '3 条回写', '伏笔推进、角色状态更新、卷二收到影响通知'],
+] as const;
 
 export default function PipelinePlayer() {
   const [activeStep, setActiveStep] = useState(0);
-  const [reducedMotion, setReducedMotion] = useState(true);
-  const [compact, setCompact] = useState(true);
-  const [mobilePlaying, setMobilePlaying] = useState(false);
-
-  useEffect(() => {
-    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const mobile = window.matchMedia('(max-width: 768px)');
-    const sync = () => { setReducedMotion(motion.matches); setCompact(mobile.matches); };
-    sync();
-    motion.addEventListener('change', sync);
-    mobile.addEventListener('change', sync);
-    return () => { motion.removeEventListener('change', sync); mobile.removeEventListener('change', sync); };
-  }, []);
-
-  const showVideo = !reducedMotion && (!compact || mobilePlaying);
+  const current = steps[activeStep];
 
   return (
     <div className={styles.pipelinePlayer}>
-      <div className={styles.pipelineMedia}>
-        {showVideo ? (
-          <video
-            muted
-            loop
-            playsInline
-            autoPlay
-            controls={compact}
-            poster="/projects/moling/video/agent-pipeline-poster.png"
-            aria-label="墨灵用预设稿演示从章节目标到同步 Canon 的八步创作闭环"
-            onTimeUpdate={(event) => setActiveStep(Math.min(7, Math.floor(event.currentTarget.currentTime / 1.625)))}
-          >
-            <source src="/projects/moling/video/agent-pipeline.webm" type="video/webm" />
-            <source src="/projects/moling/video/agent-pipeline.mp4" type="video/mp4" />
-          </video>
-        ) : (
-          <Image
-            src="/projects/moling/video/agent-pipeline-poster.png"
-            alt="《南岸无灯》第七章的八步创作流水线，结构候选被选中并推进双重署名伏笔"
-            fill
-            sizes="(max-width: 900px) 100vw, 68vw"
-          />
-        )}
-        {compact && !reducedMotion && !mobilePlaying && (
-          <button type="button" className={styles.playPipeline} onClick={() => setMobilePlaying(true)} aria-label="播放创作流水线演示">
-            <span aria-hidden="true">▶</span> 播放 13 秒演示
-          </button>
-        )}
-        <span className={styles.videoDescription}>静音演示 · 预设稿回放 · 13 秒循环</span>
+      <div className={styles.pipelineStage} aria-live="polite">
+        <div className={styles.pipelineStageTop}><span>STEP {String(activeStep + 1).padStart(2, '0')}</span><b>{current[1]}</b></div>
+        <p>{current[0]}</p>
+        <blockquote>{current[2]}</blockquote>
+        <div className={styles.pipelineMeta}><span>LOCAL WORKSPACE</span><span>PRESET DEMO DATA</span><span>NO LIVE MODEL REQUEST</span></div>
       </div>
       <ol className={styles.pipelineSteps} aria-label="创作流水线步骤">
-        {steps.map(([title, copy], index) => (
-          <li key={title} className={index === activeStep && showVideo ? styles.activePipelineStep : ''}>
-            <span>{String(index + 1).padStart(2, '0')}</span>
-            <div><b>{title}</b><p>{copy}</p></div>
+        {steps.map(([title], index) => (
+          <li key={title} className={index === activeStep ? styles.activePipelineStep : ''}>
+            <button type="button" onClick={() => setActiveStep(index)} aria-current={index === activeStep ? 'step' : undefined}>
+              <span>{String(index + 1).padStart(2, '0')}</span><b>{title}</b>
+            </button>
           </li>
         ))}
       </ol>

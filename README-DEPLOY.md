@@ -94,7 +94,7 @@ curl -X POST http://localhost:3000/api/agent/projects \
 在 Linux 服务器上（项目目录内）：
 
 ```bash
-bash scripts/server-setup.sh /var/www/ai-blog2 /var/repos/ai-blog2.git main
+bash scripts/server-setup.sh /var/www/ai-blog2 /var/repos/ai-blog2.git master
 ```
 
 这会创建：
@@ -109,7 +109,7 @@ cd /var/www/ai-blog2
 cp .env.example .env
 # 编辑 .env：DATABASE_URL、JWT_SECRET、AGENT_API_KEY、SITE_URL 等
 
-bash scripts/deploy.sh main
+bash scripts/deploy.sh master
 ```
 
 `deploy.sh` 会：安装依赖 → 迁移 → `pnpm build` → `pm2 restart`。
@@ -120,7 +120,7 @@ PM2 配置见 `ecosystem.config.js`，进程名 `blog`。
 
 ```bash
 git remote add production ssh://user@your-server/var/repos/ai-blog2.git
-git push production main
+git push production master
 ```
 
 推送后服务器自动部署，日志：`/var/www/ai-blog2/deploy.log`

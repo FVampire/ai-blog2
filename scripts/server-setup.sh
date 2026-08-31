@@ -6,7 +6,7 @@ set -euo pipefail
 
 DEPLOY_DIR="${1:-/var/www/ai-blog2}"
 BARE_REPO="${2:-/var/repos/ai-blog2.git}"
-BRANCH="${3:-main}"
+BRANCH="${3:-master}"
 
 echo "=== ai-blog2 Server Setup ==="
 echo "Deploy dir:  $DEPLOY_DIR"
@@ -26,9 +26,18 @@ HOOK_FILE="$BARE_REPO/hooks/post-receive"
 cp scripts/hooks/post-receive "$HOOK_FILE"
 chmod +x "$HOOK_FILE"
 
-# 在 hook 中写入部署目录
-sed -i "s|DEPLOY_DIR=.*|DEPLOY_DIR=\"$DEPLOY_DIR\"|" "$HOOK_FILE" 2>/dev/null || \
-  sed -i '' "s|DEPLOY_DIR=.*|DEPLOY_DIR=\"$DEPLOY_DIR\"|" "$HOOK_FILE"
+# 在 hook 中写入部署目录和目标分支
+if sed --version >/dev/null 2>&1; then
+  sed -i \
+    -e "s|^DEPLOY_DIR=.*|DEPLOY_DIR=\"$DEPLOY_DIR\"|" \
+    -e "s|^BRANCH=.*|BRANCH=\"$BRANCH\"|" \
+    "$HOOK_FILE"
+else
+  sed -i '' \
+    -e "s|^DEPLOY_DIR=.*|DEPLOY_DIR=\"$DEPLOY_DIR\"|" \
+    -e "s|^BRANCH=.*|BRANCH=\"$BRANCH\"|" \
+    "$HOOK_FILE"
+fi
 
 echo "Installed post-receive hook"
 

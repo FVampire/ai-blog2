@@ -2,7 +2,7 @@
 # PM2 部署脚本 — 由 git hook 或手动触发
 set -euo pipefail
 
-BRANCH="${1:-${DEPLOY_BRANCH:-main}}"
+BRANCH="${1:-${DEPLOY_BRANCH:-master}}"
 APP_DIR="${APP_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 LOG_PREFIX="[Deploy $(date '+%Y-%m-%d %H:%M:%S')]"
 

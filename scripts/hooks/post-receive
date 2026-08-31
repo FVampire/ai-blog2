@@ -5,7 +5,7 @@
 set -euo pipefail
 
 DEPLOY_DIR="${DEPLOY_DIR:-/var/www/ai-blog2}"
-BRANCH="${DEPLOY_BRANCH:-main}"
+BRANCH="${DEPLOY_BRANCH:-master}"
 LOG_FILE="${DEPLOY_DIR}/deploy.log"
 
 while read -r oldrev newrev refname; do
@@ -17,8 +17,9 @@ while read -r oldrev newrev refname; do
       export APP_DIR="$DEPLOY_DIR"
       export DEPLOY_BRANCH="$BRANCH"
       cd "$DEPLOY_DIR"
-      git --git-dir="$DEPLOY_DIR/.git" fetch origin "$BRANCH"
-      git --git-dir="$DEPLOY_DIR/.git" --work-tree="$DEPLOY_DIR" checkout -f "$BRANCH"
+      git fetch origin "$BRANCH"
+      git checkout -f "$BRANCH"
+      git reset --hard "origin/$BRANCH"
       bash scripts/deploy.sh "$BRANCH"
       echo "[$(date)] Deploy finished"
     } >> "$LOG_FILE" 2>&1
