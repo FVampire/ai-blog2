@@ -66,7 +66,6 @@ export async function POST(request: NextRequest) {
       success: true,
       message: '登录成功',
       data: {
-        token,
         user: {
           id: user.id,
           username: user.username,

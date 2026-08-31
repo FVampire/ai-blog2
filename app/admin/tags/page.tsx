@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { toast } from '../../../components/admin/Toast';
 
 interface Tag { id: number; name: string; slug: string; color: string; created_at: string; post_count: number; }
 
@@ -18,8 +19,7 @@ export default function AdminTags() {
   const loadTags = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/tags', { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch('/api/tags');
       const data = await response.json();
       if (data.success) setTags(data.data);
     } catch (error) { console.error('Load tags error:', error); }
@@ -28,26 +28,24 @@ export default function AdminTags() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem('adminToken');
     try {
       const url = editingTag ? `/api/tags/${editingTag.id}` : '/api/tags';
       const method = editingTag ? 'PUT' : 'POST';
-      const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(formData) });
+      const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
       const data = await response.json();
-      if (data.success) { alert(editingTag ? '更新成功' : '创建成功'); setShowModal(false); setFormData({ name: '', slug: '', color: '#FF6B6B' }); setEditingTag(null); loadTags(); }
-      else alert(data.message || '操作失败');
-    } catch (error) { console.error('Submit error:', error); alert('操作失败'); }
+      if (data.success) { toast.success(editingTag ? '更新成功' : '创建成功'); setShowModal(false); setFormData({ name: '', slug: '', color: '#FF6B6B' }); setEditingTag(null); loadTags(); }
+      else toast.error(data.message || '操作失败');
+    } catch (error) { console.error('Submit error:', error); toast.error('操作失败'); }
   };
 
   const handleEdit = (tag: Tag) => { setEditingTag(tag); setFormData({ name: tag.name, slug: tag.slug, color: tag.color || '#FF6B6B' }); setShowModal(true); };
   const handleDelete = async (id: number) => {
     if (!confirm('确定要删除这个标签吗？')) return;
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/tags/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`/api/tags/${id}`, { method: 'DELETE' });
       const data = await response.json();
-      if (data.success) { alert('删除成功'); loadTags(); } else alert(data.message || '删除失败');
-    } catch (error) { console.error('Delete error:', error); alert('删除失败'); }
+      if (data.success) { toast.success('删除成功'); setTags((current) => current.filter((tag) => tag.id !== id)); } else toast.error(data.message || '删除失败');
+    } catch (error) { console.error('Delete error:', error); toast.error('删除失败'); }
   };
   const handleAdd = () => { setEditingTag(null); setFormData({ name: '', slug: '', color: '#FF6B6B' }); setShowModal(true); };
 

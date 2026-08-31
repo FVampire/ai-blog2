@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, ChangeEvent, DragEvent } from 'react';
+import React, { useEffect, useState, useRef, ChangeEvent, DragEvent } from 'react';
 
 import { authJson, authUpload } from './admin/authFetch';
 import { toast } from './admin/Toast';
@@ -36,6 +36,10 @@ const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
   const [images, setImages] = useState<ImageItem[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setPreview(defaultImage);
+  }, [defaultImage]);
 
   // 加载已上传的图片列表
   const loadImages = async () => {

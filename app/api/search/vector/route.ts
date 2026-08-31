@@ -34,10 +34,12 @@ export async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams;
   const q = searchParams.get('q');
-  const limit = parseInt(searchParams.get('limit') || '10') || 10;
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '10') || 10));
   const threshold = parseFloat(searchParams.get('threshold') || '0.5') || 0.5;
+  const forceText = searchParams.get('mode') === 'text';
 
-  return handleVectorSearch(q, limit, threshold);
+  return handleVectorSearch(q, page, limit, threshold, forceText);
 }
 
 export async function POST(request: NextRequest) {
@@ -55,10 +57,10 @@ export async function POST(request: NextRequest) {
   const limit = parseInt(body.limit) || 10;
   const threshold = parseFloat(body.threshold) || 0.5;
 
-  return handleVectorSearch(q, limit, threshold);
+  return handleVectorSearch(q, 1, limit, threshold, body.mode === 'text');
 }
 
-async function handleVectorSearch(q: string | null, limit: number, threshold: number) {
+async function handleVectorSearch(q: string | null, page: number, limit: number, threshold: number, forceText = false) {
   if (!q || typeof q !== 'string' || q.trim().length === 0) {
     return NextResponse.json(
       { success: false, message: '搜索关键词不能为空' },
@@ -69,6 +71,7 @@ async function handleVectorSearch(q: string | null, limit: number, threshold: nu
   const queryText = q.trim();
 
   try {
+    if (forceText) return await fallbackToTextSearch(queryText, page, limit);
     let vectorSearchEnabled = true;
     try {
       const { rows } = await query(
@@ -77,24 +80,27 @@ async function handleVectorSearch(q: string | null, limit: number, threshold: nu
       if (rows.length > 0) {
         vectorSearchEnabled = rows[0].value === 'true';
       }
-    } catch (e) {}
+    } catch {
+      // A missing settings table should not make public search unavailable.
+      vectorSearchEnabled = true;
+    }
 
     if (!vectorSearchEnabled) {
-      return await fallbackToTextSearch(queryText, limit);
+      return await fallbackToTextSearch(queryText, page, limit);
     }
 
     const queryVectors = await generateEmbedding(queryText, queryText, queryText);
 
     if (!queryVectors) {
-      return await fallbackToTextSearch(queryText, limit);
+      return await fallbackToTextSearch(queryText, page, limit);
     }
 
     const vectorResults = await VectorRepository.search(queryText, queryVectors, {
-      limit,
+      limit: 100,
       threshold,
     });
 
-    const results: SearchResult[] = vectorResults
+    const allResults: SearchResult[] = vectorResults
       .map((result) => ({
         id: result.postId,
         title: result.title,
@@ -113,14 +119,17 @@ async function handleVectorSearch(q: string | null, limit: number, threshold: nu
         matchedSnippets: result.matchedSnippets,
       }))
       .sort((a, b) => (b.similarity || 0) - (a.similarity || 0));
+    const total = allResults.length;
+    const results = allResults.slice((page - 1) * limit, page * limit);
 
     return NextResponse.json({
       success: true,
       data: {
         query: queryText,
         results,
-        total: results.length,
+        total,
         searchType: 'vector',
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       },
     });
   } catch (error: any) {
@@ -132,8 +141,15 @@ async function handleVectorSearch(q: string | null, limit: number, threshold: nu
   }
 }
 
-async function fallbackToTextSearch(queryText: string, limit: number) {
+async function fallbackToTextSearch(queryText: string, page: number, limit: number) {
   try {
+    const countResult = await query(
+      `SELECT COUNT(*)::int AS total FROM posts
+       WHERE status = 'published'
+         AND (title ILIKE $1 OR excerpt ILIKE $1 OR content ILIKE $1)`,
+      [`%${queryText}%`],
+    );
+    const total = Number(countResult.rows[0]?.total || 0);
     const { rows } = await query(
       `SELECT
         p.id, p.title, p.slug, p.excerpt, p.image_url,
@@ -156,8 +172,8 @@ async function fallbackToTextSearch(queryText: string, limit: number) {
         AND (p.title ILIKE $1 OR p.excerpt ILIKE $1 OR p.content ILIKE $1)
       GROUP BY p.id, u.username
       ORDER BY similarity DESC, p.published_at DESC
-      LIMIT $3`,
-      [`%${queryText}%`, `%${queryText}%`, limit]
+      LIMIT $3 OFFSET $4`,
+      [`%${queryText}%`, `%${queryText}%`, limit, (page - 1) * limit]
     );
 
     const results: SearchResult[] = rows.map((row: any) => ({
@@ -183,8 +199,9 @@ async function fallbackToTextSearch(queryText: string, limit: number) {
       data: {
         query: queryText,
         results,
-        total: results.length,
+        total,
         searchType: 'text',
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
       },
     });
   } catch (error: any) {

@@ -26,8 +26,7 @@ export default function CommentsManagement() {
   const loadComments = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/comments?status=${statusFilter}&page=${currentPage}&limit=20`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`/api/comments?status=${statusFilter}&page=${currentPage}&limit=20`);
       const data = await response.json();
       if (data.success) { setComments(data.data); setPagination(data.pagination); }
       else showMessage('error', data.message || '加载评论失败');
@@ -37,9 +36,8 @@ export default function CommentsManagement() {
 
   const updateCommentStatus = async (id: number, status: 'pending' | 'approved' | 'rejected') => {
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await fetch(`/api/comments/${id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
       const data = await response.json();
@@ -51,8 +49,7 @@ export default function CommentsManagement() {
   const deleteComment = async (id: number) => {
     if (!confirm('确定要删除这条评论吗？')) return;
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/comments/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`/api/comments/${id}`, { method: 'DELETE' });
       const data = await response.json();
       if (data.success) { showMessage('success', data.message || '删除成功'); loadComments(); }
       else showMessage('error', data.message || '删除失败');

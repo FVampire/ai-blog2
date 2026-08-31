@@ -6,8 +6,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import AdminLayout from '../../../../components/admin/AdminLayout';
+import { toast } from '../../../../components/admin/Toast';
 import EnhancedImageUpload from '../../../../components/EnhancedImageUpload';
 import MarkdownEditor from '../../../../components/MarkdownEditor';
+import { confirmDiscardChanges, useUnsavedChanges } from '../../../../hooks/useUnsavedChanges';
 
 interface Tag {
   id: number;
@@ -15,9 +17,13 @@ interface Tag {
   slug: string;
 }
 
+const DRAFT_KEY = 'admin:post-draft:new';
+
 export default function NewPost() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [draftReady, setDraftReady] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [tags, setTags] = useState<Tag[]>([]);
   const [formData, setFormData] = useState({
     title: '',
@@ -29,12 +35,45 @@ export default function NewPost() {
     tagIds: [] as number[],
   });
 
+  const emptySnapshot = JSON.stringify({
+    title: '', slug: '', excerpt: '', content: '', imageUrl: '', status: 'draft', tagIds: [],
+  });
+  const dirty = draftReady && JSON.stringify(formData) !== emptySnapshot;
+  useUnsavedChanges(dirty && !loading);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(DRAFT_KEY);
+      if (stored) {
+        const draft = JSON.parse(stored) as { data?: typeof formData; savedAt?: string };
+        if (draft.data) {
+          setFormData(draft.data);
+          if (draft.savedAt) setLastSaved(new Date(draft.savedAt));
+          toast.success('已恢复本地草稿');
+        }
+      }
+    } catch {
+      localStorage.removeItem(DRAFT_KEY);
+    } finally {
+      setDraftReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady || !dirty) return;
+    const timer = window.setTimeout(() => {
+      const savedAt = new Date();
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ data: formData, savedAt: savedAt.toISOString() }));
+      setLastSaved(savedAt);
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [draftReady, dirty, formData]);
+
   useEffect(() => { loadTags(); }, []);
 
   const loadTags = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/tags', { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch('/api/tags');
       const data = await response.json();
       if (data.success) setTags(data.data);
     } catch (error) { console.error('Load tags error:', error); }
@@ -42,19 +81,18 @@ export default function NewPost() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.slug) { alert('标题和Slug不能为空'); return; }
+    if (!formData.title || !formData.slug) { toast.error('标题和 Slug 不能为空'); return; }
     setLoading(true);
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await fetch('/api/posts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
       const data = await response.json();
-      if (data.success) { alert('文章创建成功'); router.push('/admin/posts'); }
-      else alert(data.message || '创建失败');
-    } catch (error) { console.error('Create post error:', error); alert('创建失败'); }
+      if (data.success) { localStorage.removeItem(DRAFT_KEY); toast.success('文章创建成功'); router.push('/admin/posts'); }
+      else toast.error(data.message || '创建失败');
+    } catch (error) { console.error('Create post error:', error); toast.error('创建失败'); }
     finally { setLoading(false); }
   };
 
@@ -74,8 +112,8 @@ export default function NewPost() {
     <AdminLayout>
       <div className="post-editor-page">
         <div className="page-header">
-          <h1 className="page-title">新建文章</h1>
-          <button type="button" className="btn-secondary" onClick={() => router.push('/admin/posts')}>返回列表</button>
+          <div><h1 className="page-title">新建文章</h1><small>{lastSaved ? `草稿已自动保存 · ${lastSaved.toLocaleTimeString('zh-CN')}` : '草稿自动保存已开启'}</small></div>
+          <button type="button" className="btn-secondary" onClick={() => { if (confirmDiscardChanges(dirty)) router.push('/admin/posts'); }}>返回列表</button>
         </div>
 
         <form onSubmit={handleSubmit} className="post-editor-form">
@@ -127,7 +165,7 @@ export default function NewPost() {
           </div>
 
           <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={() => router.push('/admin/posts')} disabled={loading}>取消</button>
+            <button type="button" className="btn-secondary" onClick={() => { if (confirmDiscardChanges(dirty)) router.push('/admin/posts'); }} disabled={loading}>取消</button>
             <button type="submit" className="btn-primary" disabled={loading}>{loading ? '创建中...' : '创建文章'}</button>
           </div>
         </form>

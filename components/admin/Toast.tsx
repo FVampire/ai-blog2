@@ -31,12 +31,6 @@ function dismiss(id: number) {
 function push(type: ToastType, message: string) {
   if (!message) return;
 
-  // 没有挂载容器的页面（如后台之外的演示页）退回原生提示，避免消息静默丢失
-  if (listeners.size === 0) {
-    if (typeof window !== 'undefined') window.alert(message);
-    return;
-  }
-
   const id = nextId++;
   items = [...items, { id, type, message }];
   emit();

@@ -33,6 +33,7 @@ interface SearchData {
   results: SearchResult[];
   total: number;
   searchType: 'vector' | 'text';
+  pagination?: { page: number; limit: number; total: number; totalPages: number };
 }
 
 const searchPageStyles = `
@@ -179,56 +180,55 @@ function SearchContent() {
   const searchParams = useSearchParams();
   const q = searchParams.get('q');
   const type = searchParams.get('type');
+  const pageParam = Math.max(1, parseInt(searchParams.get('page') || '1') || 1);
 
   const [query, setQuery] = useState('');
   const [searchType, setSearchType] = useState<'vector' | 'text'>('vector');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [total, setTotal] = useState(0);
-  const [limit, setLimit] = useState(PAGE_SIZE);
-  const [hasMore, setHasMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(pageParam);
+  const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
 
   const performSearch = useCallback(async (
     searchQuery: string,
     nextSearchType: 'vector' | 'text',
-    nextLimit: number,
+    nextPage: number,
   ) => {
     if (!searchQuery.trim()) return;
 
-    const loadingMore = nextLimit > PAGE_SIZE;
-    if (loadingMore) setIsLoadingMore(true);
-    else setIsLoading(true);
+    setIsLoading(true);
     setError('');
     setSearched(true);
 
     try {
       const response = await apiClient.get<SearchData>(
-        `/api/search?q=${encodeURIComponent(searchQuery)}&type=${nextSearchType}&limit=${nextLimit}`,
+        `/api/search?q=${encodeURIComponent(searchQuery)}&type=${nextSearchType}&page=${nextPage}&limit=${PAGE_SIZE}`,
       );
 
-      if (response.success) {
-        const list = response.data.results || [];
+      if (response.success && response.data) {
+        const data = response.data;
+        const list = data.results || [];
         setResults(list);
-        setTotal(response.data.total ?? list.length);
-        setHasMore(list.length >= nextLimit);
+        setTotal(data.total ?? list.length);
+        setCurrentPage(data.pagination?.page ?? nextPage);
+        setTotalPages(data.pagination?.totalPages ?? Math.ceil((data.total ?? list.length) / PAGE_SIZE));
       } else {
         setError(response.message || '搜索失败');
         setResults([]);
         setTotal(0);
-        setHasMore(false);
+        setTotalPages(0);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '搜索失败，请稍后重试';
       setError(message);
       setResults([]);
       setTotal(0);
-      setHasMore(false);
+      setTotalPages(0);
     } finally {
       setIsLoading(false);
-      setIsLoadingMore(false);
     }
   }, []);
 
@@ -239,33 +239,29 @@ function SearchContent() {
   useEffect(() => {
     if (q) {
       setQuery(q);
-      setLimit(PAGE_SIZE);
-      performSearch(q, (type as 'vector' | 'text') || 'vector', PAGE_SIZE);
+      setCurrentPage(pageParam);
+      performSearch(q, (type as 'vector' | 'text') || 'vector', pageParam);
     }
-  }, [q, type, performSearch]);
+  }, [q, type, pageParam, performSearch]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
 
-    setLimit(PAGE_SIZE);
     router.push(`/search?q=${encodeURIComponent(query)}&type=${searchType}`);
-    performSearch(query, searchType, PAGE_SIZE);
   };
 
   const handleTypeChange = (newType: 'vector' | 'text') => {
     setSearchType(newType);
     if (query.trim()) {
-      setLimit(PAGE_SIZE);
       router.push(`/search?q=${encodeURIComponent(query)}&type=${newType}`);
-      performSearch(query, newType, PAGE_SIZE);
     }
   };
 
-  const handleLoadMore = () => {
-    const nextLimit = limit + PAGE_SIZE;
-    setLimit(nextLimit);
-    performSearch(query, searchType, nextLimit);
+  const goToPage = (nextPage: number) => {
+    if (!query.trim() || nextPage < 1 || nextPage > totalPages) return;
+    router.push(`/search?q=${encodeURIComponent(query)}&type=${searchType}&page=${nextPage}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -367,18 +363,11 @@ function SearchContent() {
                     <span className="sp-results-progress">
                       已显示 {results.length} 条{total > results.length ? ` / 共 ${total} 条` : ''}
                     </span>
-                    {hasMore ? (
-                      <button
-                        type="button"
-                        className="sp-load-more"
-                        onClick={handleLoadMore}
-                        disabled={isLoadingMore}
-                      >
-                        {isLoadingMore ? '加载中…' : '加载更多'}
-                      </button>
-                    ) : (
-                      <span className="sp-results-progress">已经到底了</span>
-                    )}
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <button type="button" className="sp-load-more" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1}>上一页</button>
+                      <span className="sp-results-progress">第 {currentPage} / {Math.max(totalPages, 1)} 页</span>
+                      <button type="button" className="sp-load-more" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages}>下一页</button>
+                    </div>
                   </div>
                 )}
               </>

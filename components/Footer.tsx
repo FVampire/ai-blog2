@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 
 import Link from 'next/link';
 
+import { getPublicSettings } from '../lib/public-settings-client';
+
 interface FooterSocialLink {
   platform?: string;
   name?: string;
@@ -19,14 +21,12 @@ const Footer: React.FC = () => {
   const [projectsNavLabel, setProjectsNavLabel] = useState('项目');
 
   useEffect(() => {
-    fetch('/api/settings/public')
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.success || !data.data) return;
-        if (data.data.footerText) setFooterText(data.data.footerText);
-        if (Array.isArray(data.data.socialLinks)) setSocialLinks(data.data.socialLinks);
-        if (data.data.projectsEnabled !== undefined) setProjectsEnabled(data.data.projectsEnabled);
-        if (data.data.projectsNavLabel) setProjectsNavLabel(data.data.projectsNavLabel);
+    getPublicSettings()
+      .then((settings) => {
+        if (settings.footerText) setFooterText(settings.footerText);
+        if (Array.isArray(settings.socialLinks)) setSocialLinks(settings.socialLinks);
+        if (settings.projectsEnabled !== undefined) setProjectsEnabled(settings.projectsEnabled);
+        if (settings.projectsNavLabel) setProjectsNavLabel(settings.projectsNavLabel);
       })
       .catch(() => {
         setFooterText(DEFAULT_FOOTER);

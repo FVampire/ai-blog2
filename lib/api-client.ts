@@ -10,7 +10,6 @@ interface ApiResponse<T = any> {
 }
 
 interface LoginData {
-  token: string;
   user: {
     id: number;
     username: string;
@@ -20,22 +19,10 @@ interface LoginData {
 }
 
 class ApiClient {
-  private getToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('adminToken');
-  }
-
-  private getHeaders(includeAuth: boolean = false): HeadersInit {
+  private getHeaders(): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };
-
-    if (includeAuth) {
-      const token = this.getToken();
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
 
     return headers;
   }
@@ -43,13 +30,13 @@ class ApiClient {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
-    requiresAuth: boolean = false
+    _requiresAuth: boolean = false
   ): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
         headers: {
-          ...this.getHeaders(requiresAuth),
+          ...this.getHeaders(),
           ...options.headers,
         },
       });

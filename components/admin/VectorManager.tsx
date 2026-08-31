@@ -32,10 +32,7 @@ export const VectorManager: React.FC = () => {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/vector', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch('/api/admin/vector');
       const data = await response.json();
       if (data.success) {
         setStats(data.data);
@@ -57,12 +54,10 @@ export const VectorManager: React.FC = () => {
     setResult(null);
 
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await fetch(
         `/api/admin/vector?limit=${limit}&dry_run=${dryRun}`,
         {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
         }
       );
       const data = await response.json();
@@ -97,10 +92,8 @@ export const VectorManager: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await fetch('/api/admin/vector?confirm=true', {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
 

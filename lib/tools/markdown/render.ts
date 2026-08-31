@@ -7,7 +7,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import rehypeSlug from 'rehype-slug';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeStringify from 'rehype-stringify';
-import { markdownSanitizeSchema } from '../markdown/plugins';
+import { markdownSanitizeSchema } from '../../markdown/plugins';
 import { themeCss } from './themes';
 
 export async function renderMarkdown(markdown: string, options: { allowHtml: boolean; sanitize: boolean }) {

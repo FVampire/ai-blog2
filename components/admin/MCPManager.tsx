@@ -39,12 +39,7 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
   const fetchServers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/admin/mcp', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch('/api/admin/mcp');
 
       const data = await response.json();
 
@@ -75,7 +70,6 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem('adminToken');
       const url = editingServer
         ? `/api/admin/mcp/${editingServer.id}`
         : '/api/admin/mcp';
@@ -86,7 +80,6 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...formData,
@@ -149,12 +142,8 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
     if (!confirm('确定要删除这个MCP服务器吗？')) return;
 
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await fetch(`/api/admin/mcp/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
       });
 
       const data = await response.json();
@@ -173,12 +162,8 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
 
   const handleSetDefault = async (id: number) => {
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await fetch(`/api/admin/mcp/${id}/default`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
       });
 
       const data = await response.json();

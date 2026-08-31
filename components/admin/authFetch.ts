@@ -9,21 +9,15 @@ export interface ApiEnvelope<T = any> {
   [key: string]: unknown;
 }
 
-const TOKEN_KEY = 'adminToken';
-const USER_KEY = 'adminUser';
 const LOGIN_PATH = '/admin/login';
 
 let redirecting = false;
 
-export function getAdminToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(TOKEN_KEY);
-}
-
 export function clearAdminCredentials() {
   if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(TOKEN_KEY);
-  window.localStorage.removeItem(USER_KEY);
+  // Remove credentials written by older builds. Current authentication is cookie-only.
+  window.localStorage.removeItem('adminToken');
+  window.localStorage.removeItem('adminUser');
   void fetch('/api/auth/logout', { method: 'POST' });
 }
 
@@ -39,8 +33,6 @@ export function handleUnauthorized(message = '登录已过期，请重新登录'
 
 export function buildAuthHeaders(init: RequestInit = {}): Headers {
   const headers = new Headers(init.headers);
-  const token = getAdminToken();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
   if (typeof init.body === 'string' && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
@@ -130,8 +122,6 @@ export function authUpload(
     xhr.addEventListener('error', () => reject(new Error('网络错误')));
 
     xhr.open('POST', url);
-    const token = getAdminToken();
-    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.send(formData);
   });
 }

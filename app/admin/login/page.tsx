@@ -22,14 +22,16 @@ export default function AdminLogin() {
       const response = await apiClient.login(username, password);
 
       if (response.success && response.data) {
-        localStorage.setItem('adminToken', response.data.token);
-        localStorage.setItem('adminUser', JSON.stringify(response.data.user));
-        router.push('/admin');
+        // The JWT only exists in the httpOnly cookie set by the login route.
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        router.replace('/admin');
+        router.refresh();
       } else {
         setError(response.error || response.message || '登录失败');
         setLoading(false);
       }
-    } catch (err) {
+    } catch {
       setError('登录失败，请稍后重试');
       setLoading(false);
     }

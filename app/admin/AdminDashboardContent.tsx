@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import AdminLayout from '../../components/admin/AdminLayout';
+import { toast } from '../../components/admin/Toast';
 
 interface DashboardStats {
   totalPosts: number;
@@ -30,6 +31,7 @@ export default function AdminDashboardContent({ stats, recentPosts }: AdminDashb
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [publishingId, setPublishingId] = useState<number | null>(null);
+  const [visiblePosts, setVisiblePosts] = useState(recentPosts);
 
   const statCards = [
     { label: '总文章数', value: stats.totalPosts.toString(), icon: '📝', color: 'blue', link: '/admin/posts' },
@@ -63,25 +65,21 @@ export default function AdminDashboardContent({ stats, recentPosts }: AdminDashb
     if (!confirm('确定要发布这篇文章吗？')) return;
     setPublishingId(postId);
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await fetch(`/api/posts/${postId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'published' }),
       });
       const data = await response.json();
       if (data.success) {
-        alert('文章发布成功');
-        window.location.reload();
+        setVisiblePosts((posts) => posts.map((post) => post.id === postId ? { ...post, status: 'published' } : post));
+        toast.success('文章发布成功');
       } else {
-        alert(data.message || '发布失败');
+        toast.error(data.message || '发布失败');
       }
     } catch (error) {
       console.error('Publish error:', error);
-      alert('发布失败');
+      toast.error('发布失败');
     } finally {
       setPublishingId(null);
     }
@@ -91,21 +89,17 @@ export default function AdminDashboardContent({ stats, recentPosts }: AdminDashb
     if (!confirm('确定要删除这篇文章吗？此操作无法撤销。')) return;
     setDeletingId(postId);
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/posts/${postId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const response = await fetch(`/api/posts/${postId}`, { method: 'DELETE' });
       const data = await response.json();
       if (data.success) {
-        alert('文章删除成功');
-        window.location.reload();
+        setVisiblePosts((posts) => posts.filter((post) => post.id !== postId));
+        toast.success('文章删除成功');
       } else {
-        alert(data.message || '删除失败');
+        toast.error(data.message || '删除失败');
       }
     } catch (error) {
       console.error('Delete error:', error);
-      alert('删除失败');
+      toast.error('删除失败');
     } finally {
       setDeletingId(null);
     }
@@ -115,12 +109,20 @@ export default function AdminDashboardContent({ stats, recentPosts }: AdminDashb
   const handleAddUser = () => router.push('/admin/users');
   const handleManageTags = () => router.push('/admin/tags');
   const handleViewReports = () => {
-    alert('报告功能开发中...\n\n统计数据：\n' +
-      `- 总文章数: ${stats.totalPosts}\n` +
-      `- 总用户数: ${stats.totalUsers}\n` +
-      `- 总评论数: ${stats.totalComments}\n` +
-      `- 总浏览量: ${stats.todayViews}`
-    );
+    const rows = [
+      ['指标', '数值'],
+      ['总文章数', stats.totalPosts],
+      ['总用户数', stats.totalUsers],
+      ['总评论数', stats.totalComments],
+      ['总浏览量', stats.todayViews],
+    ];
+    const csv = `\uFEFF${rows.map((row) => row.join(',')).join('\n')}`;
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    link.download = `blog-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    toast.success('统计报告已导出');
   };
 
   return (
@@ -174,8 +176,8 @@ export default function AdminDashboardContent({ stats, recentPosts }: AdminDashb
                 </tr>
               </thead>
               <tbody>
-                {recentPosts.length > 0 ? (
-                  recentPosts.map((post) => (
+                {visiblePosts.length > 0 ? (
+                  visiblePosts.map((post) => (
                     <tr key={post.id}>
                       <td className="post-title">{post.title}</td>
                       <td>{post.author}</td>

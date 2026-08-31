@@ -24,30 +24,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    const userStr = localStorage.getItem('adminUser');
-
-    if (!token || !userStr) {
-      clearAdminCredentials();
-      router.push('/admin/login');
-      return;
-    }
-
-    try {
-      setUser(JSON.parse(userStr));
-    } catch {
-      clearAdminCredentials();
-      router.push('/admin/login');
-      return;
-    }
-
+    // One-time cleanup for sessions created before cookie-only authentication.
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
     let cancelled = false;
 
-    // 令牌可能已在服务端失效：拉一次当前用户，401 由 authFetch 统一处理（清凭据 + 回登录页）
     authJson<{ user: AdminUser }>('/api/auth/me').then((result) => {
       if (cancelled || !result.success || !result.data?.user) return;
       setUser(result.data.user);
-      localStorage.setItem('adminUser', JSON.stringify(result.data.user));
     });
 
     return () => {

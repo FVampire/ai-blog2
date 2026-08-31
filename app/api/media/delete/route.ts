@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { requireRoles, isAuthError } from '@/lib/auth-middleware-app';
+import { recordAuditEvent } from '@/lib/audit-log';
 
 export async function DELETE(request: NextRequest) {
   const authResult = requireRoles(request, ['admin', 'editor']);
@@ -30,6 +31,14 @@ export async function DELETE(request: NextRequest) {
     }
 
     fs.unlinkSync(filePath);
+    await recordAuditEvent({
+      request,
+      user: authResult.user,
+      action: 'media.delete',
+      resourceType: 'media',
+      resourceId: safeFilename,
+      metadata: { filename: safeFilename },
+    });
 
     return NextResponse.json({
       success: true,

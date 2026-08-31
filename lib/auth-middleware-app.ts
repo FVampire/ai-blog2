@@ -13,12 +13,6 @@ export interface AuthResult {
  * Returns the decoded user payload or null.
  */
 export function getAuthUser(request: NextRequest): JWTPayload | null {
-  const authHeader = request.headers.get('authorization');
-
-  if (authHeader?.startsWith('Bearer ')) {
-    return verifyToken(authHeader.substring(7));
-  }
-
   const cookieToken = request.cookies.get(ADMIN_TOKEN_COOKIE)?.value;
   return cookieToken ? verifyToken(cookieToken) : null;
 }

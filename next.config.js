@@ -18,7 +18,6 @@ const nextConfig = {
         hostname: '**',
       },
     ],
-    unoptimized: true,
   },
   // TypeORM imports all drivers; tell webpack to ignore the ones we don't need
   webpack: (config) => {

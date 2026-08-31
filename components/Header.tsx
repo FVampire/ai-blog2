@@ -3,7 +3,10 @@
 import React, { useEffect, useState } from 'react';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+
+import { useTheme } from '../contexts/ThemeContext';
+import { getPublicSettings } from '../lib/public-settings-client';
 
 interface NavLinkProps {
   href: string;
@@ -46,19 +49,23 @@ const Header: React.FC<HeaderProps> = ({
   const [fetchedEnabled, setFetchedEnabled] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
 
   const projectsNavLabel = propNavLabel ?? fetchedNavLabel;
   const projectsEnabled = propEnabled ?? fetchedEnabled;
+  const section = pathname?.startsWith('/projects')
+    ? 'projects'
+    : pathname?.startsWith('/tools')
+      ? 'tools'
+      : 'blog';
 
   useEffect(() => {
-    fetch('/api/settings/public')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.data) {
-          if (data.data.siteName) setSiteName(data.data.siteName);
-          if (data.data.projectsNavLabel) setFetchedNavLabel(data.data.projectsNavLabel);
-          if (data.data.projectsEnabled !== undefined) setFetchedEnabled(data.data.projectsEnabled);
-        }
+    getPublicSettings()
+      .then((settings) => {
+          if (settings.siteName) setSiteName(settings.siteName);
+          if (settings.projectsNavLabel) setFetchedNavLabel(settings.projectsNavLabel);
+          if (settings.projectsEnabled !== undefined) setFetchedEnabled(settings.projectsEnabled);
       })
       .catch((err) => {
         console.error('Failed to fetch site settings:', err);
@@ -66,8 +73,20 @@ const Header: React.FC<HeaderProps> = ({
   }, []);
 
   useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        router.push('/search');
+      }
+    };
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, [router]);
+
+  useEffect(() => {
     setMenuOpen(false);
-  }, [pathname]);
+    document.documentElement.dataset.section = section;
+  }, [pathname, section]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -92,7 +111,7 @@ const Header: React.FC<HeaderProps> = ({
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <header className="header">
+    <header className="header" data-section={section}>
       <Link href="/" className="logo" aria-label="返回首页">
         {siteName}
       </Link>
@@ -104,6 +123,11 @@ const Header: React.FC<HeaderProps> = ({
           </NavLink>
         ))}
       </nav>
+
+      <div className="header-actions">
+        <button type="button" className="header-action" onClick={() => router.push('/search')} aria-label="搜索（Ctrl 或 Command 加 K）">⌕ <kbd>⌘K</kbd></button>
+        <button type="button" className="header-action theme-toggle" onClick={toggleTheme} aria-label={theme === 'dark' ? '切换到浅色模式' : '切换到暗色模式'}>{theme === 'dark' ? '☀' : '☾'}</button>
+      </div>
 
       <button
         type="button"

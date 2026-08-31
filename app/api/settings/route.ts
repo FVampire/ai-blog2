@@ -26,6 +26,28 @@ function serializeSettingValue(value: unknown, type: string): string {
 const SENSITIVE_SETTING_KEYS = ['ai_api_key', 'ai_embedding_api_key'];
 const SENSITIVE_KEY_PATTERNS = ['api_key', 'apikey', 'secret', 'token', 'password'];
 
+// Only settings represented by a supported admin control may be changed through this endpoint.
+// Database rows are not an authorization boundary: deployments can contain internal-only keys.
+const WRITABLE_SETTING_KEYS = new Set([
+  'site_name', 'site_description', 'site_keywords', 'site_logo', 'site_favicon',
+  'posts_per_page', 'comments_per_page', 'excerpt_length',
+  'projects_enabled', 'projects_show_on_home', 'projects_home_count', 'projects_intro', 'projects_nav_label',
+  'comments_enabled', 'comments_moderation', 'comments_guest_allowed',
+  'registration_enabled', 'default_user_role',
+  'upload_max_size', 'upload_allowed_types',
+  'social_github', 'social_twitter', 'social_weibo',
+  'about_author_name', 'about_author_bio', 'about_author_bio_2', 'about_author_bio_3',
+  'author_avatar', 'about_social_links', 'footer_text', 'analytics_code',
+  'ai_enabled', 'ai_provider', 'ai_api_key', 'ai_api_base_url', 'ai_model',
+  'ai_model_light', 'ai_embedding_model', 'ai_embedding_api_key',
+  'ai_assistant_enabled', 'ai_assistant_name', 'ai_assistant_avatar',
+  'ai_assistant_welcome', 'ai_assistant_system_prompt',
+  'ai_summary_enabled', 'ai_search_enabled', 'ai_vector_search_enabled',
+  'ai_vector_search_threshold', 'ai_vector_search_weight_title',
+  'ai_vector_search_weight_content', 'ai_vector_search_weight_excerpt',
+  'ai_temperature', 'ai_max_tokens', 'mcp_enabled', 'mcp_allow_user_select',
+]);
+
 function isSensitiveKey(key: string): boolean {
   const lowerKey = key.toLowerCase();
   return (
@@ -99,7 +121,7 @@ export async function PUT(request: NextRequest) {
     const updates = Object.entries(settings);
     for (const [key, value] of updates) {
       const type = typeMap[key];
-      if (!type) {
+      if (!type || !WRITABLE_SETTING_KEYS.has(key)) {
         ignoredKeys.push(key);
         continue;
       }

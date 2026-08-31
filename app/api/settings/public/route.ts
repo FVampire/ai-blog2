@@ -39,7 +39,7 @@ export async function GET() {
         projectsShowOnHome: settings.projects_show_on_home !== false,
         projectsHomeCount: settings.projects_home_count || 3,
       },
-    });
+    }, { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=86400' } });
   } catch (error) {
     console.error('Get public settings error:', error);
     return NextResponse.json(

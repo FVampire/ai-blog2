@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth, isAuthError } from '@/lib/auth-middleware-app';
+import { recordAuditEvent } from '@/lib/audit-log';
 import { JWTPayload } from '@/lib/jwt';
 import { PostRepository } from '@/lib/repositories/PostRepository';
 
@@ -97,6 +98,17 @@ export async function PUT(
       prevPostId: body.prevPostId ?? undefined,
       nextPostId: body.nextPostId ?? undefined,
     });
+    await recordAuditEvent({
+      request,
+      user: authResult.user,
+      action: 'post.update',
+      resourceType: 'post',
+      resourceId: postId,
+      metadata: {
+        title: post.title,
+        changedFields: Object.keys(body).filter((key) => body[key] !== undefined),
+      },
+    });
 
     return NextResponse.json({
       success: true,
@@ -111,10 +123,10 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = requireAuth(_request);
+  const authResult = requireAuth(request);
   if (isAuthError(authResult)) return authResult;
 
   const { id } = await params;
@@ -127,7 +139,16 @@ export async function DELETE(
     const permissionError = await ensureCanMutatePost(authResult.user, postId);
     if (permissionError) return permissionError;
 
+    const post = await PostRepository.getPostById(postId);
     await PostRepository.deletePost(postId);
+    await recordAuditEvent({
+      request,
+      user: authResult.user,
+      action: 'post.delete',
+      resourceType: 'post',
+      resourceId: postId,
+      metadata: { title: post?.title, slug: post?.slug },
+    });
     return NextResponse.json({ success: true, message: '文章删除成功' });
   } catch (error) {
     console.error('Delete post error:', error);

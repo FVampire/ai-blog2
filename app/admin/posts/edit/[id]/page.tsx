@@ -6,8 +6,10 @@ import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 
 import AdminLayout from '../../../../../components/admin/AdminLayout';
+import { toast } from '../../../../../components/admin/Toast';
 import EnhancedImageUpload from '../../../../../components/EnhancedImageUpload';
 import MarkdownEditor from '../../../../../components/MarkdownEditor';
+import { confirmDiscardChanges, useUnsavedChanges } from '../../../../../hooks/useUnsavedChanges';
 
 interface Tag { id: number; name: string; slug: string; }
 interface PostOption { id: number; title: string; }
@@ -43,35 +45,50 @@ export default function EditPost() {
   const [vectorInfo, setVectorInfo] = useState<{ hasVectors: boolean; model?: string } | null>(null);
   const [generatingVector, setGeneratingVector] = useState(false);
   const [vectorMessage, setVectorMessage] = useState({ type: '', text: '' });
+  const [draftReady, setDraftReady] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [serverSnapshot, setServerSnapshot] = useState('');
   const [formData, setFormData] = useState({
     title: '', slug: '', excerpt: '', content: '', imageUrl: '',
     status: 'draft' as 'draft' | 'published' | 'archived',
     tagIds: [] as number[], prevPostId: null as number | null, nextPostId: null as number | null,
   });
+  const draftKey = `admin:post-draft:${id}`;
+  const dirty = draftReady && JSON.stringify(formData) !== serverSnapshot;
+  useUnsavedChanges(dirty && !loading);
 
   const loadPost = async () => {
     try {
       setPageLoading(true);
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/posts/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`/api/posts/${id}`);
       const data = await response.json();
       if (data.success) {
         const post = data.data.post;
-        setFormData({
+        const serverData = {
           title: post.title, slug: post.slug, excerpt: post.excerpt || '', content: post.content || '',
           imageUrl: post.imageUrl || '', status: post.status,
           tagIds: post.tags.map((t: any) => t.id),
           prevPostId: post.prev_post_id || null, nextPostId: post.next_post_id || null,
-        });
-      } else { alert('加载文章失败'); router.push('/admin/posts'); }
-    } catch (error) { console.error('Load post error:', error); alert('加载文章失败'); router.push('/admin/posts'); }
+        };
+        setServerSnapshot(JSON.stringify(serverData));
+        try {
+          const stored = localStorage.getItem(draftKey);
+          const draft = stored ? JSON.parse(stored) as { data?: typeof serverData; savedAt?: string } : null;
+          setFormData(draft?.data || serverData);
+          if (draft?.savedAt) { setLastSaved(new Date(draft.savedAt)); toast.success('已恢复本地草稿'); }
+        } catch {
+          localStorage.removeItem(draftKey);
+          setFormData(serverData);
+        }
+        setDraftReady(true);
+      } else { toast.error('加载文章失败'); router.push('/admin/posts'); }
+    } catch (error) { console.error('Load post error:', error); toast.error('加载文章失败'); router.push('/admin/posts'); }
     finally { setPageLoading(false); }
   };
 
   const loadTags = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/tags', { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch('/api/tags');
       const data = await response.json();
       if (data.success) setTags(data.data);
     } catch (error) { console.error('Load tags error:', error); }
@@ -79,8 +96,7 @@ export default function EditPost() {
 
   const loadAvailablePosts = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('/api/posts?limit=100', { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch('/api/posts?limit=100');
       const data = await response.json();
       if (data.success) {
         const posts = data.data.posts
@@ -93,8 +109,7 @@ export default function EditPost() {
 
   const loadVectorInfo = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/admin/vector/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`/api/admin/vector/${id}`);
       const data = await response.json();
       if (data.success) setVectorInfo({ hasVectors: data.data.hasVectors, model: data.data.vectors?.model });
     } catch (error) { console.error('Load vector info error:', error); }
@@ -102,12 +117,21 @@ export default function EditPost() {
 
   useEffect(() => { if (id) { loadPost(); loadTags(); loadAvailablePosts(); loadVectorInfo(); } }, [id]);
 
+  useEffect(() => {
+    if (!draftReady || !dirty) return;
+    const timer = window.setTimeout(() => {
+      const savedAt = new Date();
+      localStorage.setItem(draftKey, JSON.stringify({ data: formData, savedAt: savedAt.toISOString() }));
+      setLastSaved(savedAt);
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [draftKey, draftReady, dirty, formData]);
+
   const handleGenerateVector = async () => {
     if (!confirm('确定要为此文章生成向量吗？')) return;
     setGeneratingVector(true); setVectorMessage({ type: '', text: '' });
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/admin/vector/${id}`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`/api/admin/vector/${id}`, { method: 'POST' });
       const data = await response.json();
       if (data.success) { setVectorInfo({ hasVectors: true, model: data.data.model }); setVectorMessage({ type: 'success', text: data.message }); }
       else setVectorMessage({ type: 'error', text: data.message });
@@ -118,8 +142,7 @@ export default function EditPost() {
   const handleDeleteVector = async () => {
     if (!confirm('确定要删除此文章的向量吗？')) return;
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/admin/vector/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`/api/admin/vector/${id}`, { method: 'DELETE' });
       const data = await response.json();
       if (data.success) { setVectorInfo({ hasVectors: false }); setVectorMessage({ type: 'success', text: data.message }); }
       else setVectorMessage({ type: 'error', text: data.message });
@@ -128,19 +151,18 @@ export default function EditPost() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.slug) { alert('标题和Slug不能为空'); return; }
+    if (!formData.title || !formData.slug) { toast.error('标题和 Slug 不能为空'); return; }
     setLoading(true);
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await fetch(`/api/posts/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
       const data = await response.json();
-      if (data.success) { alert('文章更新成功'); router.push('/admin/posts'); }
-      else alert(data.message || '更新失败');
-    } catch (error) { console.error('Update post error:', error); alert('更新失败'); }
+      if (data.success) { localStorage.removeItem(draftKey); setServerSnapshot(JSON.stringify(formData)); toast.success('文章更新成功'); router.push('/admin/posts'); }
+      else toast.error(data.message || '更新失败');
+    } catch (error) { console.error('Update post error:', error); toast.error('更新失败'); }
     finally { setLoading(false); }
   };
 
@@ -156,8 +178,8 @@ export default function EditPost() {
       <style dangerouslySetInnerHTML={{ __html: editPostStyles }} />
       <div className="post-editor-page">
         <div className="page-header">
-          <h1 className="page-title">编辑文章</h1>
-          <button type="button" className="btn-secondary" onClick={() => router.push('/admin/posts')}>返回列表</button>
+          <div><h1 className="page-title">编辑文章</h1><small>{lastSaved ? `草稿已自动保存 · ${lastSaved.toLocaleTimeString('zh-CN')}` : '草稿自动保存已开启'}</small></div>
+          <button type="button" className="btn-secondary" onClick={() => { if (confirmDiscardChanges(dirty)) router.push('/admin/posts'); }}>返回列表</button>
         </div>
 
         <form onSubmit={handleSubmit} className="post-editor-form">
@@ -207,7 +229,7 @@ export default function EditPost() {
             </div>
           </div>
           <div className="form-actions">
-            <button type="button" className="btn-secondary" onClick={() => router.push('/admin/posts')} disabled={loading}>取消</button>
+            <button type="button" className="btn-secondary" onClick={() => { if (confirmDiscardChanges(dirty)) router.push('/admin/posts'); }} disabled={loading}>取消</button>
             <button type="submit" className="btn-primary" disabled={loading}>{loading ? '更新中...' : '更新文章'}</button>
           </div>
         </form>

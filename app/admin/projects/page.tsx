@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 import AdminLayout from '../../../components/admin/AdminLayout';
 import EnhancedImageUpload from '../../../components/EnhancedImageUpload';
+import { toast } from '../../../components/admin/Toast';
 
 interface Project {
   id: number;
@@ -56,14 +57,10 @@ export default function AdminProjects() {
     loadPosts();
   }, []);
 
-  const getToken = () => localStorage.getItem('adminToken');
-
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/admin/projects', {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await fetch('/api/admin/projects');
       const data = await res.json();
       if (data.success) setProjects(data.data);
     } catch (e) {
@@ -75,9 +72,7 @@ export default function AdminProjects() {
 
   const loadPosts = async () => {
     try {
-      const res = await fetch('/api/posts?status=published&limit=100', {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await fetch('/api/posts?status=published&limit=100');
       const data = await res.json();
       if (data.success) {
         const list = data.data?.posts || [];
@@ -118,9 +113,7 @@ export default function AdminProjects() {
     });
 
     try {
-      const res = await fetch(`/api/admin/projects/${project.id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await fetch(`/api/admin/projects/${project.id}`);
       const data = await res.json();
       if (data.success) {
         setForm((prev) => ({ ...prev, postIds: data.data.linkedPostIds || [] }));
@@ -157,7 +150,6 @@ export default function AdminProjects() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`,
         },
         body: JSON.stringify(payload),
       });
@@ -165,12 +157,13 @@ export default function AdminProjects() {
       if (data.success) {
         setShowModal(false);
         loadProjects();
+        toast.success(editingId ? '项目已更新' : '项目已创建');
       } else {
-        alert(data.message || '操作失败');
+        toast.error(data.message || '操作失败');
       }
     } catch (e) {
       console.error(e);
-      alert('操作失败');
+      toast.error('操作失败');
     } finally {
       setSaving(false);
     }
@@ -179,13 +172,10 @@ export default function AdminProjects() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除此项目？关联的文章链接也会被移除。')) return;
     try {
-      const res = await fetch(`/api/admin/projects/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const res = await fetch(`/api/admin/projects/${id}`, { method: 'DELETE' });
       const data = await res.json();
-      if (data.success) loadProjects();
-      else alert(data.message || '删除失败');
+      if (data.success) { setProjects((current) => current.filter((project) => project.id !== id)); toast.success('项目已删除'); }
+      else toast.error(data.message || '删除失败');
     } catch (e) {
       console.error(e);
     }
@@ -336,8 +326,9 @@ export default function AdminProjects() {
                   <div className="form-group">
                     <label>封面图片</label>
                     <EnhancedImageUpload
-                      value={form.imageUrl}
-                      onChange={(url) => setForm({ ...form, imageUrl: url })}
+                      defaultImage={form.imageUrl}
+                      onUploadSuccess={(url) => setForm((current) => ({ ...current, imageUrl: url }))}
+                      onSelectImage={(url) => setForm((current) => ({ ...current, imageUrl: url }))}
                     />
                   </div>
 

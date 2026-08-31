@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --experimental-strip-types --test lib/upload-image.test.ts lib/markdown/plugins.test.ts lib/auth-cookie.test.ts",
+    "test": "node --experimental-strip-types --test lib/upload-image.test.ts lib/markdown/plugins.test.ts lib/auth-cookie.test.ts lib/edge-jwt.test.ts",
     "migrate": "node scripts/migrate.mjs",
     "deploy": "bash scripts/deploy.sh"
   },

@@ -43,6 +43,9 @@ export default function AdminPostsContent({
   const [searchTerm, setSearchTerm] = useState(search);
   const [publishingId, setPublishingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkAction, setBulkAction] = useState('');
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   useEffect(() => {
     setSearchTerm(search);
@@ -104,6 +107,28 @@ export default function AdminPostsContent({
     }
   };
 
+  const handleBulkApply = async () => {
+    if (!bulkAction || selectedIds.length === 0) return;
+    const deleting = bulkAction === 'delete';
+    if (deleting && !confirm(`确定删除选中的 ${selectedIds.length} 篇文章吗？此操作无法撤销。`)) return;
+    setBulkLoading(true);
+    const result = await authJson('/api/posts/bulk', {
+      method: 'POST',
+      body: JSON.stringify(deleting
+        ? { action: 'delete', ids: selectedIds }
+        : { action: 'status', status: bulkAction, ids: selectedIds }),
+    });
+    setBulkLoading(false);
+    if (result.success) {
+      toast.success(result.message || '批量操作完成');
+      setSelectedIds([]);
+      setBulkAction('');
+      router.refresh();
+    } else {
+      toast.error(result.message || '批量操作失败');
+    }
+  };
+
   const getStatusLabel = (value: string) => {
     const statusMap: { [key: string]: string } = { published: '已发布', draft: '草稿', archived: '已归档' };
     return statusMap[value] || value;
@@ -140,10 +165,25 @@ export default function AdminPostsContent({
           </div>
         </div>
 
+        <div className="filters" aria-label="批量操作">
+          <span>已选择 {selectedIds.length} 篇</span>
+          <select value={bulkAction} onChange={(event) => setBulkAction(event.target.value)} className="filter-select">
+            <option value="">选择批量操作</option>
+            <option value="published">设为已发布</option>
+            <option value="draft">设为草稿</option>
+            <option value="archived">设为已归档</option>
+            <option value="delete">批量删除</option>
+          </select>
+          <button type="button" className="btn-secondary" disabled={!bulkAction || selectedIds.length === 0 || bulkLoading} onClick={handleBulkApply}>
+            {bulkLoading ? '处理中...' : '应用'}
+          </button>
+        </div>
+
         <div className="data-table">
           <table>
             <thead>
               <tr>
+                <th style={{ width: 40 }}><input type="checkbox" aria-label="选择本页全部文章" checked={posts.length > 0 && selectedIds.length === posts.length} onChange={(event) => setSelectedIds(event.target.checked ? posts.map((post) => post.id) : [])} /></th>
                 <th style={{ width: '40%' }}>标题</th><th>作者</th><th>发布日期</th>
                 <th>浏览量</th><th>状态</th><th>标签</th><th style={{ width: '150px' }}>操作</th>
               </tr>
@@ -151,6 +191,7 @@ export default function AdminPostsContent({
             <tbody>
               {posts.map((post) => (
                 <tr key={post.id}>
+                  <td><input type="checkbox" aria-label={`选择文章 ${post.title}`} checked={selectedIds.includes(post.id)} onChange={(event) => setSelectedIds((ids) => event.target.checked ? [...ids, post.id] : ids.filter((id) => id !== post.id))} /></td>
                   <td className="post-title">{post.title}</td>
                   <td>{post.author}</td>
                   <td>{post.date}</td>

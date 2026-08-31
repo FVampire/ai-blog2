@@ -116,7 +116,6 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                       priority
                       sizes="(max-width: 768px) 100vw, 760px"
                       className="blog-image"
-                      unoptimized
                     />
                   </div>
                 )}
