@@ -14,7 +14,8 @@ export async function middleware(request: NextRequest) {
   const user = token && secret ? await verifyEdgeToken(token, secret) : null;
 
   if (!user) {
-    return NextResponse.redirect(new URL('/admin/login', request.url));
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || request.url;
+    return NextResponse.redirect(new URL('/admin/login', siteUrl));
   }
 
   return NextResponse.next();
