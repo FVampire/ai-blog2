@@ -60,3 +60,6 @@ coverage/
 .cache/
 .eslintcache
 .tmp/
+
+# Local artifacts produced by Codex/Agent publishing workflows
+/.agent-generated/
