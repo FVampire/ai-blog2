@@ -6,7 +6,10 @@ import pg from 'pg';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(scriptDir, '..');
-const migrationFile = 'migration-update-profile-about.sql';
+const migrationFiles = [
+  'migration-update-profile-about.sql',
+  'migration-update-author-avatar.sql',
+];
 
 config({ path: join(rootDir, '.env') });
 
@@ -31,12 +34,14 @@ try {
       applied_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     )
   `);
-  const sql = readFileSync(join(rootDir, 'db', migrationFile), 'utf8');
-  await client.query(sql);
-  await client.query(
-    'INSERT INTO schema_migrations (filename) VALUES ($1) ON CONFLICT (filename) DO UPDATE SET applied_at = CURRENT_TIMESTAMP',
-    [migrationFile],
-  );
+  for (const migrationFile of migrationFiles) {
+    const sql = readFileSync(join(rootDir, 'db', migrationFile), 'utf8');
+    await client.query(sql);
+    await client.query(
+      'INSERT INTO schema_migrations (filename) VALUES ($1) ON CONFLICT (filename) DO UPDATE SET applied_at = CURRENT_TIMESTAMP',
+      [migrationFile],
+    );
+  }
   await client.query('COMMIT');
 
   const result = await client.query(`
@@ -44,7 +49,7 @@ try {
     FROM settings
     WHERE key IN (
       'about_author_bio_short', 'about_author_bio', 'about_author_bio_2',
-      'about_author_bio_3', 'about_author_bio_4'
+      'about_author_bio_3', 'about_author_bio_4', 'author_avatar'
     )
     ORDER BY key
   `);

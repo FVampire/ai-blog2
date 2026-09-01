@@ -2,8 +2,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require('D:/workspace/demo/writing_assistant/diagnostics/drive/node_modules/playwright');
 
-// Raw captures can contain unpublished prose. Keep them out of the public tree;
-// only redacted, edited derivatives may be copied into public/projects/moling.
+// Raw captures stay private until a deliberately selected frame is copied into
+// public/projects/moling. The showcase intentionally keeps the prose readable.
 const outputDir = path.resolve(__dirname, '../.tmp/moling-real-flow-raw');
 
 async function settle(page, text) {
@@ -41,10 +41,6 @@ async function clickTitle(page, title) {
   ` });
 
   const projectName = '旧货·人间烟火重构版';
-  if (!(await page.getByText(projectName, { exact: true }).count())) {
-    throw new Error(`Project not active: ${projectName}`);
-  }
-
   const activeNav = page.locator('nav > div[aria-hidden="false"]').first();
   const expand = activeNav.locator('button[title="展开导航"]').first();
   if (await expand.count()) {
@@ -52,6 +48,23 @@ async function clickTitle(page, title) {
     await page.waitForTimeout(350);
   }
 
+  await clickTitle(page, '章节');
+  if (!(await page.getByText(projectName, { exact: true }).count())) {
+    throw new Error(`Project not active: ${projectName}`);
+  }
+
+  // Close the current document tab so the first frame is a genuine project
+  // overview instead of a duplicate of the finalized chapter editor.
+  const titlebarClose = page.locator('button', { hasText: '✕' }).filter({ visible: true });
+  const closeButtons = await titlebarClose.all();
+  for (const button of closeButtons) {
+    const box = await button.boundingBox();
+    if (box && box.y < 36) {
+      await button.click({ force: true });
+      await page.waitForTimeout(500);
+      break;
+    }
+  }
   await settle(page, '已完结 11 / 11 章');
   await shot(page, '01-project-overview.png');
 
@@ -62,6 +75,7 @@ async function clickTitle(page, title) {
 
   console.log('open chapter outline');
   await page.locator('button[role="tab"]', { hasText: '细纲' }).first().click({ force: true, timeout: 8_000 });
+  await page.getByText('✅ 新鲜', { exact: false }).first().waitFor({ state: 'visible', timeout: 15_000 });
   await page.waitForTimeout(900);
   await shot(page, '03-chapter-11-outline.png');
 

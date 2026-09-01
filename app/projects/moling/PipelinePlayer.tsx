@@ -44,7 +44,7 @@ export default function PipelinePlayer() {
         <video
           ref={videoRef}
           src="/projects/moling/moling-real-flow-readable-v4.mp4"
-          poster="/projects/moling/moling-chapter-studio-full-v3.png"
+          poster="/projects/moling/moling-project-overview-full-v5.png"
           autoPlay
           muted
           loop

@@ -2,40 +2,41 @@
 
 import { useRef, useState } from 'react';
 
-import Image from 'next/image';
-
+import ImageLightbox from './ImageLightbox';
 import styles from './moling.module.css';
 
 const showcases = [
   {
     id: 'run',
-    label: '真实三章',
+    label: '三章总览',
     kicker: '01 · AUTHENTIC RUN',
     title: '不是一张孤立截图，而是一条跑完的长篇工作流。',
     description: '同一真实项目连续完成第 9–11 章。正文、章节标题和任务信息全部来自实际流程，并保持可读。',
-    src: '/projects/moling/moling-chapter-studio-full-v3.png',
-    alt: '墨灵真实三章项目的完整章节编辑器截图',
-    caption: '3 CHAPTERS · ORIGINAL UI · FULL TEXT',
+    src: '/projects/moling/moling-project-overview-full-v5.png',
+    alt: '墨灵真实三章项目总览，显示十一章完成度与章节树',
+    caption: '11 / 11 FINALIZED · THREE-CHAPTER RUN',
   },
   {
     id: 'studio',
     label: '正文定稿',
-    kicker: '02 · CHAPTER STUDIO',
-    title: '从章节树到正文与协作面板，完整工作台一次看清。',
-    description: '真实 11 章项目的全屏编辑状态。正文、章节树、字数、工具栏和本地保存状态都能直接查看。',
-    src: '/projects/moling/moling-chapter-studio-full-v3.png',
-    alt: '墨灵真实章节工作台完整截图',
-    caption: 'CHAPTER 11 · FINALIZED · LOCAL SAVE',
-  },
-  {
     id: 'chapter-outline',
     label: '章节细纲',
-    kicker: '03 · CHAPTER OUTLINE',
+    kicker: '02 · CHAPTER OUTLINE',
     title: '场景、节拍与约束，不再藏在正文背后。',
     description: '第 11 章真实细纲完整展示支线目标、场景节拍、角色参与和校验状态，可直接对照成稿效果。',
-    src: '/projects/moling/moling-chapter-outline-full-v3.png',
+    src: '/projects/moling/moling-chapter-outline-clean-v5.png',
     alt: '墨灵第十一章真实细纲界面',
     caption: 'SCENES · BEATS · CONSTRAINTS · VALIDATION',
+  },
+  {
+    id: 'studio',
+    label: '正文定稿',
+    kicker: '03 · CHAPTER STUDIO',
+    title: '细纲确认以后，定稿正文才进入完整工作台。',
+    description: '第 11 章真实定稿状态。正文、章节树、字数、工具栏和本地保存状态完整展示，正文可直接阅读。',
+    src: '/projects/moling/moling-chapter-studio-full-v5.png',
+    alt: '墨灵真实章节工作台完整截图',
+    caption: 'CHAPTER 11 · FINALIZED · LOCAL SAVE',
   },
   {
     id: 'outline',
@@ -43,7 +44,7 @@ const showcases = [
     kicker: '04 · OUTLINE WORKBENCH',
     title: '单章写完以后，仍能回到全书结构中检查位置。',
     description: '纵向大纲同时显示 11 章历史、下一章目标、角色出场计划与必须发生事项，局部修改有明确边界。',
-    src: '/projects/moling/moling-outline-workbench-full-v3.png',
+    src: '/projects/moling/moling-outline-workbench-full-v5.png',
     alt: '墨灵真实全书大纲工作台',
     caption: '11 CHAPTERS · NEXT GOAL · CHARACTER PLAN',
   },
@@ -53,7 +54,7 @@ const showcases = [
     kicker: '05 · TASK COMMAND',
     title: '完成不等于消失：影响、提醒与时间线继续可追踪。',
     description: '任务中心真实记录 11/11 章完成度、项目字数、后处理提醒和历史时间线，具体提醒内容也保持可读。',
-    src: '/projects/moling/moling-task-center-full-v3.png',
+    src: '/projects/moling/moling-task-center-full-v5.png',
     alt: '墨灵真实任务中心完整截图',
     caption: '11 / 11 FINALIZED · TRACEABLE HISTORY',
   },
@@ -99,10 +100,8 @@ export default function ShowcaseSwitch() {
 
       <div id={`moling-panel-${active.id}`} role="tabpanel" aria-labelledby={`moling-tab-${active.id}`} className={styles.showcasePanel}>
         <figure className={styles.finalShowcaseImage}>
-          <a href={active.src} target="_blank" rel="noreferrer" className={styles.fullImageLink} aria-label={`打开原始分辨率：${active.label}`}>
-            <Image src={active.src} alt={active.alt} fill sizes="(max-width: 768px) 100vw, 68vw" />
-          </a>
-          <figcaption>{active.caption} · 点击查看原图</figcaption>
+          <ImageLightbox src={active.src} alt={active.alt} label={active.label} />
+          <figcaption>{active.caption} · 站内放大查看</figcaption>
         </figure>
         <div className={styles.showcaseCopy}>
           <span>{active.kicker}</span>

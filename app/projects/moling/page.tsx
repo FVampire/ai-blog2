@@ -13,7 +13,7 @@ const PAGE_TITLE = '墨灵 Moling · 长篇 AI 创作工作台 - 五月的火';
 const PAGE_DESCRIPTION = '为长篇小说而生的桌面创作系统。墨灵持续维护角色、设定、伏笔与章节状态，让每一次生成都建立在完整故事上下文之上。';
 const SITE_NAME = '五月的火';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
-const PAGE_IMAGE = '/projects/moling/moling-chapter-studio-full-v3.png';
+const PAGE_IMAGE = '/projects/moling/moling-project-overview-full-v5.png';
 
 export const metadata: Metadata = {
   title: { absolute: PAGE_TITLE },
@@ -62,13 +62,13 @@ export default function MolingPage() {
           </div>
           <figure className={styles.heroWindow}>
             <Image
-              src="/projects/moling/moling-chapter-studio-full-v3.png"
-              alt="墨灵真实章节编辑器，第 11 章正文、章节树和 AI 协作面板完整可读"
+              src="/projects/moling/moling-project-overview-full-v5.png"
+              alt="墨灵真实项目总览，十一章章节树与三章连续运行状态完整可读"
               fill
               priority
               sizes="(max-width: 760px) 100vw, 1260px"
             />
-            <figcaption>REAL RUN · CHAPTER 09—11 · ORIGINAL SCREENSHOT</figcaption>
+              <figcaption>REAL RUN · CHAPTER 09—11 · PROJECT OVERVIEW</figcaption>
           </figure>
           <ul className={styles.heroTags} aria-label="产品能力">
             <li>长篇记忆</li><li>故事规划</li><li>智能审稿</li><li>本地创作</li>
@@ -95,7 +95,7 @@ export default function MolingPage() {
             </div>
             <figure className={styles.studioVisual}>
               <Image
-                src="/projects/moling/moling-chapter-studio-full-v3.png"
+                src="/projects/moling/moling-chapter-studio-full-v5.png"
                 alt="墨灵真实章节工作台，显示 11 章项目、正文编辑器与 AI 协作面板"
                 fill
                 sizes="(max-width: 760px) 100vw, 1220px"

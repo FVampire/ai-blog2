@@ -33,35 +33,17 @@ const PAGE_TITLE = '关于我';
 const PAGE_DESCRIPTION = '一名横跨图形引擎、医疗 AI、智能工作流与服装科技的全栈工程师。';
 const SITE_NAME = '五月的火';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
-const THESIS = '如何把复杂技术真正变成可使用、可复用、可规模化的系统。';
-
-const DOMAINS = [
-  { index: '01', title: '图形引擎', copy: '浏览器端 CAD 与三维交互' },
-  { index: '02', title: '医疗 AI', copy: '病历结构化与诊疗辅助' },
-  { index: '03', title: '智能工作流', copy: 'Agent、MCP 与流程编排' },
-  { index: '04', title: '服装科技', copy: '试穿、搭配与自动打版' },
-] as const;
 
 const CHAPTER_META = [
-  { key: 'authorBio' as const, index: '01', kicker: 'POSITIONING', title: '个人定位' },
-  { key: 'authorBio2' as const, index: '02', kicker: 'INDUSTRY', title: '行业项目' },
-  { key: 'authorBio3' as const, index: '03', kicker: 'DIRECTION', title: '工作流与当前方向' },
-  { key: 'authorBio4' as const, index: '04', kicker: 'WORKS', title: '代表作品' },
+  { key: 'authorBio' as const, title: '我是谁' },
+  { key: 'authorBio2' as const, title: '做过的事' },
+  { key: 'authorBio3' as const, title: '现在在做什么' },
+  { key: 'authorBio4' as const, title: '自己做的作品' },
 ];
 
 const FEATURED_WORKS = [
-  {
-    href: '/projects/moling',
-    kicker: 'DESKTOP AI',
-    title: '墨灵 Moling',
-    copy: '面向长篇小说的桌面创作工作台',
-  },
-  {
-    href: '/projects/forgetting-tide',
-    kicker: 'NARRATIVE GAME',
-    title: '遗忘潮汐',
-    copy: '从世界观到原创配乐的完整构筑',
-  },
+  { href: '/projects/moling', title: '墨灵 Moling' },
+  { href: '/projects/forgetting-tide', title: '遗忘潮汐' },
 ];
 
 export const metadata: Metadata = {
@@ -133,129 +115,78 @@ export default async function AboutPage() {
   const initial = Array.from(settings.authorName)[0] || '火';
 
   return (
-    <div className={styles.shell}>
+    <div>
       <Header />
 
       <main className={styles.page}>
-        <header className={styles.hero}>
-          <p className={styles.eyebrow}>PROFILE · ABOUT</p>
-          <div className={styles.heroGrid}>
-            <div className={styles.heroCopy}>
-              <h1>{settings.authorName}</h1>
+          <h1 className={styles.pageTitle}>{PAGE_TITLE}</h1>
+
+          <header className={styles.intro}>
+            <div className={styles.portrait}>
+              {avatarUrl ? (
+                <Image
+                  src={avatarUrl}
+                  alt={settings.authorName}
+                  width={160}
+                  height={160}
+                  unoptimized
+                />
+              ) : (
+                <span aria-hidden="true">{initial}</span>
+              )}
+            </div>
+            <div className={styles.introCopy}>
+              <h2 className={styles.name}>{settings.authorName}</h2>
               <p className={styles.lead}>{settings.authorBioShort || PAGE_DESCRIPTION}</p>
               {settings.socialLinks.length > 0 && (
-                <div className={styles.socials}>
+                <p className={styles.socials}>
                   {settings.socialLinks.map((link) => (
                     <a
                       key={link.platform}
                       href={link.url}
-                      className={styles.social}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       {link.name}
                     </a>
                   ))}
-                </div>
+                </p>
               )}
             </div>
+          </header>
 
-            <div className={styles.portrait}>
-              <div className={styles.portraitPlate} aria-hidden="true" />
-              <div className={styles.portraitFrame}>
-                {avatarUrl ? (
-                  <Image
-                    src={avatarUrl}
-                    alt={settings.authorName}
-                    width={420}
-                    height={520}
-                    unoptimized
-                    className={styles.portraitImg}
-                  />
-                ) : (
-                  <span className={styles.portraitInitial}>{initial}</span>
-                )}
-              </div>
-              <p className={styles.portraitCaption}>全栈 · AI 应用 · 产品落地</p>
-            </div>
-          </div>
-        </header>
-
-        <section className={styles.domainMap} aria-label="关注领域">
-          {DOMAINS.map((domain) => (
-            <article key={domain.index}>
-              <span>{domain.index}</span>
-              <b>{domain.title}</b>
-              <small>{domain.copy}</small>
-            </article>
-          ))}
-        </section>
-
-        <section className={styles.chapters} aria-label="经历与方向">
-          {chapters.map((chapter, index) => (
-            <article
-              key={chapter.key}
-              className={index === 0 ? styles.chapterFeature : styles.chapter}
-            >
-              <div className={styles.chapterMeta}>
-                <span className={styles.chapterIndex}>{chapter.index}</span>
-                <p className={styles.chapterKicker}>{chapter.kicker}</p>
-              </div>
-              <div className={styles.chapterBody}>
-                <h2>{chapter.title}</h2>
-                {index === 0 && <blockquote className={styles.pullQuote}>「{THESIS}」</blockquote>}
-                <p>{chapter.body}</p>
-                {chapter.key === 'authorBio4' && (
-                  <div className={styles.workLinks}>
-                    {FEATURED_WORKS.map((work) => (
-                      <Link key={work.href} href={work.href} className={styles.workLink}>
-                        <span>{work.kicker}</span>
-                        <b>{work.title}</b>
-                        <small>{work.copy}</small>
-                        <i aria-hidden="true">↗</i>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </article>
-          ))}
-        </section>
-
-        {skillGroups.length > 0 && (
-          <section className={styles.skills} aria-label="能力图谱">
-            <div className={styles.sectionHeading}>
-              <div>
-                <span>05 · CAPABILITY</span>
-                <h2>能力图谱</h2>
-              </div>
-              <p>把图形、数据、模型与流程拆成可复用的工程能力，而不是停留在单点技术。</p>
-            </div>
-            <div className={styles.skillGrid}>
-              {skillGroups.map((group, index) => (
-                <article key={group.category}>
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  <h3>{group.label}</h3>
-                  <ul>
-                    {group.names.map((name) => (
-                      <li key={name}>{name}</li>
-                    ))}
-                  </ul>
-                </article>
+          <div className={styles.body}>
+            <div className={styles.essay}>
+              {chapters.map((chapter) => (
+                <section key={chapter.key} className={styles.section}>
+                  <h3>{chapter.title}</h3>
+                  <p>{chapter.body}</p>
+                  {chapter.key === 'authorBio4' && (
+                    <p className={styles.workMentions}>
+                      {FEATURED_WORKS.map((work) => (
+                        <Link key={work.href} href={work.href}>
+                          {work.title}
+                        </Link>
+                      ))}
+                    </p>
+                  )}
+                </section>
               ))}
             </div>
-          </section>
-        )}
 
-        <section className={styles.closing}>
-          <span>CONTINUE</span>
-          <p>从概念到可运行产品。</p>
-          <div className={styles.closingLinks}>
-            <Link href="/projects">查看作品集</Link>
-            <Link href="/articles">阅读文章</Link>
+            {skillGroups.length > 0 && (
+              <aside className={styles.aside} aria-label="技能">
+                <h3>技能</h3>
+                {skillGroups.map((group) => (
+                  <div key={group.category} className={styles.skillGroup}>
+                    <h4>{group.label}</h4>
+                    <p>{group.names.join(' · ')}</p>
+                  </div>
+                ))}
+              </aside>
+            )}
           </div>
-        </section>
-      </main>
+        </main>
 
       <Footer />
     </div>

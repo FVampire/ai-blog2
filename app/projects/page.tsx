@@ -107,7 +107,7 @@ export default async function ProjectsPage() {
           <Link className={styles.projectCard} href="/projects/moling">
             <div className={styles.cover}>
               <Image
-                src="/projects/moling/moling-chapter-studio-full-v3.png"
+                src="/projects/moling/moling-project-overview-full-v5.png"
                 alt="墨灵真实三章创作流程，包含章节编辑、大纲工作台与任务中心"
                 fill
                 priority
