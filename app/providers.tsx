@@ -8,13 +8,13 @@ import { ThemeProvider } from '../contexts/ThemeContext';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const hideChat = pathname.startsWith('/admin') || pathname.startsWith('/design-preview');
+  const isAdminPage = pathname.startsWith('/admin');
 
   return (
     <ThemeProvider>
       <ArticleProvider>
         {children}
-        {!hideChat && <AIChatWidget />}
+        {!isAdminPage && <AIChatWidget />}
       </ArticleProvider>
     </ThemeProvider>
   );
