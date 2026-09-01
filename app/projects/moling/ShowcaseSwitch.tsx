@@ -17,8 +17,6 @@ const showcases = [
     caption: '11 / 11 FINALIZED · THREE-CHAPTER RUN',
   },
   {
-    id: 'studio',
-    label: '正文定稿',
     id: 'chapter-outline',
     label: '章节细纲',
     kicker: '02 · CHAPTER OUTLINE',

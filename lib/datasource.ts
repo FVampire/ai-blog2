@@ -1,15 +1,16 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 
-import { User } from './entities/User';
-import { Post } from './entities/Post';
-import { Tag } from './entities/Tag';
-import { PostTag } from './entities/PostTag';
 import { Comment } from './entities/Comment';
-import { Setting } from './entities/Setting';
 import { MCPServer } from './entities/MCPServer';
+import { Post } from './entities/Post';
+import { PostCategory } from './entities/PostCategory';
+import { PostTag } from './entities/PostTag';
 import { PostVector } from './entities/PostVector';
 import { Project } from './entities/Project';
+import { Setting } from './entities/Setting';
+import { Tag } from './entities/Tag';
+import { User } from './entities/User';
 import { getDatabaseSsl, sanitizeDatabaseUrl } from './pg-config';
 
 let dataSource: DataSource | null = null;
@@ -25,7 +26,7 @@ export function getDataSource(): DataSource {
     type: 'postgres',
     url: sanitizeDatabaseUrl(DATABASE_URL),
     ssl: getDatabaseSsl(),
-    entities: [User, Post, Tag, PostTag, Comment, Setting, MCPServer, PostVector, Project],
+    entities: [User, Post, Tag, PostTag, Comment, Setting, MCPServer, PostVector, Project, PostCategory],
     synchronize: false, // 生产环境不要自动同步，使用迁移
     logging: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     extra: {

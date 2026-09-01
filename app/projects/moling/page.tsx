@@ -125,7 +125,7 @@ export default function MolingPage() {
             <div className={styles.sectionHeading}>
               <div><span>04</span><p>CREATIVE PIPELINE</p></div>
               <h2>从章节目标，到世界记住这一章。</h2>
-              <p>视频由真实三章工作流的实机画面剪辑而成。17.2 秒压缩回放完整展示正文、章节细纲、全书大纲与任务收束，不把模型等待伪装成秒级生成。</p>
+              <p>27.5 秒完整回放从创建《南岸无灯》项目开始，依次展示章节目标、AI 细纲、多模型竞态、正文逐字写入、审稿修订与故事记忆同步。正文使用预先筛选的优胜稿按阅读速度回放，节奏可控，过程清楚。</p>
             </div>
             <PipelinePlayer />
           </section>

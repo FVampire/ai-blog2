@@ -1,14 +1,16 @@
 import React from 'react';
 
-import type { Metadata } from 'next';
 import Link from 'next/link';
+
+import type { Metadata } from 'next';
 
 import ArticlesContent from './ArticlesContent';
 import Footer from '../../components/Footer';
 import Header from '../../components/Header';
+import TagCloud from '../../components/TagCloud';
 import { formatDate } from '../../lib/format';
+import { PostCategoryRepository } from '../../lib/repositories/PostCategoryRepository';
 import { PostRepository } from '../../lib/repositories/PostRepository';
-import { TagRepository } from '../../lib/repositories/TagRepository';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +28,7 @@ interface Post {
   slug: string;
   image: string;
   tags: Array<{ name: string; color: string; slug?: string }>;
+  category?: { name: string; slug: string; color: string };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -52,11 +55,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 interface ArticlesPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; category?: string }>;
 }
 
 export default async function ArticlesPage({ searchParams }: ArticlesPageProps) {
-  const currentPage = parseInt((await searchParams).page || '1') || 1;
+  const params = await searchParams;
+  const currentPage = parseInt(params.page || '1') || 1;
+  const categorySlug = params.category?.trim() || undefined;
   const postsPerPage = 6;
 
   let posts: Post[] = [];
@@ -64,7 +69,11 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
   let postsFailed = false;
 
   try {
-    const result = await PostRepository.getPublicPosts({ page: currentPage, limit: postsPerPage });
+    const result = await PostRepository.getPublicPosts({
+      page: currentPage,
+      limit: postsPerPage,
+      category: categorySlug,
+    });
     const authorName = await PostRepository.getAuthorName();
 
     totalPages = result.totalPages;
@@ -83,28 +92,53 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
             color: t.color || '#6C757D',
           }))
         : [],
+      category: row.category ? {
+        name: row.category.name,
+        slug: row.category.slug,
+        color: row.category.color,
+      } : undefined,
     }));
   } catch (error) {
     console.error('Error fetching posts:', error);
     postsFailed = true;
   }
 
-  let tags: Array<{ id: number; name: string; slug: string; postCount: number }> = [];
+  let categories: Awaited<ReturnType<typeof PostCategoryRepository.getAllWithPostCount>> = [];
   try {
-    tags = (await TagRepository.getAllTagsWithCount()).filter((tag) => tag.postCount > 0);
+    categories = (await PostCategoryRepository.getAllWithPostCount()).filter((category) => category.postCount > 0);
   } catch (error) {
-    console.error('Error fetching tags:', error);
+    console.error('Error fetching post categories:', error);
   }
+
+  const activeCategory = categories.find((category) => category.slug === categorySlug);
+  const allPublishedCount = categories.reduce((sum, category) => sum + category.postCount, 0);
 
   return (
     <div>
       <Header />
 
-      <div className="container">
-        <div className="content-wrapper">
+      <div className="articles-hero">
+        <div className="container articles-hero-inner">
+          <div>
+            <span className="section-eyebrow">ARTICLE LIBRARY</span>
+            <h1>{activeCategory?.name || PAGE_TITLE}</h1>
+            <p>{activeCategory?.description || '按专栏回看所有开发记录、技术笔记与实践复盘。'}</p>
+          </div>
+          <div className="articles-hero-count">
+            <strong>{activeCategory ? activeCategory.postCount : allPublishedCount}</strong>
+            <span>篇文章</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="container articles-container">
+        <div className="content-wrapper articles-layout">
           <div className="main-content">
             <div className="blog-section">
-              <h1 className="section-title">{PAGE_TITLE}</h1>
+              <div className="articles-list-heading">
+                <h2>{activeCategory ? `${activeCategory.name} · 全部文章` : '按时间浏览'}</h2>
+                <span>第 {currentPage} / {Math.max(totalPages, 1)} 页</span>
+              </div>
 
               {postsFailed ? (
                 <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
@@ -116,31 +150,44 @@ export default async function ArticlesPage({ searchParams }: ArticlesPageProps) 
                   </p>
                 </div>
               ) : (
-                <ArticlesContent posts={posts} currentPage={currentPage} totalPages={totalPages} />
+                <ArticlesContent
+                  posts={posts}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  categorySlug={categorySlug}
+                />
               )}
             </div>
           </div>
 
           <div className="sidebar">
-            <div className="card">
-              <h2 className="section-title">标签</h2>
-              {tags.length === 0 ? (
-                <p className="text-center py-3 text-text-secondary">暂无标签</p>
+            <div className="card category-directory">
+              <span className="section-eyebrow">COLUMNS</span>
+              <h2 className="section-title">文章专栏</h2>
+              {categories.length === 0 ? (
+                <p className="text-center py-3 text-text-secondary">暂无专栏</p>
               ) : (
-                <ul className="pl-5">
-                  {tags.map((tag) => (
-                    <li key={tag.id} className="mb-2.5">
-                      <Link href={`/tags/${tag.slug}`} className="hover:text-warm-orange transition-colors">
-                        {tag.name}
-                      </Link>
-                      <span className="ml-2 text-gray-400 text-xs">
-                        ({tag.postCount})
-                      </span>
-                    </li>
+                <nav aria-label="按专栏筛选文章">
+                  <Link href="/articles" className={!categorySlug ? 'category-directory-item active' : 'category-directory-item'}>
+                    <span className="category-directory-dot" style={{ background: '#FF8C42' }} />
+                    <span className="category-directory-name">全部文章</span>
+                    <strong>{allPublishedCount}</strong>
+                  </Link>
+                  {categories.map((category) => (
+                    <Link
+                      key={category.id}
+                      href={`/articles?category=${category.slug}`}
+                      className={category.slug === categorySlug ? 'category-directory-item active' : 'category-directory-item'}
+                    >
+                      <span className="category-directory-dot" style={{ background: category.color }} />
+                      <span className="category-directory-name">{category.name}</span>
+                      <strong>{category.postCount}</strong>
+                    </Link>
                   ))}
-                </ul>
+                </nav>
               )}
             </div>
+            <TagCloud />
           </div>
         </div>
       </div>

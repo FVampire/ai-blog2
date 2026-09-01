@@ -11,6 +11,7 @@ interface Post {
   slug: string;
   image: string;
   tags: Array<{ name: string; color: string }>;
+  category?: { name: string; slug: string; color: string };
 }
 
 interface BlogListProps {
@@ -38,6 +39,7 @@ const BlogList: React.FC<BlogListProps> = ({ posts }) => {
           slug={post.slug}
           image={post.image}
           tags={post.tags}
+          category={post.category}
         />
       ))}
     </div>

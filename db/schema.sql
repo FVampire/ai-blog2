@@ -47,6 +47,28 @@ CREATE TABLE IF NOT EXISTS post_tags (
   PRIMARY KEY (post_id, tag_id)
 );
 
+-- High-level article categories (displayed as "专栏")
+CREATE TABLE IF NOT EXISTS post_categories (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(50) UNIQUE NOT NULL,
+  slug VARCHAR(50) UNIQUE NOT NULL,
+  description TEXT,
+  color VARCHAR(7) NOT NULL DEFAULT '#6C757D',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS category_id INTEGER;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_posts_category') THEN
+    ALTER TABLE posts ADD CONSTRAINT fk_posts_category
+      FOREIGN KEY (category_id) REFERENCES post_categories(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
 -- Comments table
 CREATE TABLE IF NOT EXISTS comments (
   id SERIAL PRIMARY KEY,
@@ -63,6 +85,8 @@ CREATE TABLE IF NOT EXISTS comments (
 CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id);
 CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);
 CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug);
+CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category_id);
+CREATE INDEX IF NOT EXISTS idx_post_categories_slug ON post_categories(slug);
 CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id);
 CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);
 CREATE INDEX IF NOT EXISTS idx_comments_visitor_id ON comments(visitor_id);
@@ -120,6 +144,10 @@ CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
 
 DROP TRIGGER IF EXISTS update_posts_updated_at ON posts;
 CREATE TRIGGER update_posts_updated_at BEFORE UPDATE ON posts
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_post_categories_updated_at ON post_categories;
+CREATE TRIGGER update_post_categories_updated_at BEFORE UPDATE ON post_categories
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_comments_updated_at ON comments;

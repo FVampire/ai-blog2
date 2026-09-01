@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth, isAuthError, getAuthUser } from '@/lib/auth-middleware-app';
 import { PostRepository } from '@/lib/repositories/PostRepository';
-import { TagRepository } from '@/lib/repositories/TagRepository';
 
 export async function GET(request: NextRequest) {
   const user = getAuthUser(request);
@@ -19,8 +18,9 @@ async function publicGetHandler(searchParams: URLSearchParams) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || undefined;
+    const category = searchParams.get('category') || undefined;
 
-    const result = await PostRepository.getPublicPosts({ page, limit, search });
+    const result = await PostRepository.getPublicPosts({ page, limit, search, category });
     const fallbackAuthor = await PostRepository.getAuthorName();
 
     const posts = result.data.map((row) => ({
@@ -35,6 +35,7 @@ async function publicGetHandler(searchParams: URLSearchParams) {
         month: 'long',
         day: 'numeric',
       }),
+      category: row.category,
       tags: (row.tags as Array<{ name: string; slug: string; color?: string }>).map((t) => ({
         name: t.name,
         slug: t.slug,
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { title, slug, excerpt, content, imageUrl, status, tagIds } = body;
+    const { title, slug, excerpt, content, imageUrl, status, tagIds, categoryId } = body;
     const authorId = authResult.user.userId;
 
     if (!title || !slug) {
@@ -121,6 +122,7 @@ export async function POST(request: NextRequest) {
       imageUrl,
       status: status || 'draft',
       authorId,
+      categoryId: categoryId ?? null,
       tagIds,
     });
 

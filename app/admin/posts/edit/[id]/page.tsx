@@ -12,6 +12,7 @@ import MarkdownEditor from '../../../../../components/MarkdownEditor';
 import { confirmDiscardChanges, useUnsavedChanges } from '../../../../../hooks/useUnsavedChanges';
 
 interface Tag { id: number; name: string; slug: string; }
+interface PostCategory { id: number; name: string; }
 interface PostOption { id: number; title: string; }
 
 const editPostStyles = `
@@ -41,6 +42,7 @@ export default function EditPost() {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [categories, setCategories] = useState<PostCategory[]>([]);
   const [availablePosts, setAvailablePosts] = useState<PostOption[]>([]);
   const [vectorInfo, setVectorInfo] = useState<{ hasVectors: boolean; model?: string } | null>(null);
   const [generatingVector, setGeneratingVector] = useState(false);
@@ -51,7 +53,7 @@ export default function EditPost() {
   const [formData, setFormData] = useState({
     title: '', slug: '', excerpt: '', content: '', imageUrl: '',
     status: 'draft' as 'draft' | 'published' | 'archived',
-    tagIds: [] as number[], prevPostId: null as number | null, nextPostId: null as number | null,
+    categoryId: null as number | null, tagIds: [] as number[], prevPostId: null as number | null, nextPostId: null as number | null,
   });
   const draftKey = `admin:post-draft:${id}`;
   const dirty = draftReady && JSON.stringify(formData) !== serverSnapshot;
@@ -67,6 +69,7 @@ export default function EditPost() {
         const serverData = {
           title: post.title, slug: post.slug, excerpt: post.excerpt || '', content: post.content || '',
           imageUrl: post.imageUrl || '', status: post.status,
+          categoryId: post.categoryId || null,
           tagIds: post.tags.map((t: any) => t.id),
           prevPostId: post.prev_post_id || null, nextPostId: post.next_post_id || null,
         };
@@ -94,6 +97,14 @@ export default function EditPost() {
     } catch (error) { console.error('Load tags error:', error); }
   };
 
+  const loadCategories = async () => {
+    try {
+      const response = await fetch('/api/post-categories');
+      const data = await response.json();
+      if (data.success) setCategories(data.data);
+    } catch (error) { console.error('Load post categories error:', error); }
+  };
+
   const loadAvailablePosts = async () => {
     try {
       const response = await fetch('/api/posts?limit=100');
@@ -115,7 +126,7 @@ export default function EditPost() {
     } catch (error) { console.error('Load vector info error:', error); }
   };
 
-  useEffect(() => { if (id) { loadPost(); loadTags(); loadAvailablePosts(); loadVectorInfo(); } }, [id]);
+  useEffect(() => { if (id) { loadPost(); loadTags(); loadCategories(); loadAvailablePosts(); loadVectorInfo(); } }, [id]);
 
   useEffect(() => {
     if (!draftReady || !dirty) return;
@@ -190,6 +201,11 @@ export default function EditPost() {
                 <option value="draft">草稿</option><option value="published">已发布</option><option value="archived">已归档</option>
               </select>
             </div>
+          </div>
+          <div className="form-group"><label>所属专栏</label>
+            <select value={formData.categoryId ?? ''} onChange={(e) => setFormData({ ...formData, categoryId: e.target.value ? Number(e.target.value) : null })}>
+              <option value="">暂不归类</option>{categories.map((category) => (<option key={category.id} value={category.id}>{category.name}</option>))}
+            </select><small>专栏是文章的大分类；一篇文章只能属于一个专栏</small>
           </div>
           <div className="form-group"><label>URL Slug *</label><input type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} required /><small>文章的URL标识符</small></div>
           <div className="form-group"><label>摘要</label><textarea value={formData.excerpt} onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })} style={{ minHeight: '100px' }} /></div>

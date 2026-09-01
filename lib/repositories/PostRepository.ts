@@ -1,8 +1,9 @@
-import { BaseRepository } from './BaseRepository';
-import { Post } from '../entities/Post';
-import { Tag } from '../entities/Tag';
-import { PostTag } from '../entities/PostTag';
 import { In } from 'typeorm';
+
+import { Post } from '../entities/Post';
+import { PostTag } from '../entities/PostTag';
+import { Tag } from '../entities/Tag';
+import { BaseRepository } from './BaseRepository';
 
 interface PostDTO {
   id: number;
@@ -20,7 +21,17 @@ interface PostDTO {
   publishedAt?: Date;
   prevPostId?: number;
   nextPostId?: number;
+  categoryId?: number | null;
+  category?: PostCategoryDTO;
   tags: TagDTO[];
+}
+
+interface PostCategoryDTO {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  color: string;
 }
 
 interface TagDTO {
@@ -55,6 +66,14 @@ function toDTO(post: Post, authorName?: string, tags?: TagDTO[]): PostDTO {
     publishedAt: post.publishedAt,
     prevPostId: post.prevPostId,
     nextPostId: post.nextPostId,
+    categoryId: post.categoryId,
+    category: post.category ? {
+      id: post.category.id,
+      name: post.category.name,
+      slug: post.category.slug,
+      description: post.category.description,
+      color: post.category.color,
+    } : undefined,
     tags: tags || [],
   };
 }
@@ -72,16 +91,37 @@ export class PostRepository extends BaseRepository {
     page?: number;
     limit?: number;
     search?: string;
+    category?: string;
   } = {}): Promise<PaginationResult<Omit<PostDTO, 'content'>>> {
-    const { page = 1, limit = 10, search } = options;
+    const { page = 1, limit = 10, search, category } = options;
     const ds = await this.getDataSource();
     const offset = (page - 1) * limit;
 
-    let queryText = `
+    const filters = ["p.status = 'published'"];
+    const filterParams: unknown[] = [];
+
+    if (search) {
+      filterParams.push(`%${search}%`);
+      filters.push(`(p.title ILIKE $${filterParams.length} OR u.username ILIKE $${filterParams.length})`);
+    }
+
+    if (category) {
+      filterParams.push(category);
+      filters.push(`pc.slug = $${filterParams.length}`);
+    }
+
+    const queryText = `
       SELECT
         p.id, p.title, p.slug, p.excerpt, p.image_url,
         p.views, p.published_at,
         u.username as author_name,
+        CASE WHEN pc.id IS NULL THEN NULL ELSE json_build_object(
+          'id', pc.id,
+          'name', pc.name,
+          'slug', pc.slug,
+          'description', pc.description,
+          'color', pc.color
+        ) END AS category,
         COALESCE(
           json_agg(
             json_build_object('id', t.id, 'name', t.name, 'slug', t.slug, 'color', t.color)
@@ -89,38 +129,26 @@ export class PostRepository extends BaseRepository {
         ) as tags
       FROM posts p
       LEFT JOIN users u ON p.author_id = u.id
+      LEFT JOIN post_categories pc ON p.category_id = pc.id
       LEFT JOIN post_tags pt ON p.id = pt.post_id
       LEFT JOIN tags t ON pt.tag_id = t.id
-      WHERE p.status = 'published'
-    `;
-
-    const queryParams: unknown[] = [];
-    let paramIndex = 1;
-
-    if (search) {
-      queryText += ` AND (p.title ILIKE $${paramIndex} OR u.username ILIKE $${paramIndex})`;
-      queryParams.push(`%${search}%`);
-      paramIndex++;
-    }
-
-    queryText += `
-      GROUP BY p.id, u.username
+      WHERE ${filters.join(' AND ')}
+      GROUP BY p.id, u.username, pc.id
       ORDER BY p.published_at DESC NULLS LAST, p.created_at DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      LIMIT $${filterParams.length + 1} OFFSET $${filterParams.length + 2}
     `;
-    queryParams.push(limit, offset);
 
-    const rows = await ds.query(queryText, queryParams);
+    const rows = await ds.query(queryText, [...filterParams, limit, offset]);
 
-    let countQuery = `SELECT COUNT(*) FROM posts p WHERE p.status = 'published'`;
-    const countParams: unknown[] = [];
+    const countQuery = `
+      SELECT COUNT(*)
+      FROM posts p
+      LEFT JOIN users u ON p.author_id = u.id
+      LEFT JOIN post_categories pc ON p.category_id = pc.id
+      WHERE ${filters.join(' AND ')}
+    `;
 
-    if (search) {
-      countQuery += ' AND (p.title ILIKE $1 OR EXISTS(SELECT 1 FROM users u WHERE u.id = p.author_id AND u.username ILIKE $1))';
-      countParams.push(`%${search}%`);
-    }
-
-    const countResult = await ds.query(countQuery, countParams);
+    const countResult = await ds.query(countQuery, filterParams);
     const total = parseInt(countResult[0].count);
 
     const data = rows.map((row: any) => ({
@@ -132,6 +160,7 @@ export class PostRepository extends BaseRepository {
       views: row.views,
       authorName: row.author_name,
       publishedAt: row.published_at,
+      category: row.category || undefined,
       tags: row.tags,
     }));
 
@@ -158,6 +187,7 @@ export class PostRepository extends BaseRepository {
 
     const qb = repo.createQueryBuilder('p')
       .leftJoinAndSelect('p.tags', 't')
+      .leftJoinAndSelect('p.category', 'category')
       .leftJoin('p.author', 'u')
       .addSelect(['u.id', 'u.username']);
 
@@ -192,7 +222,7 @@ export class PostRepository extends BaseRepository {
     const repo = await this.getRepo(Post);
     const post = await repo.findOne({
       where: { id },
-      relations: { tags: true, author: true },
+      relations: { tags: true, author: true, category: true },
     });
     if (!post) return null;
     return toDTO(post, post.author?.username, extractTags(post));
@@ -205,7 +235,7 @@ export class PostRepository extends BaseRepository {
     const repo = await this.getRepo(Post);
     const post = await repo.findOne({
       where: { slug, status: 'published' },
-      relations: { tags: true, author: true },
+      relations: { tags: true, author: true, category: true },
     });
     if (!post) return null;
     return toDTO(post, post.author?.username, extractTags(post));
@@ -222,6 +252,7 @@ export class PostRepository extends BaseRepository {
     imageUrl?: string;
     status: 'draft' | 'published' | 'archived';
     authorId: number;
+    categoryId?: number | null;
     tagIds?: number[];
   }): Promise<PostDTO> {
     const ds = await this.getDataSource();
@@ -240,6 +271,7 @@ export class PostRepository extends BaseRepository {
       imageUrl: data.imageUrl || '',
       status: data.status,
       authorId: data.authorId,
+      categoryId: data.categoryId ?? null,
       publishedAt: data.status === 'published' ? new Date() : undefined,
     });
 
@@ -266,6 +298,7 @@ export class PostRepository extends BaseRepository {
     imageUrl?: string;
     status?: 'draft' | 'published' | 'archived';
     tagIds?: number[];
+    categoryId?: number | null;
     prevPostId?: number;
     nextPostId?: number;
   }): Promise<PostDTO> {
@@ -286,6 +319,7 @@ export class PostRepository extends BaseRepository {
     if (data.excerpt !== undefined) post.excerpt = data.excerpt;
     if (data.content !== undefined) post.content = data.content;
     if (data.imageUrl !== undefined) post.imageUrl = data.imageUrl;
+    if (data.categoryId !== undefined) post.categoryId = data.categoryId;
     if (data.status !== undefined) {
       post.status = data.status;
       if (data.status === 'published' && !post.publishedAt) {

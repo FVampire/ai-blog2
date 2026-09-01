@@ -55,6 +55,8 @@ export async function GET(
           views: post.views,
           author: { id: post.authorId, name: post.authorName },
           tags: post.tags,
+          category: post.category,
+          categoryId: post.categoryId,
           prev_post_id: post.prevPostId,
           next_post_id: post.nextPostId,
           createdAt: post.createdAt,
@@ -95,6 +97,7 @@ export async function PUT(
       imageUrl: body.imageUrl,
       status: body.status,
       tagIds: body.tagIds,
+      categoryId: body.categoryId === null ? null : body.categoryId,
       prevPostId: body.prevPostId ?? undefined,
       nextPostId: body.nextPostId ?? undefined,
     });

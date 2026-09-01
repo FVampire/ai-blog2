@@ -2,8 +2,10 @@ import {
   Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn,
   ManyToOne, ManyToMany, JoinTable, JoinColumn
 } from 'typeorm';
-import { User } from './User';
+
+import { PostCategory } from './PostCategory';
 import { Tag } from './Tag';
+import { User } from './User';
 
 @Entity('posts')
 export class Post {
@@ -37,6 +39,13 @@ export class Post {
   @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'author_id' })
   author?: User;
+
+  @Column({ name: 'category_id', type: 'int', nullable: true })
+  categoryId?: number | null;
+
+  @ManyToOne(() => PostCategory, (category) => category.posts, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'category_id' })
+  category?: PostCategory;
 
   @Column({ name: 'prev_post_id', type: 'int', nullable: true })
   prevPostId?: number;

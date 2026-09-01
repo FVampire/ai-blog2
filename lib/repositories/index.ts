@@ -6,3 +6,4 @@ export * from './MediaRepository';
 export * from './SettingsRepository';
 export * from './VectorRepository';
 export * from './MCPRepository';
+export * from './PostCategoryRepository';

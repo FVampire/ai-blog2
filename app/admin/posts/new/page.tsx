@@ -17,6 +17,11 @@ interface Tag {
   slug: string;
 }
 
+interface PostCategory {
+  id: number;
+  name: string;
+}
+
 const DRAFT_KEY = 'admin:post-draft:new';
 
 export default function NewPost() {
@@ -25,6 +30,7 @@ export default function NewPost() {
   const [draftReady, setDraftReady] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [categories, setCategories] = useState<PostCategory[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -32,11 +38,12 @@ export default function NewPost() {
     content: '',
     imageUrl: '',
     status: 'draft' as 'draft' | 'published' | 'archived',
+    categoryId: null as number | null,
     tagIds: [] as number[],
   });
 
   const emptySnapshot = JSON.stringify({
-    title: '', slug: '', excerpt: '', content: '', imageUrl: '', status: 'draft', tagIds: [],
+    title: '', slug: '', excerpt: '', content: '', imageUrl: '', status: 'draft', categoryId: null, tagIds: [],
   });
   const dirty = draftReady && JSON.stringify(formData) !== emptySnapshot;
   useUnsavedChanges(dirty && !loading);
@@ -47,7 +54,7 @@ export default function NewPost() {
       if (stored) {
         const draft = JSON.parse(stored) as { data?: typeof formData; savedAt?: string };
         if (draft.data) {
-          setFormData(draft.data);
+          setFormData((current) => ({ ...current, ...draft.data }));
           if (draft.savedAt) setLastSaved(new Date(draft.savedAt));
           toast.success('已恢复本地草稿');
         }
@@ -69,7 +76,7 @@ export default function NewPost() {
     return () => window.clearTimeout(timer);
   }, [draftReady, dirty, formData]);
 
-  useEffect(() => { loadTags(); }, []);
+  useEffect(() => { loadTags(); loadCategories(); }, []);
 
   const loadTags = async () => {
     try {
@@ -77,6 +84,14 @@ export default function NewPost() {
       const data = await response.json();
       if (data.success) setTags(data.data);
     } catch (error) { console.error('Load tags error:', error); }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const response = await fetch('/api/post-categories');
+      const data = await response.json();
+      if (data.success) setCategories(data.data);
+    } catch (error) { console.error('Load post categories error:', error); }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,6 +143,15 @@ export default function NewPost() {
                 <option value="draft">草稿</option><option value="published">已发布</option><option value="archived">已归档</option>
               </select>
             </div>
+          </div>
+
+          <div className="form-group">
+            <label>所属专栏</label>
+            <select value={formData.categoryId ?? ''} onChange={(e) => setFormData({ ...formData, categoryId: e.target.value ? Number(e.target.value) : null })}>
+              <option value="">暂不归类</option>
+              {categories.map((category) => (<option key={category.id} value={category.id}>{category.name}</option>))}
+            </select>
+            <small>专栏是文章的大分类；一篇文章只能属于一个专栏</small>
           </div>
 
           <div className="form-group">

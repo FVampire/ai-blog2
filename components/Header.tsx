@@ -107,7 +107,6 @@ const Header: React.FC<HeaderProps> = ({
     { href: '/articles', label: '文章' },
     ...(projectsEnabled ? [{ href: '/projects', label: projectsNavLabel }] : []),
     { href: '/tools', label: '工具' },
-    { href: '/tags', label: '标签' },
     { href: '/about', label: '关于' },
   ];
 

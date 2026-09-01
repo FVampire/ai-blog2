@@ -25,6 +25,7 @@ interface Post {
   slug: string;
   image: string;
   tags: Array<{ name: string; color: string; slug?: string }>;
+  category?: { name: string; slug: string; color: string };
 }
 
 interface AuthorSettings {
@@ -106,6 +107,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         slug: t.slug,
         color: t.color || '#6C757D',
       })) : [],
+      category: row.category ? {
+        name: row.category.name,
+        slug: row.category.slug,
+        color: row.category.color,
+      } : undefined,
     }));
 
     const aboutSettings = await SettingsRepository.getAboutSettings();

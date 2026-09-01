@@ -1,6 +1,7 @@
+import React from 'react';
+
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
 
 import { formatDate } from '@/lib/format';
 
@@ -12,13 +13,25 @@ interface BlogPostCardProps {
   slug: string;
   image?: string;
   tags?: Array<{ name: string; color: string; slug?: string }>;
+  category?: { name: string; slug: string; color: string };
+  variant?: 'home' | 'archive';
 }
 
-const BlogPostCard: React.FC<BlogPostCardProps> = ({ title, date, author, excerpt, slug, image, tags }) => {
+const BlogPostCard: React.FC<BlogPostCardProps> = ({
+  title,
+  date,
+  author,
+  excerpt,
+  slug,
+  image,
+  tags,
+  category,
+  variant = 'home',
+}) => {
   const postHref = `/posts/${slug}`;
 
   return (
-    <article className="blog-card-modern">
+    <article className={`blog-card-modern blog-card-${variant}`}>
       {image && (
         <Link href={postHref} className="blog-card-image-link">
           <div className="blog-card-image-wrapper">
@@ -33,6 +46,16 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({ title, date, author, excerp
         </Link>
       )}
       <div className="blog-card-body">
+        {category && (
+          <Link
+            href={`/articles?category=${category.slug}`}
+            className="blog-card-category"
+            style={{ '--category-color': category.color } as React.CSSProperties}
+          >
+            <span aria-hidden="true" />
+            {category.name}
+          </Link>
+        )}
         {tags && tags.length > 0 && (
           <div className="blog-card-tags">
             {tags.slice(0, 3).map((tag) => (

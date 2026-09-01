@@ -15,20 +15,25 @@ interface Post {
   slug: string;
   image: string;
   tags: Array<{ name: string; color: string; slug?: string }>;
+  category?: { name: string; slug: string; color: string };
 }
 
 interface ArticlesContentProps {
   posts: Post[];
   currentPage: number;
   totalPages: number;
+  categorySlug?: string;
 }
 
-export default function ArticlesContent({ posts, currentPage, totalPages }: ArticlesContentProps) {
+export default function ArticlesContent({ posts, currentPage, totalPages, categorySlug }: ArticlesContentProps) {
   const router = useRouter();
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages || page === currentPage) return;
-    router.push(`/articles?page=${page}`);
+    const query = new URLSearchParams();
+    if (categorySlug) query.set('category', categorySlug);
+    query.set('page', String(page));
+    router.push(`/articles?${query.toString()}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -72,6 +77,8 @@ export default function ArticlesContent({ posts, currentPage, totalPages }: Arti
           slug={post.slug}
           image={post.image}
           tags={post.tags}
+          category={post.category}
+          variant="archive"
         />
       ))}
 

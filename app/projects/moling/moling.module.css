@@ -120,3 +120,36 @@
 @media (prefers-reduced-motion: reduce) {
   .heroWindow { animation: none; }.productWindow,.projectWindow * { transition: none !important; }.productWindow { transform: none !important; }.productWindow::after { display: none; }
 }
+
+/* The video and the step rail share one authored timeline. */
+.pipelineMedia { aspect-ratio: auto; overflow: hidden; background: #f8f4ec; }
+.pipelineViewport { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #e8ddca; }
+.pipelineViewport video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pipelineProgress { position: absolute; inset: auto 0 0; z-index: 5; height: 3px; background: rgba(43,34,27,.18); }
+.pipelineProgress i { display: block; width: 0; height: 100%; background: var(--moling-gilt); transition: width .08s linear; }
+.pipelineReadout,
+.pipelineMedia > .pipelineReadout { position: relative; inset: auto; display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 16px; align-items: center; min-height: 86px; margin: 0; padding: 15px 18px; color: var(--moling-ink); background: #faf6ef; border-top: 1px solid var(--moling-line); border-radius: 0; letter-spacing: 0; }
+.pipelineReadout > span { color: var(--moling-gilt); font-size: 8px; font-weight: 800; letter-spacing: .14em; white-space: nowrap; }
+.pipelineReadout b { display: block; font: 600 14px var(--moling-serif); }
+.pipelineReadout p { margin-top: 4px; color: var(--moling-muted); font-size: 9px; line-height: 1.5; }
+.pipelineReadout time { color: #8c7c6b; font: italic 400 16px var(--font-display),Georgia,serif; }
+.pipelineStepCopy { min-width: 0; }
+.pipelineStepCopy b { display: block; }
+.pipelineStepCopy small { display: block; margin-top: 4px; color: var(--moling-muted); font-size: 9px; font-weight: 400; line-height: 1.45; }
+.pipelineSteps li button { min-height: 84px; }
+.pipelineSteps .activePipelineStep .pipelineStepCopy small { color: #7a654b; }
+
+@media (max-width: 768px) {
+  .pipelineMedia { aspect-ratio: auto; }
+  .pipelineViewport { aspect-ratio: 16 / 9; }
+  .pipelineReadout,.pipelineMedia > .pipelineReadout { grid-template-columns: 1fr auto; min-height: 74px; padding: 12px 14px; }
+  .pipelineReadout > span { grid-column: 1; }
+  .pipelineReadout > div { grid-column: 1 / -1; grid-row: 2; }
+  .pipelineReadout time { grid-column: 2; grid-row: 1; }
+  .pipelineSteps li button { min-height: 78px; }
+  .pipelineStepCopy small { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pipelineProgress i { transition: none; }
+}
