@@ -153,7 +153,20 @@ pm2 save
 | `GET/POST /api/agent/projects` | AGENT_API_KEY | 项目管理 |
 | `GET/POST /api/admin/projects` | JWT | 后台项目管理 |
 | `POST /api/deploy/webhook` | DEPLOY_SECRET | 触发部署 |
+| `POST /api/admin/feishu/test` | JWT（admin） | 发送飞书评论通知测试 |
 | `GET /api/projects` | 无 | 公开项目列表 |
+
+### 飞书评论通知
+
+有人发表评论时，博客会向飞书自定义机器人推送卡片。可在管理后台「站点设置 → 评论设置」填写 Webhook，或在 `.env` 中配置：
+
+```env
+FEISHU_WEBHOOK_URL=https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxx
+# 若机器人开启了签名校验：
+FEISHU_WEBHOOK_SECRET=你的签名密钥
+```
+
+环境变量优先于后台配置。创建机器人：飞书群 → 设置 → 群机器人 → 添加自定义机器人。
 
 ---
 

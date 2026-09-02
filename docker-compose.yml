@@ -41,6 +41,9 @@ services:
       AGENT_AUTHOR_ID: 1
       DEPLOY_SECRET: ${DEPLOY_SECRET:-your-deploy-secret}
       SITE_URL: ${SITE_URL:-http://localhost:3000}
+      FEISHU_WEBHOOK_URL: ${FEISHU_WEBHOOK_URL:-}
+      FEISHU_WEBHOOK_SECRET: ${FEISHU_WEBHOOK_SECRET:-}
+      FEISHU_NOTIFY_COMMENTS: ${FEISHU_NOTIFY_COMMENTS:-}
     volumes:
       - uploads_data:/app/public/uploads
     ports:

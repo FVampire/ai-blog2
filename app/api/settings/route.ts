@@ -23,8 +23,8 @@ function serializeSettingValue(value: unknown, type: string): string {
   }
 }
 
-const SENSITIVE_SETTING_KEYS = ['ai_api_key', 'ai_embedding_api_key'];
-const SENSITIVE_KEY_PATTERNS = ['api_key', 'apikey', 'secret', 'token', 'password'];
+const SENSITIVE_SETTING_KEYS = ['ai_api_key', 'ai_embedding_api_key', 'feishu_webhook_url', 'feishu_webhook_secret'];
+const SENSITIVE_KEY_PATTERNS = ['api_key', 'apikey', 'secret', 'token', 'password', 'webhook'];
 
 // Only settings represented by a supported admin control may be changed through this endpoint.
 // Database rows are not an authorization boundary: deployments can contain internal-only keys.
@@ -33,6 +33,7 @@ const WRITABLE_SETTING_KEYS = new Set([
   'posts_per_page', 'comments_per_page', 'excerpt_length',
   'projects_enabled', 'projects_show_on_home', 'projects_home_count', 'projects_intro', 'projects_nav_label',
   'comments_enabled', 'comments_moderation', 'comments_guest_allowed',
+  'feishu_notify_enabled', 'feishu_webhook_url', 'feishu_webhook_secret',
   'registration_enabled', 'default_user_role',
   'upload_max_size', 'upload_allowed_types',
   'social_github', 'social_twitter', 'social_weibo',
@@ -46,6 +47,13 @@ const WRITABLE_SETTING_KEYS = new Set([
   'ai_vector_search_threshold', 'ai_vector_search_weight_title',
   'ai_vector_search_weight_content', 'ai_vector_search_weight_excerpt',
   'ai_temperature', 'ai_max_tokens', 'mcp_enabled', 'mcp_allow_user_select',
+  'distribute_enabled', 'distribute_on_update',
+  'distribute_indexnow_enabled', 'distribute_indexnow_key',
+  'distribute_webhook_url',
+  'distribute_telegram_enabled', 'distribute_telegram_bot_token', 'distribute_telegram_chat_id',
+  'distribute_discord_webhook_url',
+  'distribute_wechat_enabled', 'distribute_wechat_app_id', 'distribute_wechat_app_secret',
+  'distribute_bilibili_webhook', 'distribute_xiaohongshu_webhook', 'distribute_douyin_webhook',
 ]);
 
 function isSensitiveKey(key: string): boolean {

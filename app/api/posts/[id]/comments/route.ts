@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 
 import { needsModeration, getFilterReason } from '@/lib/content-filter';
 import { query } from '@/lib/db';
+import { notifyCommentCreated } from '@/lib/feishu-notify';
 import { formatIpCity, resolveIpLocation } from '@/lib/ip-location';
 import { enforceRateLimit, getClientIp } from '@/lib/rate-limit-api';
 
@@ -96,10 +97,27 @@ export async function POST(
       [postId, visitorId, ipAddress, city, content.trim(), status]
     );
 
+    const created = result.rows[0] as {
+      id: number;
+      visitor_id: string;
+      content: string;
+      city: string;
+      status: 'pending' | 'approved' | 'rejected';
+    };
+
     if (needsReview) {
       const reason = getFilterReason(content);
-      console.log(`Comment ${result.rows[0].id} flagged for review: ${reason}`);
+      console.log(`Comment ${created.id} flagged for review: ${reason}`);
     }
+
+    after(() => notifyCommentCreated({
+      postId,
+      visitorId: created.visitor_id,
+      city: created.city,
+      content: created.content,
+      status: created.status,
+      needsReview,
+    }));
 
     return NextResponse.json(
       {
