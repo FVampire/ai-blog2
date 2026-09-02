@@ -53,6 +53,57 @@ curl -X POST "${SITE_URL}/api/agent/publish" \
 | `slug` | No | URL slug (auto-generated from title) |
 | `imageUrl` | No | Cover image path e.g. `/uploads/xxx.jpg` |
 | `projectSlug` | No | Link post to a project showcase |
+| `seriesSlug` | No | Append to a public series (`/series/<slug>`) |
+
+Published posts automatically generate embeddings, fill empty excerpt/tags, ping IndexNow, and fan out to configured channels.
+
+## MCP Server
+
+This blog is also an MCP server. Cursor / Claude Desktop can call tools directly instead of using curl.
+
+```json
+{
+  "mcpServers": {
+    "ai-blog": {
+      "url": "http://localhost:3000/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ${AGENT_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+Tools: `search_posts`, `get_post`, `list_posts`, `list_projects`, `get_project`, `list_series`, `get_series`, `publish_post`, `list_distribution_jobs`.
+
+Prefer `publish_post` with `"status": "draft"` unless the user explicitly asks to publish.
+
+## Series
+
+After publishing a sequence of posts, link them:
+
+```bash
+curl -X PUT "${SITE_URL}/api/agent/publish" \
+  -H "Authorization: Bearer ${AGENT_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"id": 2, "prevPostId": 1}'
+```
+
+Or pass `seriesSlug` on publish. Public catalog: `/series`.
+
+## Outbound distribution
+
+Configure in Admin → 站点设置 → 发布分发, or env:
+
+| Variable | Purpose |
+|----------|---------|
+| `INDEXNOW_KEY` | IndexNow key served at `/indexnow-key.txt` |
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | Telegram |
+| `DISCORD_WEBHOOK_URL` | Discord |
+| `WECHAT_APP_ID` / `WECHAT_APP_SECRET` | WeChat MP draft box |
+| `DISTRIBUTE_WEBHOOK_URL` | Generic JSON webhook |
+
+Bilibili / 小红书 / 抖音 have no official personal posting API. The pipeline writes platform-adapted copy and POSTs it to the webhook you configure (n8n etc.). If no webhook is set, the copy is stored in Admin → 分发记录 for copy-paste.
 
 ### Response
 

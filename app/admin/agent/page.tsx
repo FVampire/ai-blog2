@@ -19,6 +19,12 @@ interface AgentPost {
 
 interface AgentSeries {
   id: string;
+  seriesId?: number | null;
+  slug?: string | null;
+  title?: string;
+  description?: string;
+  coverUrl?: string;
+  publicUrl?: string | null;
   posts: AgentPost[];
   issue?: 'broken' | 'cycle';
 }
@@ -81,6 +87,7 @@ export default function AgentConsolePage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [previousIds, setPreviousIds] = useState<number[]>([]);
   const [candidateId, setCandidateId] = useState('');
+  const [seriesMeta, setSeriesMeta] = useState({ seriesId: 0, title: '', slug: '', description: '', coverUrl: '' });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -106,6 +113,13 @@ export default function AgentConsolePage() {
     setSelectedIds(ids);
     setPreviousIds(ids);
     setCandidateId('');
+    setSeriesMeta({
+      seriesId: series?.seriesId || 0,
+      title: series?.title || '',
+      slug: series?.slug || '',
+      description: series?.description || '',
+      coverUrl: series?.coverUrl || '',
+    });
     setEditing(true);
   };
 
@@ -141,7 +155,15 @@ export default function AgentConsolePage() {
     setSaving(true);
     const result = await authJson('/api/admin/agent', {
       method: 'PUT',
-      body: JSON.stringify({ postIds: selectedIds, previousPostIds: previousIds }),
+      body: JSON.stringify({
+        postIds: selectedIds,
+        previousPostIds: previousIds,
+        seriesId: seriesMeta.seriesId || undefined,
+        title: seriesMeta.title,
+        slug: seriesMeta.slug,
+        description: seriesMeta.description,
+        coverUrl: seriesMeta.coverUrl,
+      }),
     });
     setSaving(false);
     if (!result.success) {
@@ -188,11 +210,12 @@ export default function AgentConsolePage() {
                   <article className="agent-series-card" key={series.id}>
                     <div className="agent-series-heading">
                       <div>
-                        <h3>{series.posts[0]?.title || '未命名系列'}</h3>
-                        <span>{series.posts.length} 篇文章</span>
+                        <h3>{series.title || series.posts[0]?.title || '未命名系列'}</h3>
+                        <span>{series.posts.length} 篇文章{series.slug ? ` · /series/${series.slug}` : ''}</span>
                       </div>
                       <div className="agent-series-actions">
                         {series.issue && <span className="status-badge pending">关系需检查</span>}
+                        {series.publicUrl && <Link href={series.publicUrl} target="_blank" className="btn-small">公开页</Link>}
                         <button type="button" className="btn-small" onClick={() => startSeries(series)}>调整顺序</button>
                       </div>
                     </div>
@@ -266,6 +289,12 @@ export default function AgentConsolePage() {
                   );
                 })}
               </ol>
+              <div className="agent-add-post" style={{ display: 'grid', gap: 8, padding: '0 24px 12px' }}>
+                <input value={seriesMeta.title} onChange={(event) => setSeriesMeta((current) => ({ ...current, title: event.target.value }))} placeholder="系列标题" />
+                <input value={seriesMeta.slug} onChange={(event) => setSeriesMeta((current) => ({ ...current, slug: event.target.value }))} placeholder="系列 slug，例如 rust-notes" />
+                <input value={seriesMeta.description} onChange={(event) => setSeriesMeta((current) => ({ ...current, description: event.target.value }))} placeholder="系列简介" />
+                <input value={seriesMeta.coverUrl} onChange={(event) => setSeriesMeta((current) => ({ ...current, coverUrl: event.target.value }))} placeholder="封面 URL，可留空" />
+              </div>
               <div className="agent-add-post">
                 <select value={candidateId} onChange={(event) => setCandidateId(event.target.value)}>
                   <option value="">选择未编排文章</option>

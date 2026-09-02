@@ -7,6 +7,7 @@ import AdminLayout from "../../../components/admin/AdminLayout";
 import { authJson } from "../../../components/admin/authFetch";
 import MCPManager from "../../../components/admin/MCPManager";
 import AISettings from "../../../components/admin/settings/AISettings";
+import DistributionSettings from "../../../components/admin/settings/DistributionSettings";
 import { collectMaskedKeys, MASKED_FIELD_PLACEHOLDER } from "../../../components/admin/settings/sensitive";
 import SocialSettings from "../../../components/admin/settings/SocialSettings";
 import { toast } from "../../../components/admin/Toast";
@@ -107,6 +108,7 @@ export default function AdminSettings() {
     { id: "projects", name: "项目展示" },
     { id: "comments", name: "评论设置" }, { id: "users", name: "用户设置" },
     { id: "upload", name: "上传设置" },
+    { id: "distribute", name: "发布分发" },
     { id: "ai", name: "AI 设置" }, { id: "vector", name: "向量搜索" },
     { id: "mcp", name: "MCP 设置" },
   ];
@@ -158,6 +160,7 @@ export default function AdminSettings() {
           </div>
           <div className={`settings-content ${activeTab === "vector" || activeTab === "mcp" ? "grid-layout" : ""}`}>
             {activeTab === "ai" ? (<AISettings settings={settings} onChange={handleChange} />)
+              : activeTab === "distribute" ? (<DistributionSettings settings={settings} onChange={handleChange} />)
               : activeTab === "vector" ? (<VectorManager />)
               : activeTab === "mcp" ? (<MCPManager settings={settings} details={details} onChange={handleChange} />)
               : (<>

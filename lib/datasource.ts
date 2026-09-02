@@ -5,6 +5,7 @@ import { Comment } from './entities/Comment';
 import { MCPServer } from './entities/MCPServer';
 import { Post } from './entities/Post';
 import { PostCategory } from './entities/PostCategory';
+import { PostSeries } from './entities/PostSeries';
 import { PostTag } from './entities/PostTag';
 import { PostVector } from './entities/PostVector';
 import { Project } from './entities/Project';
@@ -26,7 +27,7 @@ export function getDataSource(): DataSource {
     type: 'postgres',
     url: sanitizeDatabaseUrl(DATABASE_URL),
     ssl: getDatabaseSsl(),
-    entities: [User, Post, Tag, PostTag, Comment, Setting, MCPServer, PostVector, Project, PostCategory],
+    entities: [User, Post, Tag, PostTag, Comment, Setting, MCPServer, PostVector, Project, PostCategory, PostSeries],
     synchronize: false, // 生产环境不要自动同步，使用迁移
     logging: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     extra: {

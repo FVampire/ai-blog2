@@ -2149,7 +2149,8 @@ html[data-theme='dark'] .admin-layout .result-section h4 { color: var(--admin-te
 .agent-series-editor-list button:disabled { cursor: not-allowed; opacity: .4; }
 .agent-series-editor-list .agent-remove-post { color: #b42318; }
 .agent-add-post { display: flex; gap: 8px; padding: 8px 24px 0; }
-.agent-add-post select { flex: 1; min-width: 0; padding: 9px 10px; color: var(--admin-text); background: var(--admin-surface-soft); border: 1px solid var(--admin-border); border-radius: 7px; }
+.agent-add-post select,
+.agent-add-post input { flex: 1; min-width: 0; padding: 9px 10px; color: var(--admin-text); background: var(--admin-surface-soft); border: 1px solid var(--admin-border); border-radius: 7px; }
 .agent-series-note { padding: 12px 24px 0; font-size: 11px; }
 .agent-series-dialog .admin-dialog-actions { padding: 18px 24px 22px; }
 

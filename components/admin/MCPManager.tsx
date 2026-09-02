@@ -259,6 +259,14 @@ const MCPManager: React.FC<MCPManagerProps> = ({ settings, details, onChange }) 
   return (
     <div className="mcp-manager">
       <h3>MCP 服务器管理</h3>
+      <div className="setting-item" style={{ marginBottom: 24 }}>
+        <div className="setting-label">
+          <span className="label-text">本站 MCP Server</span>
+          <span className="label-desc">
+            Cursor / Claude Desktop 可把博客自己当成 MCP：搜索文章、读正文、列项目/系列、发布草稿。地址 <code>/api/mcp</code>，鉴权与 Agent API 相同，使用 Bearer AGENT_API_KEY。
+          </span>
+        </div>
+      </div>
 
       {message.text && (
         <div className={`message ${message.type}`}>

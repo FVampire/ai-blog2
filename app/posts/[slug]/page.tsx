@@ -126,8 +126,17 @@ export default async function PostPage({
               <article className="blog-card">
                 <div className="blog-card-content">
                   <p className="article-breadcrumb">
-                    <Link href="/articles">文章</Link> /{" "}
-                    {post.category?.name || "笔记"} / {post.title}
+                    <Link href="/articles">文章</Link>
+                    {post.seriesSlug ? (
+                      <>
+                        {" / "}
+                        <Link href={`/series/${post.seriesSlug}`}>{post.seriesTitle || "系列"}</Link>
+                      </>
+                    ) : (
+                      <> / {post.category?.name || "笔记"}</>
+                    )}
+                    {" / "}
+                    {post.title}
                   </p>
                   <h1 className="blog-title mb-4">{post.title}</h1>
 
@@ -194,10 +203,16 @@ export default async function PostPage({
                     </ReactMarkdown>
                   </div>
 
-                  {(prevPost || nextPost) && (
+                  {(prevPost || nextPost || post.seriesSlug) && (
                     <div
                       className={`post-navigation ${!prevPost || !nextPost ? "single-nav" : ""}`}
                     >
+                      {post.seriesSlug && (
+                        <Link href={`/series/${post.seriesSlug}`} className="nav-post" style={{ gridColumn: '1 / -1' }}>
+                          <div className="nav-label">系列目录</div>
+                          <div className="nav-title">{post.seriesTitle || "查看全部文章"}</div>
+                        </Link>
+                      )}
                       {prevPost && (
                         <Link
                           href={`/posts/${prevPost.slug}`}

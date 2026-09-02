@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { requireAuth, isAuthError } from '@/lib/auth-middleware-app';
 import { recordAuditEvent } from '@/lib/audit-log';
+import { isAuthError, requireAuth } from '@/lib/auth-middleware-app';
 import { JWTPayload } from '@/lib/jwt';
+import { schedulePublishPipeline } from '@/lib/publish/pipeline';
 import { PostRepository } from '@/lib/repositories/PostRepository';
+import { SeriesRepository } from '@/lib/repositories/SeriesRepository';
 
 const MANAGER_ROLES = ['admin', 'editor'];
 
@@ -89,6 +91,7 @@ export async function PUT(
     if (permissionError) return permissionError;
 
     const body = await request.json();
+    const existing = await PostRepository.getPostById(postId);
     const post = await PostRepository.updatePost(postId, {
       title: body.title,
       slug: body.slug,
@@ -101,6 +104,12 @@ export async function PUT(
       prevPostId: body.prevPostId ?? undefined,
       nextPostId: body.nextPostId ?? undefined,
     });
+    if (body.prevPostId !== undefined || body.nextPostId !== undefined) {
+      await SeriesRepository.ensureForLinkedPost(post.id);
+    }
+    if (post.status === 'published') {
+      schedulePublishPipeline(post.id, { previousStatus: existing?.status || null });
+    }
     await recordAuditEvent({
       request,
       user: authResult.user,
