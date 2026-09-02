@@ -84,11 +84,13 @@ interface UploadResult {
 export function authUpload(
   url: string,
   file: File,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
+  fields: Record<string, string> = {},
 ): Promise<UploadResult> {
   return new Promise((resolve, reject) => {
     const formData = new FormData();
     formData.append('file', file);
+    Object.entries(fields).forEach(([key, value]) => formData.append(key, value));
 
     const xhr = new XMLHttpRequest();
 

@@ -1,16 +1,29 @@
 'use client';
 
-import React, { useEffect, useState, useRef, ChangeEvent, DragEvent } from 'react';
+import React, { useCallback, useEffect, useState, useRef, ChangeEvent, DragEvent } from 'react';
 
 import { authJson, authUpload } from './admin/authFetch';
 import { toast } from './admin/Toast';
 
 interface ImageItem {
   filename: string;
+  path: string;
+  folder: string;
   url: string;
   size: number;
   uploadedAt: string;
   modifiedAt: string;
+}
+
+interface FolderItem {
+  name: string;
+  path: string;
+  itemCount: number;
+}
+
+interface Breadcrumb {
+  name: string;
+  path: string;
 }
 
 interface EnhancedImageUploadProps {
@@ -34,6 +47,9 @@ const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showSelectModal, setShowSelectModal] = useState(false);
   const [images, setImages] = useState<ImageItem[]>([]);
+  const [folders, setFolders] = useState<FolderItem[]>([]);
+  const [breadcrumbs, setBreadcrumbs] = useState<Breadcrumb[]>([{ name: '媒体库', path: '' }]);
+  const [currentFolder, setCurrentFolder] = useState('');
   const [loadingImages, setLoadingImages] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,22 +58,30 @@ const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
   }, [defaultImage]);
 
   // 加载已上传的图片列表
-  const loadImages = async () => {
+  const loadImages = useCallback(async () => {
     setLoadingImages(true);
-    const result = await authJson<{ images: ImageItem[] }>('/api/media/list?page=1&limit=100');
+    const result = await authJson<{ images: ImageItem[]; folders: FolderItem[]; breadcrumbs: Breadcrumb[] }>(
+      `/api/media/list?folder=${encodeURIComponent(currentFolder)}&page=1&limit=200`,
+    );
     setLoadingImages(false);
 
     if (result.success && result.data) {
       setImages(result.data.images);
+      setFolders(result.data.folders);
+      setBreadcrumbs(result.data.breadcrumbs);
     } else {
       toast.error(result.message || '加载图片列表失败');
     }
-  };
+  }, [currentFolder]);
+
+  useEffect(() => {
+    if (showSelectModal) void loadImages();
+  }, [loadImages, showSelectModal]);
 
   // 打开选择图片模态框时加载图片
   const handleOpenSelectModal = () => {
+    setCurrentFolder('');
     setShowSelectModal(true);
-    loadImages();
   };
 
   const handleFileSelect = async (file: File | null) => {
@@ -267,29 +291,59 @@ const EnhancedImageUpload: React.FC<EnhancedImageUploadProps> = ({
               </button>
             </div>
             <div className="modal-body">
+              <nav className="media-breadcrumbs media-picker-breadcrumbs" aria-label="媒体文件夹路径">
+                {breadcrumbs.map((crumb, index) => (
+                  <React.Fragment key={crumb.path || 'root'}>
+                    {index > 0 && <span className="media-breadcrumb-separator">/</span>}
+                    <button
+                      type="button"
+                      className={index === breadcrumbs.length - 1 ? 'is-current' : ''}
+                      disabled={index === breadcrumbs.length - 1}
+                      onClick={() => setCurrentFolder(crumb.path)}
+                    >
+                      {crumb.name}
+                    </button>
+                  </React.Fragment>
+                ))}
+              </nav>
               {loadingImages ? (
                 <div className="loading-state">加载中...</div>
-              ) : images.length === 0 ? (
+              ) : images.length === 0 && folders.length === 0 ? (
                 <div className="empty-state">
-                  <p>还没有上传任何图片</p>
+                  <p>{currentFolder ? '这个文件夹中还没有图片' : '媒体库中还没有文件夹'}</p>
                 </div>
               ) : (
-                <div className="media-grid">
-                  {images.map((image) => (
-                    <div
-                      key={image.filename}
-                      className="media-item media-item-selectable"
-                      onClick={() => handleSelectImage(image.url)}
-                    >
-                      <div className="media-thumbnail">
-                        <img src={image.url} alt={image.filename} />
-                      </div>
-                      <div className="media-info">
-                        <div className="media-filename">{image.filename}</div>
-                        <div className="media-size">{formatSize(image.size)}</div>
-                      </div>
+                <div className="media-picker-content">
+                  {folders.length > 0 && (
+                    <div className="media-folder-grid media-picker-folders">
+                      {folders.map((folder) => (
+                        <button key={folder.path} type="button" className="media-folder-card" onClick={() => setCurrentFolder(folder.path)}>
+                          <div className="media-folder-icon" aria-hidden="true"><span /></div>
+                          <div className="media-folder-meta"><strong>{folder.name}</strong><span>{folder.itemCount} 个项目</span></div>
+                        </button>
+                      ))}
                     </div>
-                  ))}
+                  )}
+                  {images.length > 0 && (
+                    <div className="media-grid">
+                      {images.map((image) => (
+                        <button
+                          key={image.path}
+                          type="button"
+                          className="media-item media-item-selectable"
+                          onClick={() => handleSelectImage(image.url)}
+                        >
+                          <div className="media-thumbnail">
+                            <img src={image.url} alt={image.filename} loading="lazy" />
+                          </div>
+                          <div className="media-info">
+                            <div className="media-filename">{image.filename}</div>
+                            <div className="media-size">{formatSize(image.size)}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

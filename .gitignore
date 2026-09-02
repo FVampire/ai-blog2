@@ -56,6 +56,12 @@ coverage/
 /public/uploads/*
 !/public/uploads/.gitkeep
 
+# Server-managed blog covers
+/public/blog-covers/
+
+# Runtime registry for user-created media roots
+/.media-library.json
+
 # Cache
 .cache/
 .eslintcache

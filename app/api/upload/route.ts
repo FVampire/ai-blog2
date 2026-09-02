@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import fs from 'fs';
-import path from 'path';
 
 import { requireAuth, isAuthError, requireAgentAuth } from '@/lib/auth-middleware-app';
+import { mediaPathToUrl, MediaLibraryError, resolveMediaFolder } from '@/lib/media-library';
 import { validateImageFile } from '@/lib/upload-image';
 
 function isAuthorized(request: NextRequest): boolean {
@@ -22,13 +22,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const folder = formData.get('folder') || 'uploads';
 
     if (!file) {
       return NextResponse.json(
@@ -45,9 +41,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const uploadDir = resolveMediaFolder(folder);
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     const filename = `${uniqueSuffix}${validation.extension}`;
-    const filePath = path.join(uploadDir, filename);
+    const filePath = `${uploadDir.absolutePath}/${filename}`;
 
     fs.writeFileSync(filePath, validation.buffer);
 
@@ -55,7 +52,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: '上传成功',
       data: {
-        url: `/uploads/${filename}`,
+        url: mediaPathToUrl(`${uploadDir.relativePath}/${filename}`),
         filename: validation.originalName,
         size: validation.size,
         mimetype: validation.mimeType,
@@ -63,6 +60,12 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Upload error:', error);
+    if (error instanceof MediaLibraryError) {
+      return NextResponse.json(
+        { success: false, message: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     return NextResponse.json(
       {
         success: false,

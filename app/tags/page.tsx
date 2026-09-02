@@ -44,7 +44,7 @@ export default function TagsPage() {
           <div className="main-content">
             <div className="blog-section">
               <h1 className="section-title">{PAGE_TITLE}</h1>
-              <TagCloud />
+              <TagCloud variant="page" />
             </div>
           </div>
 

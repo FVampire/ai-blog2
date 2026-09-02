@@ -1,7 +1,9 @@
 import { config } from 'dotenv';
 import pg from 'pg';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 
-config({ path: '.env' });
+config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
 const coverBySlug = new Map([
   ['ProgrammingStandards', '/blog-covers/ProgrammingStandards.webp'],
@@ -25,6 +27,13 @@ const coverBySlug = new Map([
   ['docker-image-resource', '/blog-covers/docker-image-resource.webp'],
   ['obsdian-recommended-configuration', '/blog-covers/obsdian-recommended-configuration.webp'],
   ['react-vulnerability', '/blog-covers/react-vulnerability.webp'],
+  ['n8n-practical-guide-1-foundations', '/blog-covers/n8n-practical-guide-1-foundations.webp'],
+  ['n8n-practical-guide-2-production-workflows', '/blog-covers/n8n-practical-guide-2-production-workflows.webp'],
+  ['n8n-practical-guide-3-operations', '/blog-covers/n8n-practical-guide-3-operations.webp'],
+  ['godot-practical-guide-1-scene-tree', '/blog-covers/godot-practical-guide-1-scene-tree.webp'],
+  ['godot-practical-guide-2-character-loop', '/blog-covers/godot-practical-guide-2-character-loop.webp'],
+  ['godot-practical-guide-3-resources', '/blog-covers/godot-practical-guide-3-resources.webp'],
+  ['godot-practical-guide-4-shipping', '/blog-covers/godot-practical-guide-4-shipping.webp'],
 ]);
 
 if (!process.env.DATABASE_URL) {

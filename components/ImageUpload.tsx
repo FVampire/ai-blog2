@@ -10,6 +10,7 @@ interface ImageUploadProps {
   onUploadError?: (error: string) => void;
   defaultImage?: string;
   disabled?: boolean;
+  folder?: string;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -17,6 +18,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   onUploadError,
   defaultImage = '',
   disabled = false,
+  folder = 'uploads',
 }) => {
   const [preview, setPreview] = useState<string>(defaultImage);
   const [uploading, setUploading] = useState(false);
@@ -59,7 +61,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     setUploadProgress(0);
 
     try {
-      const { url: imageUrl } = await authUpload('/api/upload', file, setUploadProgress);
+      const { url: imageUrl } = await authUpload('/api/upload', file, setUploadProgress, { folder });
 
       if (onUploadSuccess) {
         onUploadSuccess(imageUrl);

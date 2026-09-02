@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 import TagPageContent from './TagPageContent';
 import { formatDate } from '../../../lib/format';
+import { resolveCanonicalTagSlug } from '../../../lib/tag-taxonomy';
 import { PostRepository } from '../../../lib/repositories/PostRepository';
 import { TagRepository } from '../../../lib/repositories/TagRepository';
 
@@ -11,7 +12,8 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'h
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const tag = await TagRepository.getTagBySlug(slug);
+  const canonicalSlug = resolveCanonicalTagSlug(slug) || slug;
+  const tag = await TagRepository.getTagBySlug(canonicalSlug);
 
   if (!tag) {
     return { title: '标签未找到' };
@@ -51,6 +53,10 @@ export default async function TagSlugPage({
   searchParams: Promise<{ page?: string }>;
 }) {
   const { slug } = await params;
+  const canonicalSlug = resolveCanonicalTagSlug(slug);
+  if (canonicalSlug) {
+    redirect(`/tags/${canonicalSlug}`);
+  }
   const page = parseInt((await searchParams).page || '1') || 1;
   const postsPerPage = 6;
 

@@ -133,6 +133,32 @@ export class TagRepository extends BaseRepository {
   }
 
   /**
+   * Merge a source tag into a target tag, then delete the source.
+   * Posts already tagged with the target keep a single relation.
+   */
+  static async mergeTags(sourceId: number, targetId: number): Promise<void> {
+    if (sourceId === targetId) {
+      throw new Error('不能将标签合并到自身');
+    }
+
+    const ds = await this.getDataSource();
+    await ds.transaction(async (manager) => {
+      const source = await manager.findOne(Tag, { where: { id: sourceId } });
+      const target = await manager.findOne(Tag, { where: { id: targetId } });
+      if (!source || !target) throw new Error('标签不存在');
+
+      await manager.query(
+        `INSERT INTO post_tags (post_id, tag_id)
+         SELECT post_id, $2 FROM post_tags WHERE tag_id = $1
+         ON CONFLICT (post_id, tag_id) DO NOTHING`,
+        [sourceId, targetId]
+      );
+      await manager.query('DELETE FROM post_tags WHERE tag_id = $1', [sourceId]);
+      await manager.delete(Tag, { id: sourceId });
+    });
+  }
+
+  /**
    * 删除标签
    */
   static async deleteTag(id: number): Promise<boolean> {

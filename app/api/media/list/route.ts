@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import fs from 'fs';
-import path from 'path';
-
 import { requireAuth, isAuthError } from '@/lib/auth-middleware-app';
+import { listMediaFolder, MediaLibraryError } from '@/lib/media-library';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
@@ -21,39 +19,9 @@ export async function GET(request: NextRequest) {
       ? DEFAULT_LIMIT
       : Math.min(parsedLimit, MAX_LIMIT);
 
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-      return NextResponse.json({
-        success: true,
-        data: {
-          images: [],
-          total: 0,
-          pagination: { page, limit, total: 0, totalPages: 0 },
-        },
-      });
-    }
-
-    const files = fs.readdirSync(uploadsDir);
-
-    const images = files
-      .filter(file => {
-        const ext = path.extname(file).toLowerCase();
-        return ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'].includes(ext);
-      })
-      .map(file => {
-        const filePath = path.join(uploadsDir, file);
-        const stats = fs.statSync(filePath);
-        return {
-          filename: file,
-          url: `/uploads/${file}`,
-          size: stats.size,
-          uploadedAt: stats.birthtime,
-          modifiedAt: stats.mtime,
-        };
-      })
-      .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+    const folder = searchParams.get('folder') || '';
+    const listing = listMediaFolder(folder);
+    const images = listing.images;
 
     const total = images.length;
     const offset = (page - 1) * limit;
@@ -62,6 +30,9 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         images: images.slice(offset, offset + limit),
+        folders: listing.folders,
+        currentFolder: listing.currentFolder,
+        breadcrumbs: listing.breadcrumbs,
         total,
         pagination: {
           page,
@@ -73,6 +44,12 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Get images error:', error);
+    if (error instanceof MediaLibraryError) {
+      return NextResponse.json(
+        { success: false, message: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
     return NextResponse.json(
       {
         success: false,

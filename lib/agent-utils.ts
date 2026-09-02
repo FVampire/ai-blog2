@@ -2,6 +2,8 @@
  * Utilities for Agent API: slug generation, tag resolution, etc.
  */
 
+import { resolveCanonicalTagName } from './tag-taxonomy';
+
 export function generateSlug(title: string): string {
   const slug = title
     .toLowerCase()
@@ -23,18 +25,25 @@ export async function resolveTagIds(
 ): Promise<number[]> {
   const existingTags = await tagRepo.getAllTags();
   const tagIds: number[] = [];
+  const seen = new Set<number>();
 
-  for (const name of tagNames) {
+  for (const rawName of tagNames) {
+    const name = resolveCanonicalTagName(rawName);
     const slug = generateSlug(name);
     const found = existingTags.find(
       (t) => t.slug === slug || t.name.toLowerCase() === name.toLowerCase()
     );
     if (found) {
+      if (seen.has(found.id)) continue;
+      seen.add(found.id);
       tagIds.push(found.id);
-    } else {
-      const newTag = await createTag({ name, slug });
-      tagIds.push(newTag.id);
+      continue;
     }
+
+    const newTag = await createTag({ name, slug });
+    existingTags.push({ id: newTag.id, name, slug });
+    seen.add(newTag.id);
+    tagIds.push(newTag.id);
   }
 
   return tagIds;
