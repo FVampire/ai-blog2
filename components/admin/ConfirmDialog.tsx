@@ -1,5 +1,7 @@
 'use client';
 
+import { useCallback, useRef, useState } from 'react';
+
 interface ConfirmDialogProps {
   open: boolean;
   title: string;
@@ -25,4 +27,43 @@ export default function ConfirmDialog({ open, title, description, confirmLabel =
       </div>
     </div>
   );
+}
+
+interface ConfirmOptions {
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  dangerous?: boolean;
+}
+
+export function useConfirmDialog() {
+  const [options, setOptions] = useState<ConfirmOptions | null>(null);
+  const resolver = useRef<((confirmed: boolean) => void) | null>(null);
+
+  const confirm = useCallback((nextOptions: ConfirmOptions) => new Promise<boolean>((resolve) => {
+    resolver.current?.(false);
+    resolver.current = resolve;
+    setOptions(nextOptions);
+  }), []);
+
+  const close = (confirmed: boolean) => {
+    resolver.current?.(confirmed);
+    resolver.current = null;
+    setOptions(null);
+  };
+
+  return {
+    confirm,
+    confirmDialog: (
+      <ConfirmDialog
+        open={Boolean(options)}
+        title={options?.title || ''}
+        description={options?.description || ''}
+        confirmLabel={options?.confirmLabel}
+        dangerous={options?.dangerous}
+        onConfirm={() => close(true)}
+        onCancel={() => close(false)}
+      />
+    ),
+  };
 }

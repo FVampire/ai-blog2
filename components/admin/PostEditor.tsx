@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 
 import EnhancedImageUpload from '../EnhancedImageUpload';
 import MarkdownEditor from '../MarkdownEditor';
-import { confirmDiscardChanges, useUnsavedChanges } from '../../hooks/useUnsavedChanges';
+import { useUnsavedChanges } from '../../hooks/useUnsavedChanges';
 import AdminLayout from './AdminLayout';
-import ConfirmDialog from './ConfirmDialog';
+import ConfirmDialog, { useConfirmDialog } from './ConfirmDialog';
 import { toast } from './Toast';
 
 interface Tag { id: number; name: string; slug: string; }
@@ -35,8 +35,12 @@ export default function PostEditor({ postId }: { postId?: string }) {
   const [vectorBusy, setVectorBusy] = useState(false);
   const [confirmVectorDelete, setConfirmVectorDelete] = useState(false);
   const [userRole, setUserRole] = useState('author');
+  const { confirm: confirmLeave, confirmDialog: leaveConfirmDialog } = useConfirmDialog();
   const dirty = ready && JSON.stringify(form) !== serverSnapshot;
-  useUnsavedChanges(dirty && !loading);
+  const requestLeave = async (href = '/admin/posts') => {
+    if (!dirty || await confirmLeave({ title: '放弃未保存的更改？', description: '本地草稿仍会保留，下次打开这篇文章时可以恢复。', confirmLabel: '离开编辑器', dangerous: true })) router.push(href);
+  };
+  useUnsavedChanges(dirty && !loading, (href) => { void requestLeave(href); });
 
   const restoreDraft = (base: FormData) => {
     setServerSnapshot(JSON.stringify(base));
@@ -136,7 +140,7 @@ export default function PostEditor({ postId }: { postId?: string }) {
           <main className="writing-column">
             <header className="editor-header">
               <div><p className="page-eyebrow">{editing ? '编辑文章' : '新建文章'}</p><small>{lastSaved ? `本地草稿已保存 · ${lastSaved.toLocaleTimeString('zh-CN')}` : '本地草稿自动保存已开启'} · {wordCount} 词</small></div>
-              <button type="button" className="text-button" onClick={() => { if (confirmDiscardChanges(dirty)) router.push('/admin/posts'); }}>返回列表</button>
+              <button type="button" className="text-button" onClick={() => void requestLeave()}>返回列表</button>
             </header>
             <input className="editor-title-input" value={form.title} onChange={(event) => { const title = event.target.value; setForm((current) => ({ ...current, title, slug: current.slug || generateSlug(title) })); }} placeholder="文章标题" aria-label="文章标题" required />
             <div className="slug-field"><span>/posts/</span><input value={form.slug} onChange={(event) => set('slug', event.target.value)} placeholder="article-slug" aria-label="文章 Slug" required /></div>
@@ -145,7 +149,7 @@ export default function PostEditor({ postId }: { postId?: string }) {
           </main>
 
           <aside className="metadata-sidebar">
-            <div className="metadata-actions"><button type="button" className="btn-secondary" onClick={() => { if (confirmDiscardChanges(dirty)) router.push('/admin/posts'); }} disabled={loading}>取消</button><button type="submit" className="btn-primary" disabled={loading}>{loading ? '保存中...' : editing ? '保存修改' : '创建文章'}</button></div>
+            <div className="metadata-actions"><button type="button" className="btn-secondary" onClick={() => void requestLeave()} disabled={loading}>取消</button><button type="submit" className="btn-primary" disabled={loading}>{loading ? '保存中...' : editing ? '保存修改' : '创建文章'}</button></div>
             <section className="metadata-panel"><h2>发布</h2><div className="form-group"><label>状态</label><select value={form.status} onChange={(event) => set('status', event.target.value as Status)}><option value="draft">草稿</option><option value="published">已发布</option><option value="archived">已归档</option></select></div></section>
             <section className="metadata-panel"><h2>封面</h2><EnhancedImageUpload onUploadSuccess={(url) => set('imageUrl', url)} defaultImage={form.imageUrl} onSelectImage={(url) => set('imageUrl', url)} /></section>
             <section className="metadata-panel"><h2>归类</h2><div className="form-group"><label>所属专栏</label><select value={form.categoryId ?? ''} onChange={(event) => set('categoryId', event.target.value ? Number(event.target.value) : null)}><option value="">暂不归类</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></div><div className="form-group"><label>标签</label><div className="checkbox-group compact-tags">{tags.map((tag) => <label key={tag.id} className="checkbox-label"><input type="checkbox" checked={form.tagIds.includes(tag.id)} onChange={() => set('tagIds', form.tagIds.includes(tag.id) ? form.tagIds.filter((id) => id !== tag.id) : [...form.tagIds, tag.id])} /><span>{tag.name}</span></label>)}{tags.length === 0 && <small>暂无标签，前往 <Link href="/admin/tags">标签管理</Link> 创建。</small>}</div></div></section>
@@ -155,6 +159,7 @@ export default function PostEditor({ postId }: { postId?: string }) {
         </form>
       </div>
       <ConfirmDialog open={confirmVectorDelete} title="删除文章向量？" description="文章仍会保留，但在重新生成前不会进入向量搜索结果。" confirmLabel="删除向量" dangerous busy={vectorBusy} onConfirm={deleteVector} onCancel={() => setConfirmVectorDelete(false)} />
+      {leaveConfirmDialog}
     </AdminLayout>
   );
 }

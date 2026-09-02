@@ -59,7 +59,7 @@ export default function CategoriesPage() {
               <div className="category-list">
                 {categories.map((category) => (
                   <article className={`category-row ${editingId === category.id ? 'is-editing' : ''}`} key={category.id}>
-                    <span className="category-color" style={{ backgroundColor: category.color }} />
+                    <input type="color" className="category-color" value={category.color} disabled aria-label={`${category.name} 的颜色`} />
                     <div className="category-main"><strong>{category.name}</strong><small>/{category.slug} · {category.postCount} 篇已发布</small>{category.description && <p>{category.description}</p>}</div>
                     <div className="category-actions"><button className="action-btn edit" onClick={() => beginEdit(category)}>编辑</button><button className="action-btn delete" onClick={() => setDeleting(category)}>删除</button></div>
                   </article>

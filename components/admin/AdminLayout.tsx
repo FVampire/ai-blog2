@@ -51,6 +51,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
   {
     label: '系统',
     items: [
+      { href: '/admin/agent', label: 'Agent 控制台', icon: 'agent', roles: ['admin'] },
       { href: '/admin/users', label: '用户', icon: 'users', roles: ['admin'] },
       { href: '/admin/integrations', label: 'AI / 向量 / MCP', icon: 'integrations', roles: ['admin'] },
     ],

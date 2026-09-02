@@ -63,10 +63,10 @@ export default async function PreviewPostPage({ params }: { params: Promise<{ id
 
   return (
     <div>
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: '#FF8C42', color: 'white', padding: '12px', textAlign: 'center', fontWeight: 600, zIndex: 9999, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        🔍 预览模式 - 此内容未发布
+      <div className="admin-preview-banner">
+        预览模式 · 此内容未发布
       </div>
-      <div style={{ marginTop: '48px' }}>
+      <div className="admin-preview-content">
         <Header />
         <div className="container">
           <div className="content-wrapper">
@@ -75,7 +75,7 @@ export default async function PreviewPostPage({ params }: { params: Promise<{ id
                 <article className="card blog-card">
                   {post.image_url && (<div className="blog-image-container"><img src={post.image_url} alt={post.title} className="blog-image" /></div>)}
                   <div className="blog-card-content">
-                    <h1 className="blog-title" style={{ marginBottom: '16px' }}>{post.title}</h1>
+                    <h1 className="blog-title admin-preview-title">{post.title}</h1>
                     <div className="blog-meta">
                       <span className="meta-text">{post.published_at ? formatDate(post.published_at) : formatDate(post.created_at)}</span>
                       <span className="meta-text">作者: {post.author_name}</span>
@@ -86,11 +86,11 @@ export default async function PreviewPostPage({ params }: { params: Promise<{ id
                     {post.tags && post.tags.length > 0 && (
                       <div className="blog-tags">
                         {post.tags.map((tag: any, index: number) => (
-                          <span key={tag.id} className={`blog-tag blog-tag-${(index % 3) + 1}`} style={{ cursor: 'default' }}>{tag.name}</span>
+                          <span key={tag.id} className={`blog-tag blog-tag-${(index % 3) + 1} admin-preview-tag`}>{tag.name}</span>
                         ))}
                       </div>
                     )}
-                    <div className="markdown-preview" style={{ marginTop: '32px' }}>
+                    <div className="markdown-preview admin-preview-markdown">
                       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={articleRehypePlugins}>{post.content}</ReactMarkdown>
                     </div>
                   </div>

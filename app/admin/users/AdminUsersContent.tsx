@@ -3,6 +3,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import AdminLayout from '../../../components/admin/AdminLayout';
+import AdminIcon from '../../../components/admin/AdminIcon';
+import { useConfirmDialog } from '../../../components/admin/ConfirmDialog';
 import { authJson } from '../../../components/admin/authFetch';
 import { toast } from '../../../components/admin/Toast';
 
@@ -11,27 +13,6 @@ interface UserFormData { username: string; email: string; password: string; role
 interface Pagination { page: number; limit: number; total: number; totalPages: number; }
 
 const PAGE_SIZE = 20;
-
-const usersStyles = `
-  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-  .modal-content { background: white; border-radius: 8px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-  .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e5e7eb; }
-  .modal-header h2 { margin: 0; font-size: 18px; font-weight: 600; color: #111827; }
-  .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 0; line-height: 1; }
-  .modal-close:hover { color: #111827; }
-  form { padding: 24px; }
-  .form-group { margin-bottom: 20px; }
-  .form-group label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #374151; }
-  .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; transition: border-color 0.2s, box-shadow 0.2s; }
-  .form-group input:focus, .form-group select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-  .error-message { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
-  .btn-secondary { padding: 10px 20px; border: 1px solid #d1d5db; background: white; color: #374151; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-  .btn-secondary:hover { background: #f9fafb; border-color: #9ca3af; }
-  .modal-actions .btn-primary { padding: 10px 20px; border: none; background: #3b82f6; color: white; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
-  .modal-actions .btn-primary:hover { background: #2563eb; }
-  .modal-actions .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
-`;
 
 export default function AdminUsersContent() {
   const [users, setUsers] = useState<User[]>([]);
@@ -46,6 +27,7 @@ export default function AdminUsersContent() {
   const [formData, setFormData] = useState<UserFormData>({ username: '', email: '', password: '', role: 'author', status: 'active' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { confirm, confirmDialog } = useConfirmDialog();
 
   const loadUsers = useCallback(async () => {
     setPageLoading(true);
@@ -112,7 +94,8 @@ export default function AdminUsersContent() {
   };
 
   const handleDeleteUser = async (id: number) => {
-    if (!confirm('确定要删除这个用户吗？')) return;
+    const user = users.find((item) => item.id === id);
+    if (!await confirm({ title: '删除这个用户？', description: `${user?.username || '该用户'} 的账号会被永久移除，名下文章将保留但不再关联作者。`, confirmLabel: '删除用户', dangerous: true })) return;
     const result = await authJson(`/api/users/${id}`, { method: 'DELETE' });
     if (result.success) {
       toast.success('删除成功');
@@ -134,19 +117,18 @@ export default function AdminUsersContent() {
 
   return (
     <AdminLayout>
-      <style dangerouslySetInnerHTML={{ __html: usersStyles }} />
       <div className="users-page">
-        <div className="page-header"><h1 className="page-title">用户管理</h1><button className="btn-primary" onClick={handleOpenAddModal}><span>➕</span> 添加用户</button></div>
+        <div className="page-header"><h1 className="page-title">用户管理</h1><button className="btn-primary" onClick={handleOpenAddModal}><AdminIcon name="users" size={17} /> 添加用户</button></div>
         <div className="filters">
           <form className="search-box-admin" onSubmit={handleSearchSubmit}>
-            <span className="search-icon-admin">🔍</span>
+            <span className="search-icon-admin" aria-hidden="true">⌕</span>
             <input type="text" placeholder="搜索用户名或邮箱..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="search-input-admin" />
             <button type="submit" className="search-submit-admin">搜索</button>
           </form>
         </div>
         <div className="data-table">
           <table>
-            <thead><tr><th>用户名</th><th>邮箱</th><th>角色</th><th>状态</th><th>加入日期</th><th>文章数</th><th style={{ width: '150px' }}>操作</th></tr></thead>
+            <thead><tr><th>用户名</th><th>邮箱</th><th>角色</th><th>状态</th><th>加入日期</th><th>文章数</th><th className="table-actions-column">操作</th></tr></thead>
             <tbody>
               {users.map((user) => (
                 <tr key={user.id}>
@@ -191,6 +173,7 @@ export default function AdminUsersContent() {
           </div>
         </div>
       )}
+      {confirmDialog}
     </AdminLayout>
   );
 }

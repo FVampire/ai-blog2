@@ -4,7 +4,10 @@ import fs from 'fs';
 import path from 'path';
 
 import { requireAgentAuth } from '@/lib/auth-middleware-app';
+import { recordAuditEvent } from '@/lib/audit-log';
 import { validateImageFile } from '@/lib/upload-image';
+
+const DEFAULT_AUTHOR_ID = parseInt(process.env.AGENT_AUTHOR_ID || '1', 10);
 
 /**
  * Agent API: Image upload for blog posts
@@ -49,6 +52,20 @@ export async function POST(request: NextRequest) {
 
     const fileUrl = `/uploads/${filename}`;
     const siteUrl = process.env.SITE_URL || '';
+
+    await recordAuditEvent({
+      request,
+      user: { userId: DEFAULT_AUTHOR_ID, username: 'Agent', email: '', role: 'agent' },
+      action: 'agent.media.upload',
+      resourceType: 'media',
+      resourceId: filename,
+      metadata: {
+        originalName: validation.originalName,
+        size: validation.size,
+        mimeType: validation.mimeType,
+        url: fileUrl,
+      },
+    });
 
     return NextResponse.json({
       success: true,

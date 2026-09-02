@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useConfirmDialog } from './ConfirmDialog';
 
 interface VectorStats {
   totalPosts: number;
@@ -28,6 +29,7 @@ export const VectorManager: React.FC = () => {
   const [result, setResult] = useState<GenerationResult | null>(null);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [limit, setLimit] = useState(50);
+  const { confirm, confirmDialog } = useConfirmDialog();
 
   const fetchStats = async () => {
     setLoading(true);
@@ -87,9 +89,7 @@ export const VectorManager: React.FC = () => {
   };
 
   const handleDeleteAll = async () => {
-    if (!confirm('确定要删除所有向量数据吗？此操作不可恢复！')) {
-      return;
-    }
+    if (!await confirm({ title: '删除全部向量数据？', description: '所有文章的向量索引都会被移除，恢复需要重新生成。文章正文不会受影响。', confirmLabel: '删除全部向量', dangerous: true })) return;
 
     try {
       const response = await fetch('/api/admin/vector?confirm=true', {
@@ -218,244 +218,7 @@ export const VectorManager: React.FC = () => {
         </button>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        .vector-manager {
-          display: flex;
-          flex-direction: column;
-          gap: 32px;
-        }
-
-        .vector-section {
-          background: white;
-          border-radius: 8px;
-          padding: 24px;
-          border: 1px solid #e5e7eb;
-        }
-
-        .vector-section.danger {
-          border-color: #fca5a5;
-          background: #fef2f2;
-        }
-
-        .section-title {
-          font-size: 1.1rem;
-          font-weight: 600;
-          margin: 0 0 12px 0;
-          color: #111827;
-        }
-
-        .section-desc {
-          font-size: 0.9rem;
-          color: #6b7280;
-          margin-bottom: 20px;
-        }
-
-        .loading-text {
-          color: #6b7280;
-          font-style: italic;
-        }
-
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 16px;
-        }
-
-        .stat-card {
-          background: #f9fafb;
-          border-radius: 8px;
-          padding: 20px;
-          text-align: center;
-          border: 2px solid transparent;
-        }
-
-        .stat-card.success {
-          border-color: #10b981;
-          background: #ecfdf5;
-        }
-
-        .stat-card.warning {
-          border-color: #f59e0b;
-          background: #fffbeb;
-        }
-
-        .stat-card.info {
-          border-color: #3b82f6;
-          background: #eff6ff;
-        }
-
-        .stat-value {
-          font-size: 2rem;
-          font-weight: 700;
-          color: #111827;
-          margin-bottom: 4px;
-        }
-
-        .stat-label {
-          font-size: 0.85rem;
-          color: #6b7280;
-        }
-
-        .form-row {
-          display: flex;
-          gap: 16px;
-          margin-bottom: 20px;
-        }
-
-        .form-group {
-          flex: 1;
-        }
-
-        .form-group label {
-          display: block;
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: #374151;
-          margin-bottom: 6px;
-        }
-
-        .form-input {
-          width: 100%;
-          padding: 8px 12px;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          font-size: 0.9rem;
-        }
-
-        .action-buttons {
-          display: flex;
-          gap: 12px;
-        }
-
-        .btn-primary {
-          padding: 10px 24px;
-          background: #3b82f6;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          font-size: 0.9rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-          background: #2563eb;
-        }
-
-        .btn-primary:disabled {
-          background: #93c5fd;
-          cursor: not-allowed;
-        }
-
-        .btn-secondary {
-          padding: 10px 24px;
-          background: white;
-          color: #374151;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          font-size: 0.9rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-          background: #f3f4f6;
-        }
-
-        .btn-danger {
-          padding: 10px 24px;
-          background: #dc2626;
-          color: white;
-          border: none;
-          border-radius: 6px;
-          font-size: 0.9rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-danger:hover {
-          background: #b91c1c;
-        }
-
-        .message {
-          margin-top: 16px;
-          padding: 12px 16px;
-          border-radius: 6px;
-          font-size: 0.9rem;
-        }
-
-        .message.success {
-          background: #d1fae5;
-          color: #065f46;
-        }
-
-        .message.warning {
-          background: #fef3c7;
-          color: #92400e;
-        }
-
-        .message.error {
-          background: #fee2e2;
-          color: #991b1b;
-        }
-
-        .message.info {
-          background: #dbeafe;
-          color: #1e40af;
-        }
-
-        .result-panel {
-          margin-top: 20px;
-          padding: 16px;
-          background: #f9fafb;
-          border-radius: 8px;
-          border: 1px solid #e5e7eb;
-        }
-
-        .result-panel h4 {
-          margin: 0 0 12px 0;
-          font-size: 1rem;
-          color: #111827;
-        }
-
-        .result-stats {
-          display: flex;
-          gap: 20px;
-          margin-bottom: 16px;
-        }
-
-        .result-stats span {
-          font-size: 0.9rem;
-          color: #374151;
-        }
-
-        .result-stats .success {
-          color: #059669;
-        }
-
-        .result-stats .error {
-          color: #dc2626;
-        }
-
-        .error-list {
-          margin-top: 12px;
-        }
-
-        .error-list h5 {
-          margin: 0 0 8px 0;
-          font-size: 0.9rem;
-          color: #991b1b;
-        }
-
-        .error-item {
-          font-size: 0.85rem;
-          color: #dc2626;
-          padding: 4px 0;
-        }
-      `}} />
+      {confirmDialog}
     </div>
   );
 };

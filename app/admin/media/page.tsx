@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { useConfirmDialog } from '../../../components/admin/ConfirmDialog';
 import { authJson } from '../../../components/admin/authFetch';
 import { toast } from '../../../components/admin/Toast';
 import ImageUpload from '../../../components/ImageUpload';
@@ -51,6 +52,7 @@ export default function AdminMedia() {
   const [folderDialog, setFolderDialog] = useState<{ mode: 'create' | 'rename'; folder?: FolderItem } | null>(null);
   const [folderName, setFolderName] = useState('');
   const [savingFolder, setSavingFolder] = useState(false);
+  const { confirm, confirmDialog } = useConfirmDialog();
 
   const loadMedia = useCallback(async () => {
     setLoading(true);
@@ -114,10 +116,13 @@ export default function AdminMedia() {
   };
 
   const deleteFolder = async (folder: FolderItem, recursive = false) => {
-    const warning = recursive
-      ? `文件夹“${folder.name}”中的所有图片和子文件夹都会永久删除，确定继续吗？`
-      : `确定删除文件夹“${folder.name}”吗？`;
-    if (!confirm(warning)) return;
+    const confirmed = await confirm({
+      title: recursive ? '删除非空文件夹？' : '删除这个文件夹？',
+      description: recursive ? `“${folder.name}”中的所有图片和子文件夹都会永久删除。` : `“${folder.name}”会从媒体库中移除。`,
+      confirmLabel: recursive ? '删除全部内容' : '删除文件夹',
+      dangerous: true,
+    });
+    if (!confirmed) return;
 
     const result = await authJson('/api/media/folders', {
       method: 'DELETE',
@@ -144,7 +149,7 @@ export default function AdminMedia() {
   };
 
   const handleDeleteImage = async (image: ImageItem) => {
-    if (!confirm(`确定删除图片“${image.filename}”吗？`)) return;
+    if (!await confirm({ title: '删除这张图片？', description: `“${image.filename}”将从媒体库永久移除，引用它的页面可能出现缺图。`, confirmLabel: '删除图片', dangerous: true })) return;
     const result = await authJson('/api/media/delete', {
       method: 'DELETE',
       body: JSON.stringify({ path: image.path }),
@@ -305,7 +310,7 @@ export default function AdminMedia() {
                     <div className="info-row"><span className="info-label">所在文件夹：</span><span className="info-value">/{selectedImage.folder}</span></div>
                     <div className="info-row"><span className="info-label">大小：</span><span className="info-value">{formatSize(selectedImage.size)}</span></div>
                     <div className="info-row"><span className="info-label">上传时间：</span><span className="info-value">{formatDate(selectedImage.uploadedAt)}</span></div>
-                    <div className="info-row"><span className="info-label">URL：</span><span className="info-value" style={{ wordBreak: 'break-all' }}>{selectedImage.url}</span></div>
+                    <div className="info-row"><span className="info-label">URL：</span><span className="info-value break-all">{selectedImage.url}</span></div>
                     <div className="image-detail-actions">
                       <button className="btn-secondary" onClick={() => void handleCopyUrl(selectedImage.url)}>复制链接</button>
                       <button className="btn-danger" onClick={() => void handleDeleteImage(selectedImage)}>删除图片</button>
@@ -316,6 +321,7 @@ export default function AdminMedia() {
             </div>
           </div>
         )}
+        {confirmDialog}
       </div>
     </AdminLayout>
   );

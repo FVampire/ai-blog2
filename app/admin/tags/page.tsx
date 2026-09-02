@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 
 import AdminLayout from '../../../components/admin/AdminLayout';
+import AdminIcon from '../../../components/admin/AdminIcon';
+import { useConfirmDialog } from '../../../components/admin/ConfirmDialog';
 import { toast } from '../../../components/admin/Toast';
 
 interface Tag { id: number; name: string; slug: string; color: string; created_at: string; post_count: number; }
@@ -13,6 +15,7 @@ export default function AdminTags() {
   const [showModal, setShowModal] = useState(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [formData, setFormData] = useState({ name: '', slug: '', color: '#FF6B6B' });
+  const { confirm, confirmDialog } = useConfirmDialog();
 
   useEffect(() => { loadTags(); }, []);
 
@@ -40,7 +43,8 @@ export default function AdminTags() {
 
   const handleEdit = (tag: Tag) => { setEditingTag(tag); setFormData({ name: tag.name, slug: tag.slug, color: tag.color || '#FF6B6B' }); setShowModal(true); };
   const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除这个标签吗？')) return;
+    const tag = tags.find((item) => item.id === id);
+    if (!await confirm({ title: '删除这个标签？', description: `${tag?.name || '该标签'} 会从相关文章中移除，文章本身不会被删除。`, confirmLabel: '删除标签', dangerous: true })) return;
     try {
       const response = await fetch(`/api/tags/${id}`, { method: 'DELETE' });
       const data = await response.json();
@@ -54,17 +58,17 @@ export default function AdminTags() {
       <div className="tags-page">
         <div className="page-header">
           <h1 className="page-title">标签管理</h1>
-          <button className="btn-primary" onClick={handleAdd}><span>➕</span> 新建标签</button>
+          <button className="btn-primary" onClick={handleAdd}><AdminIcon name="tags" size={17} /> 新建标签</button>
         </div>
         {loading ? (<div className="loading-state">加载中...</div>) : (
           <div className="data-table">
             <table>
-              <thead><tr><th>标签名称</th><th>Slug</th><th style={{ width: '100px' }}>颜色</th><th>文章数</th><th>创建时间</th><th style={{ width: '150px' }}>操作</th></tr></thead>
+              <thead><tr><th>标签名称</th><th>Slug</th><th className="table-color-column">颜色</th><th>文章数</th><th>创建时间</th><th className="table-actions-column">操作</th></tr></thead>
               <tbody>
                 {tags.map((tag) => (
                   <tr key={tag.id}>
                     <td>{tag.name}</td><td>{tag.slug}</td>
-                    <td><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '24px', height: '24px', borderRadius: '4px', backgroundColor: tag.color, border: '1px solid #DEE2E6' }} /><span style={{ fontSize: '12px', color: '#6C757D' }}>{tag.color}</span></div></td>
+                    <td><div className="color-value"><input type="color" className="color-readonly small" value={tag.color} disabled aria-label={`${tag.name} 的颜色`} /><code>{tag.color}</code></div></td>
                     <td>{tag.post_count}</td><td>{new Date(tag.created_at).toLocaleDateString('zh-CN')}</td>
                     <td><button className="action-btn edit" onClick={() => handleEdit(tag)}>编辑</button><button className="action-btn delete" onClick={() => handleDelete(tag.id)}>删除</button></td>
                   </tr>
@@ -83,10 +87,10 @@ export default function AdminTags() {
                   <div className="form-group"><label>标签名称 *</label><input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required placeholder="例如: JavaScript" /></div>
                   <div className="form-group"><label>Slug *</label><input type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} required placeholder="例如: javascript" /><small>URL友好的标识符</small></div>
                   <div className="form-group"><label>颜色 *</label>
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                      <input type="color" value={formData.color} onChange={(e) => setFormData({ ...formData, color: e.target.value })} style={{ width: '60px', height: '40px', border: '2px solid #DEE2E6', borderRadius: '8px', cursor: 'pointer' }} />
-                      <input type="text" value={formData.color} onChange={(e) => setFormData({ ...formData, color: e.target.value })} pattern="^#[0-9A-Fa-f]{6}$" placeholder="#FF6B6B" style={{ flex: 1, padding: '8px 12px', border: '2px solid #DEE2E6', borderRadius: '8px', fontSize: '14px', fontFamily: 'monospace' }} />
-                      <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: formData.color, border: '2px solid #DEE2E6', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+                    <div className="color-field-row">
+                      <input className="color-picker" type="color" value={formData.color} onChange={(e) => setFormData({ ...formData, color: e.target.value })} />
+                      <input className="color-text-input" type="text" value={formData.color} onChange={(e) => setFormData({ ...formData, color: e.target.value })} pattern="^#[0-9A-Fa-f]{6}$" placeholder="#FF6B6B" />
+                      <input type="color" className="color-readonly preview" value={formData.color} disabled aria-label="当前颜色预览" />
                     </div><small>标签的显示颜色，格式为 #RRGGBB</small>
                   </div>
                   <div className="form-actions">
@@ -98,6 +102,7 @@ export default function AdminTags() {
             </div>
           </div>
         )}
+        {confirmDialog}
       </div>
     </AdminLayout>
   );

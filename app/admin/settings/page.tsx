@@ -15,51 +15,6 @@ import VectorManager from "../../../components/admin/VectorManager";
 interface SettingDetail { value: any; type: string; description: string; }
 type SettingsDetails = Record<string, SettingDetail>;
 
-const settingsStyles = `
-  .settings-page { padding: 0; }
-  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-  .page-title { font-size: 24px; font-weight: 600; color: #111827; margin: 0; }
-  .btn-primary { padding: 10px 24px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
-  .btn-primary:hover { background: #2563eb; }
-  .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
-  .message { padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; }
-  .message.success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
-  .message.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-  .settings-container { display: flex; gap: 24px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; width: 100%; }
-  .settings-tabs { width: 200px; background: #f9fafb; padding: 16px 0; border-right: 1px solid #e5e7eb; flex-shrink: 0; }
-  .tab-btn { display: flex; align-items: center; width: 100%; padding: 12px 20px; border: none; background: none; cursor: pointer; font-size: 14px; color: #6b7280; text-align: left; transition: all 0.2s; }
-  .tab-btn:hover { background: #e5e7eb; color: #111827; }
-  .tab-btn.active { background: white; color: #3b82f6; border-right: 2px solid #3b82f6; }
-  .tab-icon { margin-right: 10px; font-size: 16px; }
-  .settings-content { flex: 1; padding: 24px; width: 100%; min-width: 0; }
-  .setting-item { display: flex; flex-direction: column; padding: 20px 0; border-bottom: 1px solid #f3f4f6; gap: 12px; }
-  .setting-item:last-child { border-bottom: none; }
-  .setting-label { width: 100%; }
-  .label-text { display: block; font-size: 14px; font-weight: 500; color: #111827; margin-bottom: 6px; }
-  .label-desc { display: block; font-size: 12px; color: #6b7280; line-height: 1.5; }
-  .setting-control { width: 100%; }
-  .settings-input { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; transition: border-color 0.2s; }
-  .settings-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-  .settings-textarea { width: 100%; min-width: 0; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; resize: vertical; font-family: inherit; }
-  .settings-textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-  .settings-select { width: 100%; min-width: 0; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background: white; cursor: pointer; transition: border-color 0.2s; }
-  .settings-select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-  .toggle-switch { position: relative; display: inline-block; width: 48px; height: 24px; }
-  .toggle-switch input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #d1d5db; transition: 0.3s; border-radius: 24px; }
-  .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: 0.3s; border-radius: 50%; }
-  .toggle-switch input:checked + .toggle-slider { background-color: #3b82f6; }
-  .toggle-switch input:checked + .toggle-slider:before { transform: translateX(24px); }
-  .settings-loading { display: flex; justify-content: center; align-items: center; height: 300px; color: #6b7280; }
-  @media (max-width: 768px) {
-    .settings-container { flex-direction: column; }
-    .settings-tabs { width: 100%; display: flex; overflow-x: auto; border-right: none; border-bottom: 1px solid #e5e7eb; }
-    .tab-btn { flex-shrink: 0; white-space: nowrap; }
-    .tab-btn.active { border-right: none; border-bottom: 2px solid #3b82f6; }
-    .setting-item { flex-direction: column; gap: 10px; }
-  }
-`;
-
 export default function AdminSettings() {
   const pathname = usePathname();
   const section = pathname.startsWith('/admin/integrations') ? 'integrations' : 'site';
@@ -126,16 +81,16 @@ export default function AdminSettings() {
     if (key === "ai_provider") return (<select value={value || "openai"} onChange={(e) => handleChange(key, e.target.value)} className="settings-select"><option value="openai">OpenAI</option><option value="anthropic">Anthropic (Claude)</option><option value="deepseek">DeepSeek</option><option value="moonshot">Moonshot</option><option value="qwen">通义千问</option><option value="other">其他</option></select>);
     if (key === "ai_api_key") return <input type="password" value={value || ""} onChange={(e) => handleChange(key, e.target.value)} className="settings-input" placeholder="sk-..." />;
     if (key === "analytics_code" || key === "footer_text" || key === "ai_assistant_system_prompt" || key === "ai_assistant_welcome") return (<textarea value={value || ""} onChange={(e) => handleChange(key, e.target.value)} className="settings-textarea" rows={key === "ai_assistant_system_prompt" ? 4 : 3} />);
-    return <input style={{ width: "100%" }} type="text" value={value || ""} onChange={(e) => handleChange(key, e.target.value)} className="settings-input" />;
+    return <input type="text" value={value || ""} onChange={(e) => handleChange(key, e.target.value)} className="settings-input" />;
   };
 
   const allTabs = [
-    { id: "basic", name: "站点与外观", icon: "◆" },
-    { id: "projects", name: "项目展示", icon: "🚀" },
-    { id: "comments", name: "评论设置", icon: "💬" }, { id: "users", name: "用户设置", icon: "👥" },
-    { id: "upload", name: "上传设置", icon: "↑" },
-    { id: "ai", name: "AI 设置", icon: "🤖" }, { id: "vector", name: "向量搜索", icon: "🔍" },
-    { id: "mcp", name: "MCP 设置", icon: "🔌" },
+    { id: "basic", name: "站点与外观" },
+    { id: "projects", name: "项目展示" },
+    { id: "comments", name: "评论设置" }, { id: "users", name: "用户设置" },
+    { id: "upload", name: "上传设置" },
+    { id: "ai", name: "AI 设置" }, { id: "vector", name: "向量搜索" },
+    { id: "mcp", name: "MCP 设置" },
   ];
   const tabs = allTabs.filter((tab) => section === 'integrations'
     ? ['ai', 'vector', 'mcp'].includes(tab.id)
@@ -173,7 +128,6 @@ export default function AdminSettings() {
 
   return (
     <AdminLayout>
-      <style dangerouslySetInnerHTML={{ __html: settingsStyles }} />
       <div className="settings-page">
         <div className="page-header">
           <div><p className="page-eyebrow">{section === 'integrations' ? '系统能力' : '运营配置'}</p><h1 className="page-title">{section === 'integrations' ? 'AI / 向量 / MCP' : '站点设置'}</h1><p className="page-description">{section === 'integrations' ? '集中管理模型、检索与外部工具连接。' : '管理站点外观、内容展示、评论和上传策略。'}</p></div>
@@ -181,7 +135,7 @@ export default function AdminSettings() {
         </div>
         <div className="settings-container">
           <div className="settings-tabs">
-            {tabs.map((tab) => (<button key={tab.id} className={`tab-btn ${activeTab === tab.id ? "active" : ""}`} onClick={() => setActiveTab(tab.id)}><span className="tab-icon">{tab.icon}</span><span className="tab-name">{tab.name}</span></button>))}
+            {tabs.map((tab) => (<button key={tab.id} className={`tab-btn ${activeTab === tab.id ? "active" : ""}`} onClick={() => setActiveTab(tab.id)}><span className="tab-name">{tab.name}</span></button>))}
           </div>
           <div className={`settings-content ${activeTab === "vector" || activeTab === "mcp" ? "grid-layout" : ""}`}>
             {activeTab === "ai" ? (<AISettings settings={settings} onChange={handleChange} />)

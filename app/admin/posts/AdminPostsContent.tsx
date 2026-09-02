@@ -8,6 +8,7 @@ import AdminLayout from '../../../components/admin/AdminLayout';
 import { authJson } from '../../../components/admin/authFetch';
 import { toast } from '../../../components/admin/Toast';
 import ConfirmDialog from '../../../components/admin/ConfirmDialog';
+import AdminIcon from '../../../components/admin/AdminIcon';
 
 interface Post {
   id: number;
@@ -159,13 +160,13 @@ export default function AdminPostsContent({
         <div className="page-header">
           <h1 className="page-title">文章管理</h1>
           <button className="btn-primary" onClick={() => router.push('/admin/posts/new')}>
-            <span>➕</span> 新建文章
+            <AdminIcon name="posts" size={17} /> 新建文章
           </button>
         </div>
 
         <div className="filters">
           <form className="search-box-admin" onSubmit={handleSearchSubmit}>
-            <span className="search-icon-admin">🔍</span>
+            <span className="search-icon-admin" aria-hidden="true">⌕</span>
             <input type="text" placeholder="搜索文章标题或作者..." value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)} className="search-input-admin" />
             <button type="submit" className="search-submit-admin">搜索</button>
@@ -200,9 +201,9 @@ export default function AdminPostsContent({
           <table>
             <thead>
               <tr>
-                <th style={{ width: 40 }}><input type="checkbox" aria-label="选择本页全部文章" checked={posts.length > 0 && selectedIds.length === posts.length} onChange={(event) => setSelectedIds(event.target.checked ? posts.map((post) => post.id) : [])} /></th>
-                <th style={{ width: '40%' }}>标题</th><th>作者</th><th>发布日期</th>
-                <th>浏览量</th><th>状态</th><th>标签</th><th style={{ width: '150px' }}>操作</th>
+                <th className="table-select-column"><input type="checkbox" aria-label="选择本页全部文章" checked={posts.length > 0 && selectedIds.length === posts.length} onChange={(event) => setSelectedIds(event.target.checked ? posts.map((post) => post.id) : [])} /></th>
+                <th className="table-title-column">标题</th><th>作者</th><th>发布日期</th>
+                <th>浏览量</th><th>状态</th><th>标签</th><th className="table-actions-column">操作</th>
               </tr>
             </thead>
             <tbody>

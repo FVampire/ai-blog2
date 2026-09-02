@@ -5,6 +5,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 import AdminLayout from '../../../components/admin/AdminLayout';
+import AdminIcon from '../../../components/admin/AdminIcon';
+import { useConfirmDialog } from '../../../components/admin/ConfirmDialog';
 import EnhancedImageUpload from '../../../components/EnhancedImageUpload';
 import { toast } from '../../../components/admin/Toast';
 
@@ -51,6 +53,7 @@ export default function AdminProjects() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const { confirm, confirmDialog } = useConfirmDialog();
 
   useEffect(() => {
     loadProjects();
@@ -170,7 +173,8 @@ export default function AdminProjects() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除此项目？关联的文章链接也会被移除。')) return;
+    const project = projects.find((item) => item.id === id);
+    if (!await confirm({ title: '删除这个项目？', description: `${project?.name || '该项目'} 会从项目展示中移除，关联的文章链接也会解除。`, confirmLabel: '删除项目', dangerous: true })) return;
     try {
       const res = await fetch(`/api/admin/projects/${id}`, { method: 'DELETE' });
       const data = await res.json();
@@ -196,7 +200,7 @@ export default function AdminProjects() {
         <div className="page-header">
           <h1 className="page-title">项目管理</h1>
           <button className="btn-primary" onClick={openCreate}>
-            <span>➕</span> 新建项目
+            <AdminIcon name="projects" size={17} /> 新建项目
           </button>
         </div>
 
@@ -214,30 +218,30 @@ export default function AdminProjects() {
                   <th>精选</th>
                   <th>文章数</th>
                   <th>排序</th>
-                  <th style={{ width: '160px' }}>操作</th>
+                  <th className="table-actions-column wide">操作</th>
                 </tr>
               </thead>
               <tbody>
                 {projects.map((p) => (
                   <tr key={p.id}>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="project-name-cell">
                         {p.imageUrl && (
-                          <img src={p.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }} />
+                          <img src={p.imageUrl} alt="" className="project-admin-thumb" />
                         )}
                         {p.name}
                       </div>
                     </td>
-                    <td><code style={{ fontSize: 12 }}>{p.slug}</code></td>
+                    <td><code className="table-code">{p.slug}</code></td>
                     <td>
-                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                      <div className="table-chip-list">
                         {(p.techStack || []).slice(0, 3).map((t) => (
-                          <span key={t} style={{ fontSize: 11, padding: '2px 6px', background: '#e5e7eb', borderRadius: 4 }}>{t}</span>
+                          <span key={t} className="table-chip">{t}</span>
                         ))}
                       </div>
                     </td>
                     <td>
-                      <span style={{ color: p.status === 'active' ? '#059669' : '#6b7280' }}>
+                      <span className={`project-status ${p.status}`}>
                         {p.status === 'active' ? '展示中' : '已归档'}
                       </span>
                     </td>
@@ -245,7 +249,7 @@ export default function AdminProjects() {
                     <td>{p.postCount || 0}</td>
                     <td>{p.sortOrder}</td>
                     <td>
-                      <Link href={`/projects/${p.slug}`} target="_blank" className="action-btn edit" style={{ marginRight: 4 }}>预览</Link>
+                      <Link href={`/projects/${p.slug}`} target="_blank" className="action-btn edit">预览</Link>
                       <button className="action-btn edit" onClick={() => openEdit(p)}>编辑</button>
                       <button className="action-btn delete" onClick={() => handleDelete(p.id)}>删除</button>
                     </td>
@@ -346,7 +350,7 @@ export default function AdminProjects() {
                       </select>
                     </div>
                     <div className="form-group">
-                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                      <label className="inline-checkbox-label">
                         <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
                         精选项目（首页展示）
                       </label>
@@ -381,6 +385,7 @@ export default function AdminProjects() {
             </div>
           </div>
         )}
+        {confirmDialog}
       </div>
     </AdminLayout>
   );

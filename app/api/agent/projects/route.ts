@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAgentAuth } from '@/lib/auth-middleware-app';
 import { generateSlug } from '@/lib/agent-utils';
+import { recordAuditEvent } from '@/lib/audit-log';
 import { ProjectRepository } from '@/lib/repositories/ProjectRepository';
+
+const DEFAULT_AUTHOR_ID = parseInt(process.env.AGENT_AUTHOR_ID || '1', 10);
 
 /**
  * Agent API: Project management
@@ -70,6 +73,15 @@ export async function POST(request: NextRequest) {
       demoUrl,
       imageUrl,
       featured,
+    });
+
+    await recordAuditEvent({
+      request,
+      user: { userId: DEFAULT_AUTHOR_ID, username: 'Agent', email: '', role: 'agent' },
+      action: 'agent.project.create',
+      resourceType: 'project',
+      resourceId: project.id,
+      metadata: { name: project.name, slug: project.slug },
     });
 
     const siteUrl = process.env.SITE_URL || '';
