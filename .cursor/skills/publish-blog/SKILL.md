@@ -24,6 +24,7 @@ Read from project `.env` or environment:
 |----------|---------|
 | `SITE_URL` | Blog base URL (default `http://localhost:3000`) |
 | `AGENT_API_KEY` | API key for Agent endpoints |
+| `COS_SECRET_ID` / `COS_SECRET_KEY` / `COS_BUCKET` / `COS_REGION` | Tencent COS; required for uploads |
 
 ## Publish a Blog Post
 
@@ -51,7 +52,7 @@ curl -X POST "${SITE_URL}/api/agent/publish" \
 | `tags` | No | Tag names (auto-created if missing) |
 | `status` | No | `published` (default) or `draft` |
 | `slug` | No | URL slug (auto-generated from title) |
-| `imageUrl` | No | Cover image path e.g. `/uploads/xxx.jpg` |
+| `imageUrl` | No | Cover image URL from `/api/agent/upload`, or `/uploads/xxx.jpg` |
 | `projectSlug` | No | Link post to a project showcase |
 | `seriesSlug` | No | Append to a public series (`/series/<slug>`) |
 

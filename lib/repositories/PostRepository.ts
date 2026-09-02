@@ -3,6 +3,7 @@ import { In } from 'typeorm';
 import { Post } from '../entities/Post';
 import { PostTag } from '../entities/PostTag';
 import { Tag } from '../entities/Tag';
+import { exposeMediaUrl, storeMediaUrl } from '../media-url';
 import { BaseRepository } from './BaseRepository';
 
 interface PostDTO {
@@ -59,7 +60,7 @@ function toDTO(post: Post, authorName?: string, tags?: TagDTO[]): PostDTO {
     slug: post.slug,
     excerpt: post.excerpt || '',
     content: post.content || '',
-    imageUrl: post.imageUrl || '',
+    imageUrl: exposeMediaUrl(post.imageUrl),
     status: post.status,
     views: post.views,
     authorId: post.authorId || 0,
@@ -162,7 +163,7 @@ export class PostRepository extends BaseRepository {
       title: row.title,
       slug: row.slug,
       excerpt: row.excerpt,
-      imageUrl: row.image_url || '',
+      imageUrl: exposeMediaUrl(row.image_url),
       views: row.views,
       authorName: row.author_name,
       publishedAt: row.published_at,
@@ -288,7 +289,7 @@ export class PostRepository extends BaseRepository {
       slug: data.slug,
       excerpt: data.excerpt || '',
       content: data.content || '',
-      imageUrl: data.imageUrl || '',
+      imageUrl: storeMediaUrl(data.imageUrl),
       status: data.status,
       authorId: data.authorId,
       categoryId: data.categoryId ?? null,
@@ -340,7 +341,7 @@ export class PostRepository extends BaseRepository {
     if (data.slug !== undefined) post.slug = data.slug;
     if (data.excerpt !== undefined) post.excerpt = data.excerpt;
     if (data.content !== undefined) post.content = data.content;
-    if (data.imageUrl !== undefined) post.imageUrl = data.imageUrl;
+    if (data.imageUrl !== undefined) post.imageUrl = storeMediaUrl(data.imageUrl);
     if (data.categoryId !== undefined) post.categoryId = data.categoryId;
     if (data.seriesId !== undefined) post.seriesId = data.seriesId;
     if (data.status !== undefined) {
@@ -561,7 +562,7 @@ export class PostRepository extends BaseRepository {
       title: row.title,
       slug: row.slug,
       excerpt: row.excerpt,
-      imageUrl: row.image_url || '',
+      imageUrl: exposeMediaUrl(row.image_url),
       views: row.views,
       authorName: row.author_name,
       publishedAt: row.published_at,

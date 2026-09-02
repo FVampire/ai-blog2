@@ -14,6 +14,7 @@ import SafeImage from "../../../components/SafeImage";
 import TableOfContents from "../../../components/TableOfContents";
 import { formatDate } from "../../../lib/format";
 import { articleRehypePlugins } from "../../../lib/markdown/plugins";
+import { rewriteMarkdownMediaUrls } from "../../../lib/media-url";
 import { PostRepository } from "../../../lib/repositories/PostRepository";
 
 const SITE_NAME = "五月的火";
@@ -199,7 +200,7 @@ export default async function PostPage({
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={articleRehypePlugins}
                     >
-                      {post.content}
+                      {rewriteMarkdownMediaUrls(post.content)}
                     </ReactMarkdown>
                   </div>
 

@@ -8,7 +8,7 @@ type SafeImageProps = ImageProps & { fallbackSrc?: string };
 
 export default function SafeImage({
   src,
-  fallbackSrc = "/uploads/n8n-workflow-automation-series.webp",
+  fallbackSrc = "/avatar-ai-256.png",
   alt,
   ...props
 }: SafeImageProps) {

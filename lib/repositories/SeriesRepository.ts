@@ -1,5 +1,6 @@
 import { generateSlug } from '../agent-utils';
 import { query } from '../db';
+import { exposeMediaUrl, storeMediaUrl } from '../media-url';
 import { BaseRepository } from './BaseRepository';
 
 export interface SeriesPost {
@@ -32,7 +33,7 @@ function mapSeriesRow(row: Record<string, unknown>, posts: SeriesPost[] = []): S
     slug: String(row.slug),
     title: String(row.title),
     description: String(row.description || ''),
-    coverUrl: String(row.cover_url || ''),
+    coverUrl: exposeMediaUrl(String(row.cover_url || '')),
     createdAt: row.created_at as Date,
     updatedAt: row.updated_at as Date,
     posts,
@@ -130,7 +131,7 @@ export class SeriesRepository extends BaseRepository {
           title: String(current.title),
           slug: String(current.slug),
           excerpt: String(current.excerpt || ''),
-          imageUrl: String(current.image_url || ''),
+          imageUrl: exposeMediaUrl(String(current.image_url || '')),
           status: current.status as SeriesPost['status'],
           publishedAt: (current.published_at as Date | null) || null,
         });
@@ -155,7 +156,7 @@ export class SeriesRepository extends BaseRepository {
       `INSERT INTO post_series (slug, title, description, cover_url)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [slug, data.title.trim(), data.description || '', data.coverUrl || ''],
+      [slug, data.title.trim(), data.description || '', storeMediaUrl(data.coverUrl)],
     );
     return mapSeriesRow(result.rows[0], []);
   }
@@ -177,7 +178,7 @@ export class SeriesRepository extends BaseRepository {
         slug,
         data.title?.trim() || current.title,
         data.description === undefined ? current.description : data.description,
-        data.coverUrl === undefined ? current.coverUrl : data.coverUrl,
+        data.coverUrl === undefined ? storeMediaUrl(current.coverUrl) : storeMediaUrl(data.coverUrl),
         id,
       ],
     );

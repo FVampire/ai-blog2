@@ -1,9 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-
+import { listMediaFolder, deleteMediaFile as removeMediaFile } from '../media-library';
 import { BaseRepository } from './BaseRepository';
 
-// 媒体文件接口
 export interface MediaFile {
   filename: string;
   url: string;
@@ -13,7 +10,6 @@ export interface MediaFile {
   extension: string;
 }
 
-// 分页结果接口
 export interface MediaPaginationResult {
   data: MediaFile[];
   total: number;
@@ -23,188 +19,42 @@ export interface MediaPaginationResult {
 }
 
 export class MediaRepository extends BaseRepository {
-  private static readonly UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads');
   private static readonly ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-  private static readonly ALLOWED_FILE_EXTENSIONS = [
-    ...MediaRepository.ALLOWED_IMAGE_EXTENSIONS,
-    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.zip', '.rar',
-  ];
 
-  /**
-   * 获取上传目录路径
-   */
-  private static getUploadsDir(): string {
-    return this.UPLOADS_DIR;
-  }
-
-  /**
-   * 确保上传目录存在
-   */
-  private static async ensureUploadsDir(): Promise<void> {
-    const uploadsDir = this.getUploadsDir();
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-  }
-
-  /**
-   * 安全地处理文件名，防止路径遍历攻击
-   */
-  private static sanitizeFilename(filename: string): string {
-    return path.basename(filename);
-  }
-
-  /**
-   * 检查文件扩展名是否允许
-   */
-  private static isAllowedExtension(filename: string): boolean {
-    const ext = path.extname(filename).toLowerCase();
-    return this.ALLOWED_FILE_EXTENSIONS.includes(ext);
-  }
-
-  /**
-   * 获取媒体文件列表
-   */
   static async getMediaFiles(options: {
     page?: number;
     limit?: number;
     search?: string;
   } = {}): Promise<MediaPaginationResult> {
     const { page = 1, limit = 20, search } = options;
-
-    try {
-      await this.ensureUploadsDir();
-      const uploadsDir = this.getUploadsDir();
-
-      const files = fs.readdirSync(uploadsDir);
-
-      let mediaFiles = files
-        .filter(file => {
-          if (!this.isAllowedExtension(file)) return false;
-          if (search && !file.toLowerCase().includes(search.toLowerCase())) return false;
-          return true;
-        })
-        .map(file => {
-          const filePath = path.join(uploadsDir, file);
-          const stats = fs.statSync(filePath);
-          const ext = path.extname(file).toLowerCase();
-
-          return {
-            filename: file,
-            url: `/uploads/${file}`,
-            size: stats.size,
-            uploadedAt: stats.birthtime,
-            modifiedAt: stats.mtime,
-            extension: ext,
-          };
-        })
-        .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
-
-      const total = mediaFiles.length;
-      const offset = (page - 1) * limit;
-      mediaFiles = mediaFiles.slice(offset, offset + limit);
-
-      return {
-        data: mediaFiles,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      };
-    } catch (error) {
-      console.error('Get media files error:', error);
-      throw new Error(`获取媒体文件列表失败: ${error instanceof Error ? error.message : '未知错误'}`);
-    }
-  }
-
-  /**
-   * 删除媒体文件
-   */
-  static async deleteMediaFile(filename: string): Promise<boolean> {
-    try {
-      const safeFilename = this.sanitizeFilename(filename);
-      const filePath = path.join(this.getUploadsDir(), safeFilename);
-
-      await this.ensureUploadsDir();
-
-      if (!fs.existsSync(filePath)) {
-        throw new Error('文件不存在');
-      }
-
-      const uploadsDir = this.getUploadsDir();
-      const relativePath = path.relative(uploadsDir, filePath);
-      if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-        throw new Error('非法文件路径');
-      }
-
-      fs.unlinkSync(filePath);
+    const listing = await listMediaFolder('');
+    const images = listing.images.filter((image) => {
+      if (search && !image.filename.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
-    } catch (error) {
-      console.error('Delete media file error:', error);
-      throw new Error(`删除媒体文件失败: ${error instanceof Error ? error.message : '未知错误'}`);
-    }
+    });
+    const total = images.length;
+    const offset = (page - 1) * limit;
+    return {
+      data: images.slice(offset, offset + limit).map((image) => ({
+        filename: image.filename,
+        url: image.url,
+        size: image.size,
+        uploadedAt: image.uploadedAt,
+        modifiedAt: image.modifiedAt,
+        extension: image.extension,
+      })),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
-  /**
-   * 获取媒体文件信息
-   */
-  static async getMediaFileInfo(filename: string): Promise<MediaFile | null> {
-    try {
-      const safeFilename = this.sanitizeFilename(filename);
-      const filePath = path.join(this.getUploadsDir(), safeFilename);
-
-      await this.ensureUploadsDir();
-
-      if (!fs.existsSync(filePath)) return null;
-
-      const uploadsDir = this.getUploadsDir();
-      const relativePath = path.relative(uploadsDir, filePath);
-      if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-        throw new Error('非法文件路径');
-      }
-
-      const stats = fs.statSync(filePath);
-      const ext = path.extname(safeFilename).toLowerCase();
-
-      return {
-        filename: safeFilename,
-        url: `/uploads/${safeFilename}`,
-        size: stats.size,
-        uploadedAt: stats.birthtime,
-        modifiedAt: stats.mtime,
-        extension: ext,
-      };
-    } catch (error) {
-      console.error('Get media file info error:', error);
-      throw new Error(`获取媒体文件信息失败: ${error instanceof Error ? error.message : '未知错误'}`);
-    }
+  static async deleteMediaFile(filename: string): Promise<boolean> {
+    await removeMediaFile(`uploads/${filename.split(/[\\/]/).pop()}`);
+    return true;
   }
 
-  /**
-   * 检查文件是否存在
-   */
-  static async mediaFileExists(filename: string): Promise<boolean> {
-    try {
-      const safeFilename = this.sanitizeFilename(filename);
-      const filePath = path.join(this.getUploadsDir(), safeFilename);
-      await this.ensureUploadsDir();
-      return fs.existsSync(filePath);
-    } catch (error) {
-      console.error('Check media file exists error:', error);
-      return false;
-    }
-  }
-
-  /**
-   * 获取允许的文件扩展名列表
-   */
-  static getAllowedExtensions(): string[] {
-    return [...this.ALLOWED_FILE_EXTENSIONS];
-  }
-
-  /**
-   * 获取允许的图片扩展名列表
-   */
   static getAllowedImageExtensions(): string[] {
     return [...this.ALLOWED_IMAGE_EXTENSIONS];
   }

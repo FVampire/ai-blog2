@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import fs from 'fs';
-
 import { recordAuditEvent } from '@/lib/audit-log';
 import { requireRoles, isAuthError } from '@/lib/auth-middleware-app';
-import { MediaLibraryError, resolveMediaFile } from '@/lib/media-library';
+import { deleteMediaFile, MediaLibraryError } from '@/lib/media-library';
 import { countPostMediaReferences } from '@/lib/media-post-references';
 
 export async function DELETE(request: NextRequest) {
@@ -21,8 +19,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const target = resolveMediaFile(mediaPath || `uploads/${filename}`);
-    const references = await countPostMediaReferences(target.url);
+    const targetPath = mediaPath || `uploads/${filename}`;
+    const references = await countPostMediaReferences(
+      targetPath.startsWith('/') ? targetPath : `/${targetPath}`,
+    );
     if (references > 0) {
       return NextResponse.json(
         { success: false, message: `有 ${references} 篇文章正在使用这张图片，不能删除`, code: 'FILE_IN_USE' },
@@ -30,7 +30,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    fs.unlinkSync(target.absolutePath);
+    const target = await deleteMediaFile(targetPath);
     await recordAuditEvent({
       request,
       user: authResult.user,

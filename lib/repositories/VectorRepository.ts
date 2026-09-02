@@ -11,6 +11,7 @@ import {
   getSearchWeights,
   getSimilarityThreshold,
 } from '../embedding';
+import { exposeMediaUrl } from '../media-url';
 
 // 搜索结果接口
 export interface VectorSearchResult {
@@ -176,7 +177,7 @@ export class VectorRepository extends BaseRepository {
         title: row.title,
         slug: row.slug,
         excerpt: row.excerpt,
-        imageUrl: row.image_url,
+        imageUrl: exposeMediaUrl(row.image_url),
         authorName: row.author_name,
         publishedAt: row.published_at,
         views: row.views,

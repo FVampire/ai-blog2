@@ -1,3 +1,4 @@
+import { exposeMediaUrl, storeMediaUrl } from '../media-url';
 import { BaseRepository } from './BaseRepository';
 import { Project } from '../entities/Project';
 
@@ -36,7 +37,7 @@ function toDTO(project: Project, postCount?: number): ProjectDTO {
     techStack: project.techStack || [],
     repoUrl: project.repoUrl,
     demoUrl: project.demoUrl,
-    imageUrl: project.imageUrl,
+    imageUrl: exposeMediaUrl(project.imageUrl),
     status: project.status,
     featured: project.featured,
     sortOrder: project.sortOrder,
@@ -84,7 +85,7 @@ export class ProjectRepository extends BaseRepository {
       techStack: row.tech_stack as string[] || [],
       repoUrl: row.repo_url as string | undefined,
       demoUrl: row.demo_url as string | undefined,
-      imageUrl: row.image_url as string | undefined,
+      imageUrl: exposeMediaUrl(row.image_url as string | undefined) || undefined,
       status: row.status as 'active' | 'archived',
       featured: row.featured as boolean,
       sortOrder: row.sort_order as number,
@@ -124,7 +125,7 @@ export class ProjectRepository extends BaseRepository {
       title: row.title as string,
       slug: row.slug as string,
       excerpt: row.excerpt as string | undefined,
-      imageUrl: row.image_url as string | undefined,
+      imageUrl: exposeMediaUrl(row.image_url as string | undefined) || undefined,
       publishedAt: row.published_at as Date | undefined,
     }));
   }
@@ -152,7 +153,7 @@ export class ProjectRepository extends BaseRepository {
       techStack: data.techStack || [],
       repoUrl: data.repoUrl,
       demoUrl: data.demoUrl,
-      imageUrl: data.imageUrl,
+      imageUrl: storeMediaUrl(data.imageUrl),
       featured: data.featured || false,
       sortOrder: data.sortOrder || 0,
       status: 'active',
@@ -215,7 +216,7 @@ export class ProjectRepository extends BaseRepository {
       techStack: row.tech_stack as string[] || [],
       repoUrl: row.repo_url as string | undefined,
       demoUrl: row.demo_url as string | undefined,
-      imageUrl: row.image_url as string | undefined,
+      imageUrl: exposeMediaUrl(row.image_url as string | undefined) || undefined,
       status: row.status as 'active' | 'archived',
       featured: row.featured as boolean,
       sortOrder: row.sort_order as number,
@@ -252,7 +253,7 @@ export class ProjectRepository extends BaseRepository {
     if (data.techStack !== undefined) project.techStack = data.techStack;
     if (data.repoUrl !== undefined) project.repoUrl = data.repoUrl;
     if (data.demoUrl !== undefined) project.demoUrl = data.demoUrl;
-    if (data.imageUrl !== undefined) project.imageUrl = data.imageUrl;
+    if (data.imageUrl !== undefined) project.imageUrl = storeMediaUrl(data.imageUrl);
     if (data.featured !== undefined) project.featured = data.featured;
     if (data.sortOrder !== undefined) project.sortOrder = data.sortOrder;
     if (data.status !== undefined) project.status = data.status;

@@ -25,6 +25,10 @@ DATABASE_URL=postgresql://用户名:密码@localhost:5432/blog_db
 JWT_SECRET=随便写一个长字符串
 AGENT_API_KEY=你的agent密钥
 SITE_URL=http://localhost:3000
+COS_SECRET_ID=你的COS SecretId
+COS_SECRET_KEY=你的COS SecretKey
+COS_BUCKET=桶名-AppId
+COS_REGION=ap-guangzhou
 ```
 
 初始化数据库（首次）：
@@ -35,6 +39,19 @@ psql -U postgres -d blog_db -f db/schema.sql
 
 # 方式 B：只跑增量迁移（schema 已存在时）
 pnpm migrate
+```
+
+媒体文件走腾讯云 COS，本地 `pnpm dev` 和生产环境读写同一个桶。在 COS 控制台创建存储桶后：
+
+1. 桶名格式为 `名称-AppId`，地域写入 `COS_REGION`。
+2. 给媒体使用独立子账号，只授权该桶的对象读写，不要复用翻译密钥。
+3. 需要能被浏览器和微信直接打开：要么上传时带 `public-read` ACL，要么给 `uploads/*` 配公共读策略。
+4. 可选：绑定已备案自定义域名到 `COS_PUBLIC_BASE_URL`，或前面再挂腾讯云 CDN。
+
+已有本地 `public/uploads` 文件可一次性迁到 COS：
+
+```bash
+node scripts/migrate-uploads-to-cos.mjs
 ```
 
 启动：

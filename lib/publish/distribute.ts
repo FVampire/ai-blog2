@@ -1,7 +1,5 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
-
 import { SettingsRepository } from '../repositories/SettingsRepository';
+import { publicMediaUrl, rewriteMarkdownMediaUrls } from '../media-url';
 import { absoluteUrl, siteBaseUrl } from '../site-url';
 import { renderMarkdown } from '../tools/markdown/render';
 import { createDistributionJob, hasSuccessfulJob } from './jobs';
@@ -33,6 +31,11 @@ interface ChannelConfig {
   feishuEnabled: boolean;
   feishuWebhookUrl: string;
   feishuSecret: string;
+}
+
+function publishedMediaUrl(imageUrl: string): string {
+  const exposed = publicMediaUrl(imageUrl);
+  return /^https?:\/\//i.test(exposed) ? exposed : absoluteUrl(exposed);
 }
 
 function flag(value: unknown): boolean {
@@ -131,7 +134,7 @@ async function sendDiscord(config: ChannelConfig, post: DistributePost, url: str
       title: post.title,
       description: post.excerpt || '',
       url,
-      image: post.imageUrl ? { url: absoluteUrl(post.imageUrl) } : undefined,
+      image: post.imageUrl ? { url: publishedMediaUrl(post.imageUrl) } : undefined,
     }],
   };
   try {
@@ -153,7 +156,7 @@ async function sendGenericWebhook(config: ChannelConfig, post: DistributePost, u
       slug: post.slug,
       excerpt: post.excerpt,
       url,
-      coverUrl: post.imageUrl ? absoluteUrl(post.imageUrl) : '',
+      coverUrl: post.imageUrl ? publishedMediaUrl(post.imageUrl) : '',
       tags: post.tags.map((tag) => tag.name),
     },
   };
@@ -189,19 +192,10 @@ async function sendFeishu(config: ChannelConfig, post: DistributePost, url: stri
 async function uploadWechatImage(accessToken: string, imageUrl: string): Promise<string | null> {
   if (!imageUrl) return null;
   try {
-    const localPath = imageUrl.startsWith('/uploads/')
-      ? path.join(process.cwd(), 'public', imageUrl.replace(/^\//, ''))
-      : '';
-    let bytes: Buffer;
-    let filename = 'cover.jpg';
-    if (localPath) {
-      bytes = await readFile(localPath);
-      filename = path.basename(localPath);
-    } else {
-      const remote = await fetch(absoluteUrl(imageUrl));
-      if (!remote.ok) return null;
-      bytes = Buffer.from(await remote.arrayBuffer());
-    }
+    const remote = await fetch(publishedMediaUrl(imageUrl));
+    if (!remote.ok) return null;
+    const bytes = Buffer.from(await remote.arrayBuffer());
+    const filename = imageUrl.split('/').pop()?.split('?')[0] || 'cover.jpg';
     const form = new FormData();
     form.append('media', new Blob([new Uint8Array(bytes)]), filename);
     const response = await fetch(
@@ -234,7 +228,10 @@ async function sendWechatDraft(config: ChannelConfig, post: DistributePost, copy
       return;
     }
 
-    const html = await renderMarkdown(post.content || post.excerpt || post.title, { allowHtml: false, sanitize: true });
+    const html = await renderMarkdown(
+      rewriteMarkdownMediaUrls(post.content || post.excerpt || post.title),
+      { allowHtml: false, sanitize: true },
+    );
     const thumbMediaId = await uploadWechatImage(tokenData.access_token, post.imageUrl);
     if (!thumbMediaId) {
       await record(post.id, 'wechat', 'needs_manual', { ...copy, html }, undefined, '封面未能上传到公众号素材库，草稿需要 thumb_media_id');
@@ -287,7 +284,7 @@ export async function distributePublishedPost(post: DistributePost): Promise<voi
   if (!config.enabled) return;
 
   const url = `${siteBaseUrl()}/posts/${post.slug}`;
-  const coverUrl = post.imageUrl ? absoluteUrl(post.imageUrl) : '';
+  const coverUrl = post.imageUrl ? publishedMediaUrl(post.imageUrl) : '';
   let copies = buildSocialCopies(post, url, coverUrl);
   copies = await maybeRewriteSocialCopy(copies, post);
 
