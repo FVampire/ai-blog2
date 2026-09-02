@@ -28,6 +28,8 @@ export interface IpProviderResult {
   cached: boolean;
   durationMs: number;
   data: IpLocation | null;
+  noResult?: boolean;
+  message?: string;
   error?: string;
 }
 
@@ -61,6 +63,23 @@ function messageFrom(error: unknown): string {
   if (error instanceof Error && error.name === 'AbortError') return '数据源请求超时';
   if (error instanceof Error && error.message) return error.message;
   return '数据源请求失败';
+}
+
+function amapFailureMessage(raw: Record<string, unknown>): string {
+  const code = String(raw.infocode ?? '');
+  const info = stringValue(raw.info);
+  const messages: Record<string, string> = {
+    '10001': '高德 Key 无效或已过期，请检查 AMAP_WEB_SERVICE_KEY',
+    '10002': '高德 Key 未开通 IP 定位服务或接口不可用',
+    '10003': '高德 API 当日调用量已超限',
+    '10004': '高德 API 请求过于频繁，请稍后重试',
+    '10005': '高德 Key 的 IP 白名单不包含当前服务器出口 IP',
+    '10007': '高德数字签名校验失败，请检查 Key 的签名设置',
+    '10009': '高德 Key 平台不匹配：请使用“Web服务”类型 Key，不要使用“Web端（JS API）”Key',
+    '10012': '高德 Key 权限不足，IP 定位服务被拒绝',
+  };
+  const message = messages[code] || info || '高德 IP 定位查询失败';
+  return code && code !== 'undefined' ? `${message}（${info || 'ERROR'} / ${code}）` : message;
 }
 
 function getAmapKey(): string {
@@ -200,12 +219,18 @@ export async function lookupAmapIp(input: string): Promise<IpProviderResult> {
     url.searchParams.set('output', 'JSON');
     const raw = await fetchJson(url);
     if (String(raw.status) !== '1' || String(raw.infocode) !== '10000') {
-      throw new Error(stringValue(raw.info) || '高德 IP 定位查询失败');
+      throw new Error(amapFailureMessage(raw));
     }
 
     const province = stringValue(raw.province);
     const city = stringValue(raw.city);
-    if (!province && !city) throw new Error('高德未返回国内城市信息');
+    if (!province && !city) {
+      return {
+        provider: 'amap', configured: true, success: true, cached: false,
+        durationMs: Date.now() - startedAt, data: null, noResult: true,
+        message: '高德请求成功，但没有定位到省市。公共 DNS、Anycast、国外 IP 或高德暂未收录的 IP 可能没有城市级结果；请使用自动模式回退到 ipwho.is。',
+      };
+    }
 
     const data: IpLocation = {
       ip,

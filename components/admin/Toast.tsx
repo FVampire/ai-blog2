@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 
+import styles from './Toast.module.css';
+
 export type ToastType = 'success' | 'error';
 
 interface ToastItem {
@@ -12,7 +14,8 @@ interface ToastItem {
 
 type Listener = (items: ToastItem[]) => void;
 
-const AUTO_DISMISS_MS = 3000;
+const SUCCESS_DISMISS_MS = 3000;
+const ERROR_DISMISS_MS = 6000;
 
 const listeners = new Set<Listener>();
 let items: ToastItem[] = [];
@@ -34,7 +37,10 @@ function push(type: ToastType, message: string) {
   const id = nextId++;
   items = [...items, { id, type, message }];
   emit();
-  window.setTimeout(() => dismiss(id), AUTO_DISMISS_MS);
+  window.setTimeout(
+    () => dismiss(id),
+    type === 'error' ? ERROR_DISMISS_MS : SUCCESS_DISMISS_MS,
+  );
 }
 
 export const toast = {
@@ -57,14 +63,21 @@ export default function ToastContainer() {
   if (list.length === 0) return null;
 
   return (
-    <div className="admin-toast-stack">
+    <div className={styles.stack} aria-label="系统通知">
       {list.map((item) => (
-        <div key={item.id} className={`admin-toast admin-toast-${item.type}`} role="status">
-          <span className="admin-toast-icon">{item.type === 'success' ? '✓' : '!'}</span>
-          <span className="admin-toast-message">{item.message}</span>
+        <div
+          key={item.id}
+          className={`${styles.toast} ${item.type === 'success' ? styles.success : styles.error}`}
+          role={item.type === 'error' ? 'alert' : 'status'}
+          aria-atomic="true"
+        >
+          <span className={styles.icon} aria-hidden="true">
+            {item.type === 'success' ? '✓' : '!'}
+          </span>
+          <span className={styles.message}>{item.message}</span>
           <button
             type="button"
-            className="admin-toast-close"
+            className={styles.close}
             onClick={() => dismiss(item.id)}
             aria-label="关闭提示"
           >

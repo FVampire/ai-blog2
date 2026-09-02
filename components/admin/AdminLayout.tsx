@@ -5,8 +5,8 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 
-import { authJson, clearAdminCredentials } from './authFetch';
 import AdminIcon, { AdminIconName } from './AdminIcon';
+import { authJson, clearAdminCredentials } from './authFetch';
 import ToastContainer from './Toast';
 
 interface AdminLayoutProps {
@@ -52,7 +52,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
     label: '系统',
     items: [
       { href: '/admin/agent', label: 'Agent 控制台', icon: 'agent', roles: ['admin'] },
-      { href: '/admin/tools/ip-lookup', label: 'IP 城市查询', icon: 'tools', roles: ['admin'] },
+      { href: '/admin/tools', label: '管理员工具', icon: 'tools', roles: ['admin'] },
       { href: '/admin/users', label: '用户', icon: 'users', roles: ['admin'] },
       { href: '/admin/integrations', label: 'AI / 向量 / MCP', icon: 'integrations', roles: ['admin'] },
     ],

@@ -96,3 +96,44 @@ test('lookupAmapIp sends the server key and normalizes a domestic result', async
     else process.env.AMAP_WEB_SERVICE_KEY = previousKey;
   }
 });
+
+test('lookupAmapIp treats an empty successful response as no result, not a request failure', async () => {
+  const previousFetch = globalThis.fetch;
+  const previousKey = process.env.AMAP_WEB_SERVICE_KEY;
+  process.env.AMAP_WEB_SERVICE_KEY = 'test-server-key';
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    status: '1', info: 'OK', infocode: '10000', province: [], city: [], adcode: [], rectangle: [],
+  }), { status: 200 });
+
+  try {
+    const result = await lookupAmapIp('114.114.114.114');
+    assert.equal(result.success, true);
+    assert.equal(result.noResult, true);
+    assert.equal(result.data, null);
+    assert.match(result.message || '', /请求成功/);
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousKey === undefined) delete process.env.AMAP_WEB_SERVICE_KEY;
+    else process.env.AMAP_WEB_SERVICE_KEY = previousKey;
+  }
+});
+
+test('lookupAmapIp explains a platform-mismatched key', async () => {
+  const previousFetch = globalThis.fetch;
+  const previousKey = process.env.AMAP_WEB_SERVICE_KEY;
+  process.env.AMAP_WEB_SERVICE_KEY = 'test-server-key';
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    status: '0', info: 'USERKEY_PLAT_NOMATCH', infocode: '10009',
+  }), { status: 200 });
+
+  try {
+    const result = await lookupAmapIp('114.114.114.115');
+    assert.equal(result.success, false);
+    assert.match(result.error || '', /“Web服务”类型 Key/);
+    assert.match(result.error || '', /10009/);
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousKey === undefined) delete process.env.AMAP_WEB_SERVICE_KEY;
+    else process.env.AMAP_WEB_SERVICE_KEY = previousKey;
+  }
+});

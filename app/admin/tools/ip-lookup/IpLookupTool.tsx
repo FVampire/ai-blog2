@@ -27,6 +27,7 @@ function show(value: string | number | null | undefined): string {
 
 function ResultCard({ result }: { result: IpProviderResult }) {
   const data = result.data;
+  const statusClass = result.noResult ? styles.statusNoResult : result.success ? styles.statusSuccess : styles.statusError;
   return (
     <article className={styles.resultCard}>
       <header className={styles.resultHeader}>
@@ -34,13 +35,15 @@ function ResultCard({ result }: { result: IpProviderResult }) {
           <h2>{providerNames[result.provider]}</h2>
           <p>{result.cached ? '命中 24 小时缓存' : `请求耗时 ${result.durationMs} ms`}</p>
         </div>
-        <span className={result.success ? styles.statusSuccess : styles.statusError}>
-          {result.success ? '查询成功' : result.configured ? '查询失败' : '未配置'}
+        <span className={statusClass}>
+          {result.noResult ? '无定位结果' : result.success ? '查询成功' : result.configured ? '查询失败' : '未配置'}
         </span>
       </header>
 
       {!result.success || !data ? (
-        <p className={styles.errorMessage}>{result.error || '该数据源没有返回结果'}</p>
+        <p className={result.noResult ? styles.noResultMessage : styles.errorMessage}>
+          {result.message || result.error || '该数据源没有返回结果'}
+        </p>
       ) : (
         <dl className={styles.details}>
           <div><dt>城市</dt><dd>{show(data.city)}</dd></div>
@@ -68,6 +71,7 @@ export default function IpLookupTool() {
   const visibleResults = data?.mode === 'auto' && data.selected
     ? data.results.filter((result) => result.provider === data.selected?.provider)
     : data?.results || [];
+  const hasNoResult = Boolean(data?.results.some((result) => result.noResult));
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -135,7 +139,7 @@ export default function IpLookupTool() {
           <section className={styles.selection}>
             <span>本次映射结果</span>
             <strong>{data.selected ? [data.selected.country, data.selected.region, data.selected.city].filter(Boolean).join(' · ') : '没有可用结果'}</strong>
-            <small>{data.selected ? `采用 ${providerNames[data.selected.provider]}` : '请检查数据源返回信息'}</small>
+            <small>{data.selected ? `采用 ${providerNames[data.selected.provider]}` : hasNoResult ? '请求成功，但没有城市级定位' : '请检查数据源返回信息'}</small>
           </section>
           <div className={styles.results}>
             {visibleResults.map((result) => <ResultCard key={result.provider} result={result} />)}

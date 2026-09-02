@@ -16,10 +16,12 @@
 .resultHeader { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding-bottom: 14px; border-bottom: 1px solid var(--admin-border); }
 .resultHeader h2 { margin: 0 0 3px; color: var(--admin-text); font-size: 16px; }
 .resultHeader p, .errorMessage { margin: 0; color: var(--admin-muted); font-size: 12px; }
-.statusSuccess, .statusError { flex: 0 0 auto; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.statusSuccess, .statusError, .statusNoResult { flex: 0 0 auto; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
 .statusSuccess { color: #16764b; background: rgba(32, 171, 106, .12); }
 .statusError { color: #b5473b; background: rgba(210, 73, 58, .12); }
+.statusNoResult { color: #95621f; background: rgba(210, 151, 58, .14); }
 .errorMessage { padding: 20px 0 4px; color: #b5473b; }
+.noResultMessage { margin: 0; padding: 20px 0 4px; color: var(--admin-muted); font-size: 12px; line-height: 1.7; }
 .details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; margin: 6px 0 0; }
 .details div { min-width: 0; padding: 10px 0; border-bottom: 1px solid var(--admin-border); }
 .details dt { margin-bottom: 3px; color: var(--admin-muted); font-size: 11px; }
