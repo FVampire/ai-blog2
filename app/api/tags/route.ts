@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { requireAuth, isAuthError } from '@/lib/auth-middleware-app';
+import { requireRoles, isAuthError } from '@/lib/auth-middleware-app';
 import { TagRepository } from '@/lib/repositories/TagRepository';
 
 export async function GET() {
@@ -25,7 +25,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const authResult = requireAuth(request);
+  const authResult = requireRoles(request, ['admin', 'editor']);
   if (isAuthError(authResult)) return authResult;
 
   try {

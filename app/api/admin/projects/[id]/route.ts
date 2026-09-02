@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { requireAuth, isAuthError } from '@/lib/auth-middleware-app';
+import { requireRoles, isAuthError } from '@/lib/auth-middleware-app';
 import { ProjectRepository } from '@/lib/repositories/ProjectRepository';
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = requireAuth(_request);
+  const authResult = requireRoles(_request, ['admin', 'editor']);
   if (isAuthError(authResult)) return authResult;
 
   try {
@@ -34,7 +34,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = requireAuth(request);
+  const authResult = requireRoles(request, ['admin', 'editor']);
   if (isAuthError(authResult)) return authResult;
 
   try {
@@ -62,7 +62,7 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = requireAuth(_request);
+  const authResult = requireRoles(_request, ['admin', 'editor']);
   if (isAuthError(authResult)) return authResult;
 
   try {

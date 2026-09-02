@@ -11,7 +11,7 @@ const VALID_STATUSES = ['all', 'published', 'draft', 'archived'] as const;
 type PostStatusFilter = (typeof VALID_STATUSES)[number];
 
 interface AdminPostsPageProps {
-  searchParams: Promise<{ page?: string; status?: string; search?: string }>;
+  searchParams: Promise<{ page?: string; status?: string; search?: string; attention?: string }>;
 }
 
 export default async function AdminPostsPage({ searchParams }: AdminPostsPageProps) {
@@ -23,13 +23,14 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
     ? (params.status as PostStatusFilter)
     : 'all';
   const search = (params.search || '').trim();
+  const attention = params.attention === 'cover' || params.attention === 'category' ? params.attention : undefined;
 
   let posts: Array<{
     id: number;
     title: string;
     author: string;
     date: string;
-    status: string;
+    status: 'published' | 'draft' | 'archived';
     views: number;
     tags: string[];
   }> = [];
@@ -43,6 +44,7 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
       limit: PAGE_SIZE,
       status,
       search: search || undefined,
+      attention,
     });
 
     total = result.total;
@@ -71,6 +73,7 @@ export default async function AdminPostsPage({ searchParams }: AdminPostsPagePro
       totalPages={totalPages}
       status={status}
       search={search}
+      attention={attention}
     />
   );
 }

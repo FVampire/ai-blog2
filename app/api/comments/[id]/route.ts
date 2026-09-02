@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { requireAuth, isAuthError } from '@/lib/auth-middleware-app';
+import { requireRoles, isAuthError } from '@/lib/auth-middleware-app';
 import { query } from '@/lib/db';
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = requireAuth(request);
+  const authResult = requireRoles(request, ['admin', 'editor']);
   if (isAuthError(authResult)) return authResult;
 
   const { id } = await params;
@@ -52,7 +52,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authResult = requireAuth(request);
+  const authResult = requireRoles(request, ['admin', 'editor']);
   if (isAuthError(authResult)) return authResult;
 
   const { id } = await params;

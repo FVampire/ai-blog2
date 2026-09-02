@@ -49,4 +49,23 @@ export class PostCategoryRepository extends BaseRepository {
     const repo = await this.getRepo(PostCategory);
     return repo.find({ order: { sortOrder: 'ASC', name: 'ASC' } });
   }
+
+  static async create(data: Pick<PostCategory, 'name' | 'slug' | 'color' | 'sortOrder'> & { description?: string }): Promise<PostCategory> {
+    const repo = await this.getRepo(PostCategory);
+    return repo.save(repo.create({ ...data, description: data.description || '' }));
+  }
+
+  static async update(id: number, data: Partial<Pick<PostCategory, 'name' | 'slug' | 'description' | 'color' | 'sortOrder'>>): Promise<PostCategory | null> {
+    const repo = await this.getRepo(PostCategory);
+    const category = await repo.findOne({ where: { id } });
+    if (!category) return null;
+    Object.assign(category, data);
+    return repo.save(category);
+  }
+
+  static async delete(id: number): Promise<boolean> {
+    const repo = await this.getRepo(PostCategory);
+    const result = await repo.delete(id);
+    return (result.affected || 0) > 0;
+  }
 }

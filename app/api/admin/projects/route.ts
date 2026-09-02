@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { requireAuth, isAuthError } from '@/lib/auth-middleware-app';
+import { requireRoles, isAuthError } from '@/lib/auth-middleware-app';
 import { ProjectRepository } from '@/lib/repositories/ProjectRepository';
 
 export async function GET(request: NextRequest) {
-  const authResult = requireAuth(request);
+  const authResult = requireRoles(request, ['admin', 'editor']);
   if (isAuthError(authResult)) return authResult;
 
   try {
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authResult = requireAuth(request);
+  const authResult = requireRoles(request, ['admin', 'editor']);
   if (isAuthError(authResult)) return authResult;
 
   try {

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 import AdminLayout from "../../../components/admin/AdminLayout";
 import { authJson } from "../../../components/admin/authFetch";
@@ -60,11 +61,13 @@ const settingsStyles = `
 `;
 
 export default function AdminSettings() {
+  const pathname = usePathname();
+  const section = pathname.startsWith('/admin/integrations') ? 'integrations' : 'site';
   const [settings, setSettings] = useState<Record<string, any>>({});
   const [details, setDetails] = useState<SettingsDetails>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = useState(section === 'integrations' ? 'ai' : 'basic');
   const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; name: string; url: string }>>([]);
   const [maskedKeys, setMaskedKeys] = useState<string[]>([]);
 
@@ -126,25 +129,26 @@ export default function AdminSettings() {
     return <input style={{ width: "100%" }} type="text" value={value || ""} onChange={(e) => handleChange(key, e.target.value)} className="settings-input" />;
   };
 
-  const tabs = [
-    { id: "basic", name: "基本设置", icon: "🌐" }, { id: "display", name: "显示设置", icon: "📱" },
+  const allTabs = [
+    { id: "basic", name: "站点与外观", icon: "◆" },
     { id: "projects", name: "项目展示", icon: "🚀" },
     { id: "comments", name: "评论设置", icon: "💬" }, { id: "users", name: "用户设置", icon: "👥" },
-    { id: "upload", name: "上传设置", icon: "📤" }, { id: "social", name: "作者与社交", icon: "👤" },
+    { id: "upload", name: "上传设置", icon: "↑" },
     { id: "ai", name: "AI 设置", icon: "🤖" }, { id: "vector", name: "向量搜索", icon: "🔍" },
-    { id: "mcp", name: "MCP 设置", icon: "🔌" }, { id: "other", name: "其他设置", icon: "⚙️" },
+    { id: "mcp", name: "MCP 设置", icon: "🔌" },
   ];
+  const tabs = allTabs.filter((tab) => section === 'integrations'
+    ? ['ai', 'vector', 'mcp'].includes(tab.id)
+    : !['ai', 'vector', 'mcp'].includes(tab.id));
 
   const settingGroups: Record<string, string[]> = {
-    basic: ["site_name", "site_description", "site_keywords", "site_logo", "site_favicon"],
-    display: ["posts_per_page", "comments_per_page", "excerpt_length"],
+    basic: ["site_name", "site_description", "site_keywords", "site_logo", "site_favicon", "posts_per_page", "comments_per_page", "excerpt_length", "about_author_name", "about_author_bio_short", "about_author_bio", "about_author_bio_2", "about_author_bio_3", "about_author_bio_4", "author_avatar", "about_social_links", "footer_text", "analytics_code"],
     projects: ["projects_enabled", "projects_show_on_home", "projects_home_count", "projects_intro", "projects_nav_label"],
     comments: ["comments_enabled", "comments_moderation", "comments_guest_allowed"],
     users: ["registration_enabled", "default_user_role"],
     upload: ["upload_max_size", "upload_allowed_types"],
-    social: ["about_author_name", "about_author_bio_short", "about_author_bio", "about_author_bio_2", "about_author_bio_3", "about_author_bio_4", "author_avatar", "about_social_links"],
     ai: [], vector: ["ai_vector_search_enabled", "ai_vector_search_threshold", "ai_vector_search_weight_title", "ai_vector_search_weight_content", "ai_vector_search_weight_excerpt"],
-    mcp: ["mcp_enabled", "mcp_allow_user_select"], other: ["footer_text", "analytics_code"],
+    mcp: ["mcp_enabled", "mcp_allow_user_select"],
   };
 
   const settingLabels: Record<string, string> = {
@@ -172,10 +176,9 @@ export default function AdminSettings() {
       <style dangerouslySetInnerHTML={{ __html: settingsStyles }} />
       <div className="settings-page">
         <div className="page-header">
-          <h1 className="page-title">系统设置</h1>
+          <div><p className="page-eyebrow">{section === 'integrations' ? '系统能力' : '运营配置'}</p><h1 className="page-title">{section === 'integrations' ? 'AI / 向量 / MCP' : '站点设置'}</h1><p className="page-description">{section === 'integrations' ? '集中管理模型、检索与外部工具连接。' : '管理站点外观、内容展示、评论和上传策略。'}</p></div>
           <button className="btn-primary" onClick={handleSave} disabled={saving}>{saving ? "保存中..." : "保存设置"}</button>
         </div>
-        {message.text && <div className={`message ${message.type}`}>{message.text}</div>}
         <div className="settings-container">
           <div className="settings-tabs">
             {tabs.map((tab) => (<button key={tab.id} className={`tab-btn ${activeTab === tab.id ? "active" : ""}`} onClick={() => setActiveTab(tab.id)}><span className="tab-icon">{tab.icon}</span><span className="tab-name">{tab.name}</span></button>))}

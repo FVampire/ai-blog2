@@ -5,6 +5,7 @@ import { generateSlug, resolveTagIds } from '@/lib/agent-utils';
 import { PostRepository } from '@/lib/repositories/PostRepository';
 import { TagRepository } from '@/lib/repositories/TagRepository';
 import { query } from '@/lib/db';
+import { recordAuditEvent } from '@/lib/audit-log';
 
 const DEFAULT_AUTHOR_ID = parseInt(process.env.AGENT_AUTHOR_ID || '1', 10);
 
@@ -47,6 +48,15 @@ export async function POST(request: NextRequest) {
       status: status as 'draft' | 'published' | 'archived',
       authorId: DEFAULT_AUTHOR_ID,
       tagIds,
+    });
+
+    await recordAuditEvent({
+      request,
+      user: { userId: DEFAULT_AUTHOR_ID, username: 'Agent', email: '', role: 'agent' },
+      action: 'agent.post.publish',
+      resourceType: 'post',
+      resourceId: post.id,
+      metadata: { title: post.title, slug: post.slug, status: post.status },
     });
 
     const siteUrl = process.env.SITE_URL || '';

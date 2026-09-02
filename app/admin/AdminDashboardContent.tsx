@@ -1,232 +1,83 @@
 'use client';
 
-import React, { useState } from 'react';
-
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 import AdminLayout from '../../components/admin/AdminLayout';
-import { toast } from '../../components/admin/Toast';
+import AdminIcon from '../../components/admin/AdminIcon';
+import { authJson } from '../../components/admin/authFetch';
 
-interface DashboardStats {
-  totalPosts: number;
-  totalUsers: number;
-  totalComments: number;
-  todayViews: number;
-}
+interface DashboardCounts { drafts: number; pendingComments: number; missingCover: number; missingCategory: number; }
+interface DashboardPost { id: number; title: string; slug: string; status: string; date: string; missingCover?: boolean; missingCategory?: boolean; }
+interface AdminDashboardContentProps { counts: DashboardCounts; recentAgentPosts: DashboardPost[]; attentionPosts: DashboardPost[]; }
 
-interface RecentPost {
-  id: number;
-  title: string;
-  author: string;
-  date: string;
-  status: string;
-}
-
-interface AdminDashboardContentProps {
-  stats: DashboardStats;
-  recentPosts: RecentPost[];
-}
-
-export default function AdminDashboardContent({ stats, recentPosts }: AdminDashboardContentProps) {
-  const router = useRouter();
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [publishingId, setPublishingId] = useState<number | null>(null);
-  const [visiblePosts, setVisiblePosts] = useState(recentPosts);
-
-  const statCards = [
-    { label: '总文章数', value: stats.totalPosts.toString(), icon: '📝', color: 'blue', link: '/admin/posts' },
-    { label: '总用户数', value: stats.totalUsers.toString(), icon: '👥', color: 'green', link: '/admin/users' },
-    { label: '总评论数', value: stats.totalComments.toString(), icon: '💬', color: 'orange', link: null },
-    { label: '总浏览量', value: stats.todayViews.toString(), icon: '📈', color: 'purple', link: '/admin/posts' },
-  ];
-
-  const getStatusLabel = (status: string) => {
-    const statusMap: { [key: string]: string } = {
-      'published': '已发布',
-      'draft': '草稿',
-      'archived': '已归档'
-    };
-    return statusMap[status] || status;
-  };
-
-  const handleStatClick = (link: string | null) => {
-    if (link) router.push(link);
-  };
-
-  const handleEdit = (postId: number) => {
-    router.push(`/admin/posts/edit/${postId}`);
-  };
-
-  const handlePreview = (postId: number) => {
-    window.open(`/admin/posts/preview/${postId}`, '_blank');
-  };
-
-  const handlePublish = async (postId: number) => {
-    if (!confirm('确定要发布这篇文章吗？')) return;
-    setPublishingId(postId);
-    try {
-      const response = await fetch(`/api/posts/${postId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'published' }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setVisiblePosts((posts) => posts.map((post) => post.id === postId ? { ...post, status: 'published' } : post));
-        toast.success('文章发布成功');
-      } else {
-        toast.error(data.message || '发布失败');
-      }
-    } catch (error) {
-      console.error('Publish error:', error);
-      toast.error('发布失败');
-    } finally {
-      setPublishingId(null);
-    }
-  };
-
-  const handleDelete = async (postId: number) => {
-    if (!confirm('确定要删除这篇文章吗？此操作无法撤销。')) return;
-    setDeletingId(postId);
-    try {
-      const response = await fetch(`/api/posts/${postId}`, { method: 'DELETE' });
-      const data = await response.json();
-      if (data.success) {
-        setVisiblePosts((posts) => posts.filter((post) => post.id !== postId));
-        toast.success('文章删除成功');
-      } else {
-        toast.error(data.message || '删除失败');
-      }
-    } catch (error) {
-      console.error('Delete error:', error);
-      toast.error('删除失败');
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const handleNewPost = () => router.push('/admin/posts/new');
-  const handleAddUser = () => router.push('/admin/users');
-  const handleManageTags = () => router.push('/admin/tags');
-  const handleViewReports = () => {
-    const rows = [
-      ['指标', '数值'],
-      ['总文章数', stats.totalPosts],
-      ['总用户数', stats.totalUsers],
-      ['总评论数', stats.totalComments],
-      ['总浏览量', stats.todayViews],
-    ];
-    const csv = `\uFEFF${rows.map((row) => row.join(',')).join('\n')}`;
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    link.download = `blog-report-${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-    toast.success('统计报告已导出');
-  };
+export default function AdminDashboardContent({ counts, recentAgentPosts, attentionPosts }: AdminDashboardContentProps) {
+  const [role, setRole] = useState('author');
+  useEffect(() => { void authJson<{ user: { role: string } }>('/api/auth/me').then((result) => { if (result.data?.user.role) setRole(result.data.user.role); }); }, []);
+  const tasks = [
+    { label: '草稿待完成', value: counts.drafts, href: '/admin/posts?status=draft', tone: 'blue', icon: 'posts' as const, hint: '继续写作或安排发布' },
+    { label: '评论待审核', value: counts.pendingComments, href: '/admin/comments?status=pending', tone: 'orange', icon: 'comments' as const, hint: '优先处理新留言', roles: ['admin', 'editor'] },
+    { label: '文章缺少封面', value: counts.missingCover, href: '/admin/posts?attention=cover', tone: 'purple', icon: 'media' as const, hint: '补齐列表与分享展示' },
+    { label: '文章未设专栏', value: counts.missingCategory, href: '/admin/posts?attention=category', tone: 'green', icon: 'categories' as const, hint: '整理内容归属' },
+  ].filter((task) => !task.roles || task.roles.includes(role));
 
   return (
     <AdminLayout>
-      <div className="dashboard">
-        <h1 className="page-title">仪表盘</h1>
+      <div className="dashboard workbench-dashboard">
+        <div className="page-header dashboard-heading">
+          <div>
+            <p className="page-eyebrow">今日工作台</p>
+            <h1 className="page-title">先处理需要你决定的事</h1>
+            <p className="page-description">草稿、审核与内容完整性集中在这里，统计不再占据主要视线。</p>
+          </div>
+          <Link href="/admin/posts/new" className="btn-primary"><span aria-hidden="true">＋</span>写文章</Link>
+        </div>
 
-        <div className="stats-grid">
-          {statCards.map((stat, index) => (
-            <div
-              key={index}
-              className={`stat-card stat-${stat.color}`}
-              onClick={() => handleStatClick(stat.link)}
-              style={{
-                cursor: stat.link ? 'pointer' : 'default',
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              }}
-              onMouseEnter={(e) => {
-                if (stat.link) {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.15)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (stat.link) {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '';
-                }
-              }}
-            >
-              <div className="stat-icon">{stat.icon}</div>
-              <div className="stat-content">
-                <div className="stat-value">{stat.value}</div>
-                <div className="stat-label">{stat.label}</div>
-              </div>
-            </div>
+        <div className="todo-grid" aria-label="内容待办">
+          {tasks.map((task) => (
+            <Link href={task.href} className={`todo-card todo-${task.tone}`} key={task.label}>
+              <span className="todo-icon"><AdminIcon name={task.icon} size={21} /></span>
+              <span className="todo-copy"><strong>{task.label}</strong><small>{task.hint}</small></span>
+              <span className="todo-count">{task.value}</span>
+            </Link>
           ))}
         </div>
 
-        <div className="dashboard-section">
-          <h2 className="section-title">最近文章</h2>
-          <div className="data-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>标题</th>
-                  <th>作者</th>
-                  <th>日期</th>
-                  <th>状态</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visiblePosts.length > 0 ? (
-                  visiblePosts.map((post) => (
-                    <tr key={post.id}>
-                      <td className="post-title">{post.title}</td>
-                      <td>{post.author}</td>
-                      <td>{post.date}</td>
-                      <td>
-                        <span className={`status-badge ${post.status === 'published' ? 'published' : 'draft'}`}>
-                          {getStatusLabel(post.status)}
-                        </span>
-                      </td>
-                      <td>
-                        <button className="action-btn view" onClick={() => handlePreview(post.id)}>预览</button>
-                        <button className="action-btn edit" onClick={() => handleEdit(post.id)}>编辑</button>
-                        {post.status === 'draft' && (
-                          <button className="action-btn enable" onClick={() => handlePublish(post.id)} disabled={publishingId === post.id}>
-                            {publishingId === post.id ? '发布中...' : '发布'}
-                          </button>
-                        )}
-                        <button className="action-btn delete" onClick={() => handleDelete(post.id)} disabled={deletingId === post.id}>
-                          {deletingId === post.id ? '删除中...' : '删除'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} style={{ textAlign: 'center' }}>暂无文章</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <div className="dashboard-columns">
+          <section className="dashboard-section dashboard-list-section">
+            <div className="section-heading-row">
+              <div><p className="section-kicker">Agent</p><h2 className="section-title">最近发布</h2></div>
+              <Link href="/admin/posts" className="text-link">全部文章 →</Link>
+            </div>
+            {recentAgentPosts.length === 0 ? (
+              <div className="compact-empty"><strong>还没有 Agent 发布记录</strong><span>通过 Agent API 发布的新文章会出现在这里。</span></div>
+            ) : (
+              <div className="work-list">
+                {recentAgentPosts.map((post) => (
+                  <Link href={`/admin/posts/edit/${post.id}`} className="work-list-item" key={post.id}>
+                    <span><strong>{post.title}</strong><small>{post.date}</small></span>
+                    <span className={`status-badge ${post.status === 'published' ? 'published' : 'draft'}`}>{post.status === 'published' ? '已发布' : '草稿'}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
 
-        <div className="dashboard-section">
-          <h2 className="section-title">快速操作</h2>
-          <div className="quick-actions">
-            <button className="quick-action-btn" onClick={handleNewPost}>
-              <span className="action-icon">➕</span><span className="action-text">新建文章</span>
-            </button>
-            <button className="quick-action-btn" onClick={handleAddUser}>
-              <span className="action-icon">👤</span><span className="action-text">添加用户</span>
-            </button>
-            <button className="quick-action-btn" onClick={handleManageTags}>
-              <span className="action-icon">🏷️</span><span className="action-text">管理标签</span>
-            </button>
-            <button className="quick-action-btn" onClick={handleViewReports}>
-              <span className="action-icon">📊</span><span className="action-text">查看报告</span>
-            </button>
-          </div>
+          <section className="dashboard-section dashboard-list-section">
+            <div className="section-heading-row"><div><p className="section-kicker">内容质量</p><h2 className="section-title">需要补全</h2></div></div>
+            {attentionPosts.length === 0 ? (
+              <div className="compact-empty"><strong>内容信息都很完整</strong><span>最近文章均已设置封面和专栏。</span></div>
+            ) : (
+              <div className="work-list">
+                {attentionPosts.map((post) => (
+                  <Link href={`/admin/posts/edit/${post.id}`} className="work-list-item" key={post.id}>
+                    <span><strong>{post.title}</strong><small>{post.date}</small></span>
+                    <span className="attention-tags">{post.missingCover && <em>缺封面</em>}{post.missingCategory && <em>缺专栏</em>}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </AdminLayout>

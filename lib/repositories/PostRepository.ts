@@ -181,8 +181,9 @@ export class PostRepository extends BaseRepository {
     limit?: number;
     status?: string;
     search?: string;
+    attention?: 'cover' | 'category';
   } = {}): Promise<PaginationResult<PostDTO>> {
-    const { page = 1, limit = 10, status, search } = options;
+    const { page = 1, limit = 10, status, search, attention } = options;
     const repo = await this.getRepo(Post);
 
     const qb = repo.createQueryBuilder('p')
@@ -197,6 +198,8 @@ export class PostRepository extends BaseRepository {
     if (search) {
       qb.andWhere('(p.title ILIKE :search OR u.username ILIKE :search)', { search: `%${search}%` });
     }
+    if (attention === 'cover') qb.andWhere("COALESCE(NULLIF(TRIM(p.image_url), ''), '') = ''");
+    if (attention === 'category') qb.andWhere('p.category_id IS NULL');
 
     qb.orderBy('p.created_at', 'DESC')
       .skip((page - 1) * limit)

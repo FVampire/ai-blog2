@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import { authJson } from '../../../components/admin/authFetch';
 import { toast } from '../../../components/admin/Toast';
+import ConfirmDialog from '../../../components/admin/ConfirmDialog';
 
 interface Post {
   id: number;
@@ -28,6 +29,7 @@ interface AdminPostsContentProps {
   totalPages: number;
   status: StatusFilter;
   search: string;
+  attention?: 'cover' | 'category';
 }
 
 export default function AdminPostsContent({
@@ -38,6 +40,7 @@ export default function AdminPostsContent({
   totalPages,
   status,
   search,
+  attention,
 }: AdminPostsContentProps) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState(search);
@@ -46,20 +49,23 @@ export default function AdminPostsContent({
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkAction, setBulkAction] = useState('');
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [deleteRequest, setDeleteRequest] = useState<{ type: 'single'; id: number } | { type: 'bulk' } | null>(null);
 
   useEffect(() => {
     setSearchTerm(search);
   }, [search]);
 
-  const buildUrl = (next: { page?: number; status?: StatusFilter; search?: string }) => {
+  const buildUrl = (next: { page?: number; status?: StatusFilter; search?: string; attention?: 'cover' | 'category' | null }) => {
     const query = new URLSearchParams();
     const nextPage = next.page ?? page;
     const nextStatus = next.status ?? status;
     const nextSearch = next.search ?? searchTerm;
+    const nextAttention = next.attention === null ? undefined : (next.attention ?? attention);
 
     if (nextPage > 1) query.set('page', String(nextPage));
     if (nextStatus !== 'all') query.set('status', nextStatus);
     if (nextSearch.trim()) query.set('search', nextSearch.trim());
+    if (nextAttention) query.set('attention', nextAttention);
 
     const queryString = query.toString();
     return queryString ? `/admin/posts?${queryString}` : '/admin/posts';
@@ -77,7 +83,6 @@ export default function AdminPostsContent({
   const handlePreview = (id: number) => window.open(`/admin/posts/preview/${id}`, '_blank');
 
   const handlePublish = async (id: number) => {
-    if (!confirm('确定要发布这篇文章吗？')) return;
     setPublishingId(id);
     const result = await authJson(`/api/posts/${id}`, {
       method: 'PUT',
@@ -93,8 +98,7 @@ export default function AdminPostsContent({
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除这篇文章吗？')) return;
+  const performSingleDelete = async (id: number) => {
     setDeletingId(id);
     const result = await authJson(`/api/posts/${id}`, { method: 'DELETE' });
     setDeletingId(null);
@@ -110,7 +114,11 @@ export default function AdminPostsContent({
   const handleBulkApply = async () => {
     if (!bulkAction || selectedIds.length === 0) return;
     const deleting = bulkAction === 'delete';
-    if (deleting && !confirm(`确定删除选中的 ${selectedIds.length} 篇文章吗？此操作无法撤销。`)) return;
+    if (deleting) { setDeleteRequest({ type: 'bulk' }); return; }
+    await performBulkAction(false);
+  };
+
+  const performBulkAction = async (deleting: boolean) => {
     setBulkLoading(true);
     const result = await authJson('/api/posts/bulk', {
       method: 'POST',
@@ -127,6 +135,14 @@ export default function AdminPostsContent({
     } else {
       toast.error(result.message || '批量操作失败');
     }
+  };
+
+  const confirmDelete = async () => {
+    const request = deleteRequest;
+    setDeleteRequest(null);
+    if (!request) return;
+    if (request.type === 'single') await performSingleDelete(request.id);
+    else await performBulkAction(true);
   };
 
   const getStatusLabel = (value: string) => {
@@ -164,6 +180,7 @@ export default function AdminPostsContent({
             </select>
           </div>
         </div>
+        {attention && <div className="active-filter-note"><span>当前只看：{attention === 'cover' ? '缺少封面' : '未设专栏'}</span><button className="text-button" onClick={() => router.push(buildUrl({ page: 1, attention: null }))}>清除筛选</button></div>}
 
         <div className="filters" aria-label="批量操作">
           <span>已选择 {selectedIds.length} 篇</span>
@@ -211,7 +228,7 @@ export default function AdminPostsContent({
                         {publishingId === post.id ? '发布中...' : '发布'}
                       </button>
                     )}
-                    <button className="action-btn delete" onClick={() => handleDelete(post.id)} disabled={deletingId === post.id}>
+                    <button className="action-btn delete" onClick={() => setDeleteRequest({ type: 'single', id: post.id })} disabled={deletingId === post.id}>
                       {deletingId === post.id ? '删除中...' : '删除'}
                     </button>
                   </td>
@@ -244,6 +261,7 @@ export default function AdminPostsContent({
           </button>
         </div>
       </div>
+      <ConfirmDialog open={Boolean(deleteRequest)} title={deleteRequest?.type === 'bulk' ? `删除选中的 ${selectedIds.length} 篇文章？` : '删除这篇文章？'} description="此操作无法撤销，文章及其评论关联将被移除。" confirmLabel="确认删除" dangerous onConfirm={confirmDelete} onCancel={() => setDeleteRequest(null)} />
     </AdminLayout>
   );
 }

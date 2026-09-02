@@ -18,6 +18,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin/login', siteUrl));
   }
 
+  const adminOnly = ['/admin/users', '/admin/settings', '/admin/integrations'];
+  const editorial = ['/admin/categories', '/admin/tags', '/admin/comments', '/admin/projects'];
+  const matches = (routes: string[]) => routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+
+  if ((matches(adminOnly) && user.role !== 'admin') || (matches(editorial) && !['admin', 'editor'].includes(user.role))) {
+    return NextResponse.redirect(new URL('/admin', request.url));
+  }
+
   return NextResponse.next();
 }
 
