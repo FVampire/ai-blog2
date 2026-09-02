@@ -1,30 +1,39 @@
-import type { Metadata } from 'next';
-import Image from 'next/image';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import Link from "next/link";
+import { notFound } from "next/navigation";
 
-import BackToTop from '../../../components/BackToTop';
-import CommentsSection from '../../../components/CommentsSection';
-import Footer from '../../../components/Footer';
-import Header from '../../../components/Header';
-import TableOfContents from '../../../components/TableOfContents';
-import { formatDate } from '../../../lib/format';
-import { articleRehypePlugins } from '../../../lib/markdown/plugins';
-import { PostRepository } from '../../../lib/repositories/PostRepository';
-import ArticleTracker from './ArticleTracker';
+import type { Metadata } from "next";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-const SITE_NAME = '五月的火';
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
-const DEFAULT_OG_IMAGE = '/og-default.png';
+import ArticleTracker from "./ArticleTracker";
+import BackToTop from "../../../components/BackToTop";
+import CommentsSection from "../../../components/CommentsSection";
+import Footer from "../../../components/Footer";
+import Header from "../../../components/Header";
+import SafeImage from "../../../components/SafeImage";
+import TableOfContents from "../../../components/TableOfContents";
+import { formatDate } from "../../../lib/format";
+import { articleRehypePlugins } from "../../../lib/markdown/plugins";
+import { PostRepository } from "../../../lib/repositories/PostRepository";
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+const SITE_NAME = "五月的火";
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  "http://localhost:3000"
+).replace(/\/$/, "");
+const DEFAULT_OG_IMAGE = "/og-default.png";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
   const post = await PostRepository.getPostBySlug(slug);
 
   if (!post) {
-    return { title: '文章未找到' };
+    return { title: "文章未找到" };
   }
 
   const description = post.excerpt || `阅读《${post.title}》`;
@@ -36,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description,
     alternates: { canonical: url },
     openGraph: {
-      type: 'article',
+      type: "article",
       title: post.title,
       description,
       url,
@@ -46,7 +55,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       modifiedTime: new Date(post.updatedAt || post.createdAt).toISOString(),
     },
     twitter: {
-      card: 'summary_large_image',
+      card: "summary_large_image",
       title: post.title,
       description,
       images: [image],
@@ -54,7 +63,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function PostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
 
   const post = await PostRepository.getPostBySlug(slug);
@@ -63,7 +76,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     notFound();
   }
 
-  const authorName = post.authorName || await PostRepository.getAuthorName();
+  const authorName = post.authorName || (await PostRepository.getAuthorName());
   const relatedPosts = await PostRepository.getRelatedPosts(post.id);
   const { prevPost, nextPost } = await PostRepository.getAdjacentPosts(post.id);
 
@@ -78,20 +91,25 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   };
 
   const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
+    "@context": "https://schema.org",
+    "@type": "Article",
     headline: post.title,
     description: post.excerpt || post.title,
     image: [post.imageUrl || `${SITE_URL}${DEFAULT_OG_IMAGE}`],
     datePublished: new Date(post.publishedAt || post.createdAt).toISOString(),
-    dateModified: new Date(post.updatedAt || post.publishedAt || post.createdAt).toISOString(),
-    author: { '@type': 'Person', name: authorName },
-    publisher: { '@type': 'Organization', name: SITE_NAME },
-    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/posts/${post.slug}` },
+    dateModified: new Date(
+      post.updatedAt || post.publishedAt || post.createdAt,
+    ).toISOString(),
+    author: { "@type": "Person", name: authorName },
+    publisher: { "@type": "Organization", name: SITE_NAME },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${SITE_URL}/posts/${post.slug}`,
+    },
   };
 
   return (
-    <div>
+    <div className="site-shell article-page">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -106,29 +124,31 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <div className="main-content">
             <div className="blog-section">
               <article className="blog-card">
-                {post.imageUrl && (
-                  <div className="blog-image-container">
-                    <Image
-                      src={post.imageUrl}
-                      alt={post.title}
-                      width={1200}
-                      height={630}
-                      priority
-                      sizes="(max-width: 768px) 100vw, 760px"
-                      className="blog-image"
-                    />
-                  </div>
-                )}
-
                 <div className="blog-card-content">
+                  <p className="article-breadcrumb">
+                    <Link href="/articles">文章</Link> /{" "}
+                    {post.category?.name || "笔记"} / {post.title}
+                  </p>
                   <h1 className="blog-title mb-4">{post.title}</h1>
+
+                  {post.excerpt && (
+                    <p className="article-lead">{post.excerpt}</p>
+                  )}
 
                   <div className="blog-meta">
                     <span className="meta-text">
                       {formatDate(post.publishedAt || post.createdAt)}
                     </span>
-                    <span className="meta-text">作者: {authorName}</span>
-                    <span className="meta-text">👁️ {post.views} 次阅读</span>
+                    <span className="meta-text">
+                      {Math.max(
+                        1,
+                        Math.ceil(post.content.replace(/\s/g, "").length / 300),
+                      )}{" "}
+                      min
+                    </span>
+                    <span className="meta-text">
+                      {post.content.replace(/\s/g, "").length} words
+                    </span>
                   </div>
 
                   {post.tags.length > 0 && (
@@ -139,15 +159,30 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                           href={`/tags/${tag.slug}`}
                           className="article-tag"
                           style={{
-                            backgroundColor: `${tag.color || '#6C757D'}18`,
-                            color: tag.color || '#6C757D',
-                            borderColor: `${tag.color || '#6C757D'}40`,
+                            backgroundColor: `${tag.color || "#6C757D"}18`,
+                            color: tag.color || "#6C757D",
+                            borderColor: `${tag.color || "#6C757D"}40`,
                           }}
                         >
                           {tag.name}
                         </Link>
                       ))}
                     </div>
+                  )}
+
+                  {post.imageUrl && (
+                    <figure className="blog-image-container">
+                      <SafeImage
+                        src={post.imageUrl}
+                        alt={post.title}
+                        width={1200}
+                        height={630}
+                        priority
+                        sizes="(max-width: 768px) 100vw, 800px"
+                        className="blog-image"
+                      />
+                      <figcaption>图 1-1 cover.webp</figcaption>
+                    </figure>
                   )}
 
                   <div className="markdown-preview mt-8">
@@ -160,15 +195,23 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                   </div>
 
                   {(prevPost || nextPost) && (
-                    <div className={`post-navigation ${!prevPost || !nextPost ? 'single-nav' : ''}`}>
+                    <div
+                      className={`post-navigation ${!prevPost || !nextPost ? "single-nav" : ""}`}
+                    >
                       {prevPost && (
-                        <Link href={`/posts/${prevPost.slug}`} className="nav-post prev">
+                        <Link
+                          href={`/posts/${prevPost.slug}`}
+                          className="nav-post prev"
+                        >
                           <div className="nav-label">← 上一篇</div>
                           <div className="nav-title">{prevPost.title}</div>
                         </Link>
                       )}
                       {nextPost && (
-                        <Link href={`/posts/${nextPost.slug}`} className="nav-post next">
+                        <Link
+                          href={`/posts/${nextPost.slug}`}
+                          className="nav-post next"
+                        >
                           <div className="nav-label">下一篇 →</div>
                           <div className="nav-title">{nextPost.title}</div>
                         </Link>
@@ -179,28 +222,32 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                   <CommentsSection postId={post.id} />
                 </div>
               </article>
+
+              {relatedPosts.length > 0 && (
+                <section className="article-related" aria-labelledby="related-posts-title">
+                  <div className="article-related-heading">
+                    <div>
+                      <span>RELATED NOTES</span>
+                      <h2 id="related-posts-title">相关文章</h2>
+                    </div>
+                    <span>{String(relatedPosts.length).padStart(2, "0")} entries</span>
+                  </div>
+                  <div className="article-related-list">
+                    {relatedPosts.map((relatedPost, index) => (
+                      <Link key={relatedPost.id} href={`/posts/${relatedPost.slug}`}>
+                        <span>{String(index + 1).padStart(2, "0")}</span>
+                        <strong>{relatedPost.title}</strong>
+                        <i>阅读文章 →</i>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
           </div>
 
           <div className="sidebar">
             <TableOfContents content={post.content} />
-
-            {relatedPosts.length > 0 && (
-              <div className="card">
-                <h2 className="section-title">相关文章</h2>
-                <div className="flex flex-col gap-3">
-                  {relatedPosts.map((relatedPost) => (
-                    <Link
-                      key={relatedPost.id}
-                      href={`/posts/${relatedPost.slug}`}
-                      className="text-sm text-gray-600 hover:text-warm-coral transition-colors duration-300"
-                    >
-                      {relatedPost.title}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

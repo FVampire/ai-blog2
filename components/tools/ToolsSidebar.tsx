@@ -1,16 +1,16 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+
 import { CATEGORIES } from '@/lib/tools/registry';
-import { toolMatchesQuery, useToolsNav } from './ToolsNavContext';
+
 import styles from './tools-workspace.module.css';
+import { toolMatchesQuery, useToolsNav } from './ToolsNavContext';
 
 const STORAGE_KEY = 'tools:sidebar-collapsed';
-
-/** 工作区越宽越好用的工具，首次进入时默认折叠目录，之后完全交给用户偏好 */
-const WIDE_TOOLS = new Set(['js-playground', 'markdown-to-html']);
 
 export default function ToolsSidebar() {
   const pathname = usePathname();
@@ -24,7 +24,6 @@ export default function ToolsSidebar() {
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored !== null) setCollapsed(stored === '1');
-    else if (WIDE_TOOLS.has(currentSlug)) setCollapsed(true);
     // 仅在挂载时决定初始态
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -80,7 +79,7 @@ export default function ToolsSidebar() {
         aria-label="工具目录"
       >
         <div className={styles.sidebarHead}>
-          <Link href="/tools" className={styles.sidebarTitle}>工具箱</Link>
+          <Link href="/tools" className={styles.sidebarTitle}>EXPLORER</Link>
           <button
             type="button"
             className={styles.collapseBtn}
@@ -100,7 +99,7 @@ export default function ToolsSidebar() {
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="搜索工具…"
+                placeholder="filter files"
                 aria-label="搜索工具"
               />
               {query && (

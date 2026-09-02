@@ -1,13 +1,18 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-import '../styles/globals.css';
-import '../styles/admin.css';
-import '../styles/media-library.css';
-import { Providers } from './providers';
+import "../styles/globals.css";
+import "../styles/notebook-v6.css";
+import "../styles/admin.css";
+import "../styles/media-library.css";
+import { Providers } from "./providers";
 
-const SITE_NAME = '五月的火';
-const SITE_DESCRIPTION = '记录技术、设计与开发的个人博客';
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
+const SITE_NAME = "五月的火";
+const SITE_DESCRIPTION = "记录技术、设计与开发的个人博客";
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  "http://localhost:3000"
+).replace(/\/$/, "");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -16,25 +21,27 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
-  icons: { icon: '/favicon.ico' },
+  icons: { icon: "/favicon.ico" },
   openGraph: {
-    type: 'website',
+    type: "website",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     siteName: SITE_NAME,
-    locale: 'zh_CN',
-    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: SITE_NAME }],
+    locale: "zh_CN",
+    images: [
+      { url: "/og-default.png", width: 1200, height: 630, alt: SITE_NAME },
+    ],
   },
   twitter: {
-    card: 'summary_large_image',
+    card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: ['/og-default.png'],
+    images: ["/og-default.png"],
   },
   alternates: {
     canonical: SITE_URL,
-    types: { 'application/rss+xml': `${SITE_URL}/feed.xml` },
+    types: { "application/rss+xml": `${SITE_URL}/feed.xml` },
   },
 };
 
@@ -46,7 +53,11 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('site-theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}})()` }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('site-theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}})()`,
+          }}
+        />
       </head>
       <body>
         <Providers>{children}</Providers>

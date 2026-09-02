@@ -1,9 +1,10 @@
-import React from 'react';
+import React from "react";
 
-import Image from 'next/image';
-import Link from 'next/link';
+import Link from "next/link";
 
-import { formatDate } from '@/lib/format';
+import { formatDate } from "@/lib/format";
+
+import SafeImage from "./SafeImage";
 
 interface BlogPostCardProps {
   title: string;
@@ -14,7 +15,7 @@ interface BlogPostCardProps {
   image?: string;
   tags?: Array<{ name: string; color: string; slug?: string }>;
   category?: { name: string; slug: string; color: string };
-  variant?: 'home' | 'archive';
+  variant?: "home" | "archive";
 }
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({
@@ -26,16 +27,64 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
   image,
   tags,
   category,
-  variant = 'home',
+  variant = "home",
 }) => {
   const postHref = `/posts/${slug}`;
+
+  if (variant === "archive") {
+    const minutes = Math.max(
+      1,
+      Math.ceil(`${title}${excerpt}`.replace(/\s/g, "").length / 300),
+    );
+    return (
+      <article className="archive-record">
+        <span className="archive-record-mark" aria-hidden="true" />
+        <Link href={postHref} className="archive-record-cover">
+          {image ? (
+            <SafeImage
+              src={image}
+              alt=""
+              fill
+              sizes="96px"
+              className="blog-card-image"
+            />
+          ) : (
+            <span>—</span>
+          )}
+        </Link>
+        <div className="archive-record-title">
+          <h2>
+            <Link href={postHref}>{title}</Link>
+          </h2>
+          <p>{excerpt}</p>
+        </div>
+        <div className="archive-record-tags">
+          {category && (
+            <Link href={`/articles?category=${category.slug}`}>
+              {category.name}
+            </Link>
+          )}
+          {tags?.slice(0, 2).map((tag) => (
+            <Link
+              key={tag.slug || tag.name}
+              href={tag.slug ? `/tags/${tag.slug}` : "/tags"}
+            >
+              {tag.name}
+            </Link>
+          ))}
+        </div>
+        <time>{formatDate(date)}</time>
+        <i>{minutes}m</i>
+      </article>
+    );
+  }
 
   return (
     <article className={`blog-card-modern blog-card-${variant}`}>
       {image && (
         <Link href={postHref} className="blog-card-image-link">
           <div className="blog-card-image-wrapper">
-            <Image
+            <SafeImage
               src={image}
               alt={title}
               fill
@@ -50,7 +99,9 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
           <Link
             href={`/articles?category=${category.slug}`}
             className="blog-card-category"
-            style={{ '--category-color': category.color } as React.CSSProperties}
+            style={
+              { "--category-color": category.color } as React.CSSProperties
+            }
           >
             <span aria-hidden="true" />
             {category.name}
@@ -61,7 +112,7 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
             {tags.slice(0, 3).map((tag) => (
               <Link
                 key={tag.slug || tag.name}
-                href={tag.slug ? `/tags/${tag.slug}` : '/tags'}
+                href={tag.slug ? `/tags/${tag.slug}` : "/tags"}
                 className="blog-card-tag"
                 style={{
                   backgroundColor: `${tag.color}18`,
@@ -85,7 +136,16 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
           </div>
           <Link href={postHref} className="blog-card-readmore">
             阅读更多
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M5 12h14" />
               <path d="m12 5 7 7-7 7" />
             </svg>

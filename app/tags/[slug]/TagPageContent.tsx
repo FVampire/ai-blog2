@@ -1,8 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import AuthorBio from '../../../components/AuthorBio.tailwind';
 import BlogPostCard from '../../../components/BlogPostCard';
 import Footer from '../../../components/Footer';
 import Header from '../../../components/Header';
@@ -69,9 +69,9 @@ export default function TagPageContent({ tag, posts, currentPage, totalPages }: 
           <div className="card">
             <h1 className="section-title">标签未找到</h1>
             <p>请求的标签不存在。</p>
-            <a href="/tags" style={{ color: '#FF6B6B', marginTop: '20px', display: 'inline-block' }}>
+            <Link href="/tags" style={{ color: '#FF6B6B', marginTop: '20px', display: 'inline-block' }}>
               查看所有标签
-            </a>
+            </Link>
           </div>
         </div>
         <Footer />
@@ -158,7 +158,6 @@ export default function TagPageContent({ tag, posts, currentPage, totalPages }: 
 
           <div className="sidebar">
             <TagCloud />
-            <AuthorBio />
           </div>
         </div>
       </div>

@@ -1,210 +1,247 @@
-import React from "react";
+import Image from "next/image";
+import Link from "next/link";
 
 import type { Metadata } from "next";
 
-export const dynamic = 'force-dynamic';
-
-import AuthorBio from "../components/AuthorBio";
-import BlogSection from "../components/BlogSection";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-import ProjectsSection from "../components/ProjectsSection";
-import SearchWidget from "../components/SearchWidget";
-import TagCloud from "../components/TagCloud";
+import SafeImage from "../components/SafeImage";
 import { formatDate } from "../lib/format";
+import { PostCategoryRepository } from "../lib/repositories/PostCategoryRepository";
 import { PostRepository } from "../lib/repositories/PostRepository";
 import { ProjectRepository } from "../lib/repositories/ProjectRepository";
 import { SettingsRepository } from "../lib/repositories/SettingsRepository";
+import { getAvailableTools } from "../lib/tools/registry";
 
-interface Post {
-  id: number;
-  title: string;
-  date: string;
-  author: string;
-  excerpt: string;
-  slug: string;
-  image: string;
-  tags: Array<{ name: string; color: string; slug?: string }>;
-  category?: { name: string; slug: string; color: string };
-}
-
-interface AuthorSettings {
-  name: string;
-  bio: string;
-  avatar?: string;
-  socialLinks: Array<{ platform: string; name: string; url: string }>;
-}
+export const dynamic = "force-dynamic";
 
 const SITE_NAME = "五月的火";
 const SITE_DESCRIPTION = "记录技术、设计与开发的个人博客";
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  "http://localhost:3000"
+).replace(/\/$/, "");
 
 export const metadata: Metadata = {
   title: { absolute: SITE_NAME },
   description: SITE_DESCRIPTION,
-  icons: { icon: "/favicon.ico" },
-  openGraph: {
-    type: "website",
-    title: SITE_NAME,
-    description: SITE_DESCRIPTION,
-    url: SITE_URL,
-    siteName: SITE_NAME,
-    locale: "zh_CN",
-    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: SITE_NAME }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: SITE_NAME,
-    description: SITE_DESCRIPTION,
-    images: ["/og-default.png"],
-  },
+  alternates: { canonical: SITE_URL },
 };
 
 interface HomePageProps {
   searchParams: Promise<{ page?: string }>;
 }
 
-interface ProjectSettings {
-  enabled: boolean;
-  showOnHome: boolean;
-  homeCount: number;
-  intro: string;
-  navLabel: string;
+const STATIC_PROJECTS = [
+  {
+    href: "/projects/moling",
+    name: "墨灵 Moling",
+    meta: "workbench · 2026",
+    image: "/projects/moling/moling-project-overview-full-v5.png",
+  },
+  {
+    href: "/projects/forgetting-tide",
+    name: "遗忘潮汐",
+    meta: "godot · 2026",
+    image: "/projects/forgetting-tide/hero.png",
+  },
+] as const;
+
+function readMinutes(text: string) {
+  return Math.max(1, Math.ceil(text.replace(/\s/g, "").length / 300));
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  let posts: Post[] = [];
-  let currentPage = 1;
-  let totalPages = 0;
-  let postsFailed = false;
-  let authorSettings: AuthorSettings = {
-    name: SITE_NAME,
-    bio: "",
-    avatar: undefined,
-    socialLinks: [],
+  await searchParams;
+  let result: Awaited<ReturnType<typeof PostRepository.getPublicPosts>> = {
+    data: [],
+    total: 0,
+    page: 1,
+    limit: 8,
+    totalPages: 0,
   };
+  let categories: Awaited<
+    ReturnType<typeof PostCategoryRepository.getAllWithPostCount>
+  > = [];
+  let projects: Awaited<ReturnType<typeof ProjectRepository.getAllProjects>> =
+    [];
+  let projectSettings = { enabled: true, navLabel: "项目" };
 
   try {
-    const page = parseInt((await searchParams).page || "1") || 1;
-    currentPage = page;
-    const postsPerPage = 6;
-
-    const result = await PostRepository.getPublicPosts({ page, limit: postsPerPage });
-    const authorName = await PostRepository.getAuthorName();
-
-    totalPages = result.totalPages;
-
-    posts = result.data.map((row) => ({
-      id: row.id,
-      title: row.title,
-      date: formatDate(row.publishedAt),
-      author: row.authorName || authorName,
-      excerpt: row.excerpt,
-      slug: row.slug,
-      image: row.imageUrl || "",
-      tags: Array.isArray(row.tags) ? (row.tags as Array<{ name: string; slug?: string; color?: string }>).map((t) => ({
-        name: t.name,
-        slug: t.slug,
-        color: t.color || '#6C757D',
-      })) : [],
-      category: row.category ? {
-        name: row.category.name,
-        slug: row.category.slug,
-        color: row.category.color,
-      } : undefined,
-    }));
-
-    const aboutSettings = await SettingsRepository.getAboutSettings();
-    const authorAvatar = await SettingsRepository.getSettingValue('author_avatar', '');
-    authorSettings = {
-      name: authorName || aboutSettings.authorName,
-      bio: aboutSettings.authorBioShort,
-      avatar: typeof authorAvatar === 'string' && authorAvatar.trim() ? authorAvatar.trim() : undefined,
-      socialLinks: aboutSettings.socialLinks.map((link) => ({
-        platform: link.platform,
-        name: link.name || link.platform,
-        url: link.url,
-      })),
-    };
+    [result, categories, projects, projectSettings] = await Promise.all([
+      PostRepository.getPublicPosts({ page: 1, limit: 8 }),
+      PostCategoryRepository.getAllWithPostCount(),
+      ProjectRepository.getAllProjects({ status: "active" }),
+      SettingsRepository.getProjectDisplaySettings(),
+    ]);
   } catch (error) {
-    console.error("Error fetching posts:", error);
-    postsFailed = true;
+    console.error("Error loading home index:", error);
   }
 
-  let featuredProjects: Awaited<ReturnType<typeof ProjectRepository.getAllProjects>> = [];
-  let projectSettings: ProjectSettings = {
-    enabled: true,
-    showOnHome: true,
-    homeCount: 3,
-    intro: "我的项目与开发成果",
-    navLabel: "项目",
-  };
-
-  try {
-    projectSettings = await SettingsRepository.getProjectDisplaySettings();
-    if (projectSettings.showOnHome) {
-      const allFeatured = await ProjectRepository.getAllProjects({ featured: true, status: 'active' });
-      featuredProjects = allFeatured.slice(0, projectSettings.homeCount);
-      if (featuredProjects.length < projectSettings.homeCount) {
-        const rest = await ProjectRepository.getAllProjects({ status: 'active' });
-        const ids = new Set(featuredProjects.map((p) => p.id));
-        for (const p of rest) {
-          if (!ids.has(p.id) && featuredProjects.length < projectSettings.homeCount) {
-            featuredProjects.push(p);
-            ids.add(p.id);
-          }
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching projects:", error);
-  }
+  const posts = result.data;
+  const lead = posts[0];
+  const tools = getAvailableTools();
+  const latestUpdate = lead?.publishedAt ? formatDate(lead.publishedAt) : "—";
+  const totalProjects = Math.max(STATIC_PROJECTS.length, projects.length);
 
   return (
-    <div>
-      <Header projectsNavLabel={projectSettings.navLabel} projectsEnabled={projectSettings.enabled} />
+    <div className="site-shell">
+      <Header
+        projectsNavLabel={projectSettings.navLabel}
+        projectsEnabled={projectSettings.enabled}
+      />
+      <main className="home-index">
+        <aside className="home-index-sidebar" aria-label="站点索引">
+          <p className="index-label">INDEX</p>
+          <nav>
+            <Link className="is-active" href="/articles">
+              <span>文章</span>
+              <b>{result.total}</b>
+            </Link>
+            <Link href="/projects">
+              <span>项目</span>
+              <b>{totalProjects}</b>
+            </Link>
+            <Link href="/tools">
+              <span>工具</span>
+              <b>{tools.length}</b>
+            </Link>
+          </nav>
+          <div className="index-rule" />
+          <h2>分类</h2>
+          <nav>
+            {categories
+              .filter((item) => item.postCount > 0)
+              .slice(0, 6)
+              .map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/articles?category=${category.slug}`}
+                >
+                  <span>{category.name}</span>
+                  <b>{category.postCount}</b>
+                </Link>
+              ))}
+          </nav>
+          <div className="index-stamp">INDEXED</div>
+        </aside>
 
-      <div className="container">
-        <div className="content-wrapper">
-          <div className="main-content">
-            {projectSettings.showOnHome && featuredProjects.length > 0 && (
-              <ProjectsSection
-                projects={featuredProjects}
-                title={projectSettings.navLabel}
-                intro={projectSettings.intro}
-              />
-            )}
+        <section className="home-index-main">
+          <p className="index-path">/</p>
+          <h1>{SITE_NAME}</h1>
+          <p className="home-index-stats">
+            {result.total} posts · {totalProjects} projects · {tools.length}{" "}
+            tools · updated {latestUpdate}
+          </p>
 
-            {postsFailed ? (
-              <div className="blog-section">
-                <h1 className="section-title">最新文章</h1>
-                <div className="card" style={{ textAlign: 'center', padding: '48px 24px' }}>
-                  <p style={{ color: 'var(--text-primary)', fontWeight: 600, marginBottom: 8 }}>
-                    文章列表暂时无法加载
-                  </p>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
-                    数据服务可能正在维护。请稍后刷新页面重试。
-                  </p>
+          {lead ? (
+            <article className="home-feature">
+              {lead.imageUrl ? (
+                <Link
+                  href={`/posts/${lead.slug}`}
+                  className="home-feature-image"
+                >
+                  <SafeImage
+                    src={lead.imageUrl}
+                    alt=""
+                    fill
+                    priority
+                    sizes="(max-width: 900px) 100vw, 320px"
+                  />
+                </Link>
+              ) : (
+                <div className="home-feature-image home-feature-placeholder">
+                  FIG. 01
                 </div>
+              )}
+              <div className="home-feature-copy">
+                <p className="record-path">
+                  posts/{lead.category?.slug || "notes"}
+                </p>
+                <h2>
+                  <Link href={`/posts/${lead.slug}`}>{lead.title}</Link>
+                </h2>
+                <p>{lead.excerpt}</p>
+                <div className="record-meta">
+                  {formatDate(lead.publishedAt)} ·{" "}
+                  {readMinutes(`${lead.title}${lead.excerpt}`)} min
+                </div>
+                <div className="record-tags">
+                  {lead.tags.slice(0, 3).map((tag) => (
+                    <Link href={`/tags/${tag.slug}`} key={tag.id}>
+                      {tag.name}
+                    </Link>
+                  ))}
+                </div>
+                <Link className="record-action" href={`/posts/${lead.slug}`}>
+                  阅读全文 <span>→</span>
+                </Link>
               </div>
-            ) : (
-              <BlogSection posts={posts} currentPage={currentPage} totalPages={totalPages} />
-            )}
-          </div>
+            </article>
+          ) : (
+            <div className="index-empty">文章索引暂时不可用。</div>
+          )}
 
-          <div className="sidebar">
-            <SearchWidget />
-            <TagCloud />
-            <AuthorBio
-              name={authorSettings.name}
-              bio={authorSettings.bio}
-              avatar={authorSettings.avatar}
-              socialLinks={authorSettings.socialLinks}
-            />
+          <div className="home-recent-heading">
+            <h2>最近条目</h2>
+            <Link href="/articles">全部文章 →</Link>
           </div>
-        </div>
-      </div>
+          <div className="home-record-table">
+            <div className="home-record-head">
+              <span>DATE</span>
+              <span>TITLE</span>
+              <span>TAGS</span>
+              <span>MIN</span>
+            </div>
+            {posts.slice(0, 6).map((post) => (
+              <Link
+                href={`/posts/${post.slug}`}
+                className="home-record-row"
+                key={post.id}
+              >
+                <time>{formatDate(post.publishedAt)}</time>
+                <strong>{post.title}</strong>
+                <span>
+                  {post.tags[0]?.name || post.category?.name || "笔记"}
+                </span>
+                <i>{readMinutes(`${post.title}${post.excerpt}`)}m</i>
+              </Link>
+            ))}
+          </div>
+        </section>
 
+        <aside className="home-index-rail">
+          <div className="rail-heading">
+            <h2>项目</h2>
+            <Link href="/projects">全部 →</Link>
+          </div>
+          <div className="rail-projects">
+            {STATIC_PROJECTS.map((project) => (
+              <Link href={project.href} key={project.href}>
+                <span className="rail-project-image">
+                  <Image src={project.image} alt="" fill sizes="150px" />
+                </span>
+                <span>
+                  <strong>{project.name}</strong>
+                  <small>{project.meta}</small>
+                </span>
+              </Link>
+            ))}
+          </div>
+          <div className="rail-heading rail-tools-title">
+            <h2>工具</h2>
+          </div>
+          <nav className="rail-tools">
+            {tools.slice(0, 6).map((tool) => (
+              <Link href={`/tools/${tool.slug}`} key={tool.slug}>
+                <span>{tool.slug}</span>
+                <b>↵</b>
+              </Link>
+            ))}
+          </nav>
+        </aside>
+      </main>
       <Footer />
     </div>
   );

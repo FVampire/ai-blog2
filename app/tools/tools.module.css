@@ -244,3 +244,24 @@
     padding-top: 24px;
   }
 }
+
+/* v6 catalog records */
+.page {
+  --ink: var(--v6-ink);
+  --ink-2: var(--v6-muted);
+  --ink-3: var(--v6-muted);
+  --line: var(--v6-line);
+  --line-strong: var(--v6-line);
+  --surface: var(--v6-paper-2);
+  --surface-2: var(--v6-paper);
+  width: min(1160px, calc(100% - 64px));
+  padding-top: 30px;
+}
+.categoryHeading { border-color: var(--v6-line); }
+.categoryHeading h2 { font-size: 18px; }
+.grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.card { min-height: 176px; border-radius: 5px; background: transparent; box-shadow: var(--v6-shadow); }
+.card:hover { transform: translateY(-2px); border-color: var(--v6-accent); box-shadow: var(--v6-shadow); }
+.cardIcon { width: 38px; height: 38px; border: 1px solid var(--v6-line); border-radius: 4px; color: var(--v6-accent); background: transparent; }
+.badge, .tags span { border-radius: 3px; background: transparent; }
+.provider { border-color: var(--v6-line); }

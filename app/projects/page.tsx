@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 import styles from './projects.module.css';
+import ProjectsArchive from './ProjectsArchive';
 import Footer from '../../components/Footer';
 import Header from '../../components/Header';
 import ProjectCard from '../../components/ProjectCard';
@@ -69,6 +70,9 @@ export default async function ProjectsPage() {
   const regular = managedProjects.filter((project) => !project.featured);
   const total = managedProjects.length + STATIC_CASE_SLUGS.length;
 
+  return <ProjectsArchive projects={managedProjects} settings={settings} />;
+
+  /* Legacy portfolio composition retained below as reference for the two bespoke detail pages. */
   return (
     <div className={styles.shell}>
       <Header projectsNavLabel={settings.navLabel} projectsEnabled={settings.enabled} />
