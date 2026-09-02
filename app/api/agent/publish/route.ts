@@ -128,6 +128,14 @@ export async function PUT(request: NextRequest) {
     }
 
     const post = await PostRepository.updatePost(postId, { prevPostId, nextPostId });
+    await recordAuditEvent({
+      request,
+      user: { userId: DEFAULT_AUTHOR_ID, username: 'Agent', email: '', role: 'agent' },
+      action: 'agent.post.relate',
+      resourceType: 'post',
+      resourceId: post.id,
+      metadata: { prevPostId: post.prevPostId || null, nextPostId: post.nextPostId || null },
+    });
     return NextResponse.json({
       success: true,
       message: '文章关系已更新',
