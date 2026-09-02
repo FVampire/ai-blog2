@@ -2,7 +2,7 @@ import React from 'react';
 
 export type AdminIconName =
   | 'dashboard' | 'posts' | 'categories' | 'tags' | 'media' | 'comments'
-  | 'projects' | 'settings' | 'users' | 'integrations' | 'agent' | 'home' | 'menu';
+  | 'projects' | 'settings' | 'users' | 'integrations' | 'agent' | 'tools' | 'home' | 'menu';
 
 const paths: Record<AdminIconName, React.ReactNode> = {
   dashboard: <><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,
@@ -16,6 +16,7 @@ const paths: Record<AdminIconName, React.ReactNode> = {
   users: <><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 4a3 3 0 0 1 0 6M17 14a5 5 0 0 1 4 5"/></>,
   integrations: <><path d="M8 3v4M16 3v4M5 7h14v4a7 7 0 0 1-7 7 7 7 0 0 1-7-7zM12 18v3"/></>,
   agent: <><rect x="4" y="7" width="16" height="13" rx="3"/><path d="M12 3v4M9 3h6M8 12h.01M16 12h.01M8 16h8"/></>,
+  tools: <><path d="m14.7 6.3 3-3a4 4 0 0 1-5 5L6 15l-3 6 6-3 6.7-6.7a4 4 0 0 1 5-5l-3 3z"/><path d="m5.5 16.5 2 2"/></>,
   home: <><path d="m3 11 9-8 9 8"/><path d="M5 10v11h14V10M9 21v-7h6v7"/></>,
   menu: <><path d="M4 7h16M4 12h16M4 17h16"/></>,
 };

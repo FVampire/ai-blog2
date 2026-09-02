@@ -52,9 +52,8 @@ coverage/
 *.seed
 *.pid.lock
 
-# Uploads (if local)
-/public/uploads/*
-!/public/uploads/.gitkeep
+# Runtime uploads. Everything below this root is server-managed data.
+/public/uploads/
 
 # Server-managed blog covers
 /public/blog-covers/

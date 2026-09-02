@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin/login', siteUrl));
   }
 
-  const adminOnly = ['/admin/users', '/admin/settings', '/admin/integrations', '/admin/agent'];
+  const adminOnly = ['/admin/users', '/admin/settings', '/admin/integrations', '/admin/agent', '/admin/tools'];
   const editorial = ['/admin/categories', '/admin/tags', '/admin/comments', '/admin/projects'];
   const matches = (routes: string[]) => routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 

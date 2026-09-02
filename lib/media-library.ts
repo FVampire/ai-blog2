@@ -2,14 +2,8 @@ import fs from 'fs';
 import path from 'path';
 
 export const MEDIA_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-export const DEFAULT_MEDIA_ROOTS = ['uploads', 'blog-covers'] as const;
-
-const REGISTRY_FILENAME = '.media-library.json';
+export const MEDIA_ROOT_NAME = 'uploads';
 const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
-
-interface MediaRegistry {
-  roots: string[];
-}
 
 export interface MediaFolderEntry {
   name: string;
@@ -55,43 +49,12 @@ function getPublicRoot(): string {
   return path.resolve(process.cwd(), 'public');
 }
 
-function getRegistryPath(): string {
-  return path.resolve(process.cwd(), REGISTRY_FILENAME);
+function getMediaRoot(): string {
+  return path.resolve(getPublicRoot(), MEDIA_ROOT_NAME);
 }
 
-function readRegistry(): MediaRegistry {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(getRegistryPath(), 'utf8')) as Partial<MediaRegistry>;
-    return {
-      roots: Array.isArray(parsed.roots)
-        ? parsed.roots.filter((root): root is string => typeof root === 'string' && isValidMediaName(root))
-        : [],
-    };
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-      console.error('Failed to read media registry:', error);
-    }
-    return { roots: [] };
-  }
-}
-
-function writeRegistry(registry: MediaRegistry): void {
-  const registryPath = getRegistryPath();
-  const tempPath = `${registryPath}.${process.pid}.tmp`;
-  fs.writeFileSync(tempPath, `${JSON.stringify(registry, null, 2)}\n`, 'utf8');
-  fs.renameSync(tempPath, registryPath);
-}
-
-function getManagedRoots(): string[] {
-  return Array.from(new Set([...DEFAULT_MEDIA_ROOTS, ...readRegistry().roots]));
-}
-
-function ensureDefaultRoots(): void {
-  const publicRoot = getPublicRoot();
-  fs.mkdirSync(publicRoot, { recursive: true });
-  for (const root of DEFAULT_MEDIA_ROOTS) {
-    fs.mkdirSync(path.join(publicRoot, root), { recursive: true });
-  }
+function ensureMediaRoot(): void {
+  fs.mkdirSync(getMediaRoot(), { recursive: true });
 }
 
 export function normalizeMediaPath(input: unknown): string {
@@ -155,17 +118,14 @@ function assertInsidePublic(targetPath: string): void {
 
 function assertManagedPath(relativePath: string): void {
   const root = relativePath.split('/')[0];
-  if (!root || !getManagedRoots().includes(root)) {
+  if (root !== MEDIA_ROOT_NAME) {
     throw new MediaLibraryError('该目录不属于媒体库', 'UNMANAGED_FOLDER', 404);
   }
 }
 
 export function resolveMediaFolder(folder: unknown, mustExist = true): { relativePath: string; absolutePath: string } {
-  ensureDefaultRoots();
-  const relativePath = normalizeMediaPath(folder);
-  if (!relativePath) {
-    throw new MediaLibraryError('请先选择一个媒体文件夹', 'FOLDER_REQUIRED');
-  }
+  ensureMediaRoot();
+  const relativePath = normalizeMediaPath(folder) || MEDIA_ROOT_NAME;
   assertManagedPath(relativePath);
 
   const absolutePath = path.resolve(getPublicRoot(), ...relativePath.split('/'));
@@ -201,6 +161,7 @@ export function resolveMediaFile(file: unknown): { relativePath: string; absolut
 
 export function mediaPathToUrl(relativePath: string): string {
   const normalized = normalizeMediaPath(relativePath);
+  assertManagedPath(normalized);
   return `/${normalized.split('/').map(encodeURIComponent).join('/')}`;
 }
 
@@ -219,7 +180,7 @@ function toFolderEntry(name: string, relativePath: string, absolutePath: string)
     path: relativePath,
     itemCount: countVisibleItems(absolutePath),
     modifiedAt: stats.mtime,
-    protected: DEFAULT_MEDIA_ROOTS.includes(relativePath as typeof DEFAULT_MEDIA_ROOTS[number]),
+    protected: relativePath === MEDIA_ROOT_NAME,
   };
 }
 
@@ -229,28 +190,10 @@ export function listMediaFolder(folder: unknown): {
   folders: MediaFolderEntry[];
   images: MediaImageEntry[];
 } {
-  ensureDefaultRoots();
-  const currentFolder = normalizeMediaPath(folder);
-
-  if (!currentFolder) {
-    const folders = getManagedRoots()
-      .map((root) => {
-        const absolutePath = path.join(getPublicRoot(), root);
-        if (!fs.existsSync(absolutePath) || !fs.lstatSync(absolutePath).isDirectory()) return null;
-        return toFolderEntry(root, root, absolutePath);
-      })
-      .filter((entry): entry is MediaFolderEntry => entry !== null)
-      .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
-
-    return {
-      currentFolder: '',
-      breadcrumbs: [{ name: '媒体库', path: '' }],
-      folders,
-      images: [],
-    };
-  }
-
-  const { absolutePath } = resolveMediaFolder(currentFolder);
+  ensureMediaRoot();
+  const requestedFolder = normalizeMediaPath(folder);
+  const storageFolder = requestedFolder || MEDIA_ROOT_NAME;
+  const { absolutePath } = resolveMediaFolder(storageFolder);
   const entries = fs.readdirSync(absolutePath, { withFileTypes: true });
   const folders: MediaFolderEntry[] = [];
   const images: MediaImageEntry[] = [];
@@ -258,7 +201,7 @@ export function listMediaFolder(folder: unknown): {
   for (const entry of entries) {
     if (entry.isSymbolicLink() || entry.name.startsWith('.')) continue;
     const entryPath = path.join(absolutePath, entry.name);
-    const relativePath = `${currentFolder}/${entry.name}`;
+    const relativePath = `${storageFolder}/${entry.name}`;
 
     if (entry.isDirectory()) {
       folders.push(toFolderEntry(entry.name, relativePath, entryPath));
@@ -271,7 +214,7 @@ export function listMediaFolder(folder: unknown): {
     images.push({
       filename: entry.name,
       path: relativePath,
-      folder: currentFolder,
+      folder: storageFolder,
       url: mediaPathToUrl(relativePath),
       size: stats.size,
       uploadedAt: stats.birthtime,
@@ -284,45 +227,27 @@ export function listMediaFolder(folder: unknown): {
   images.sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime());
 
   const breadcrumbs: MediaBreadcrumb[] = [{ name: '媒体库', path: '' }];
-  const segments = currentFolder.split('/');
+  const segments = storageFolder.split('/').slice(1);
   segments.forEach((segment, index) => {
-    breadcrumbs.push({ name: segment, path: segments.slice(0, index + 1).join('/') });
+    breadcrumbs.push({
+      name: segment,
+      path: [MEDIA_ROOT_NAME, ...segments.slice(0, index + 1)].join('/'),
+    });
   });
 
-  return { currentFolder, breadcrumbs, folders, images };
-}
-
-function addManagedRoot(name: string): void {
-  const registry = readRegistry();
-  if (!registry.roots.includes(name)) {
-    registry.roots.push(name);
-    registry.roots.sort((a, b) => a.localeCompare(b, 'zh-CN'));
-    writeRegistry(registry);
-  }
-}
-
-function replaceManagedRoot(oldName: string, newName: string): void {
-  const registry = readRegistry();
-  registry.roots = registry.roots.map((root) => root === oldName ? newName : root);
-  registry.roots = Array.from(new Set(registry.roots)).sort((a, b) => a.localeCompare(b, 'zh-CN'));
-  writeRegistry(registry);
-}
-
-function removeManagedRoot(name: string): void {
-  const registry = readRegistry();
-  registry.roots = registry.roots.filter((root) => root !== name);
-  writeRegistry(registry);
+  return {
+    currentFolder: storageFolder === MEDIA_ROOT_NAME ? '' : storageFolder,
+    breadcrumbs,
+    folders,
+    images,
+  };
 }
 
 export function createMediaFolder(parent: unknown, folderName: unknown): MediaFolderEntry {
-  ensureDefaultRoots();
+  ensureMediaRoot();
   const name = validateMediaName(folderName);
-  const parentPath = normalizeMediaPath(parent);
-
-  let absoluteParent = getPublicRoot();
-  if (parentPath) {
-    absoluteParent = resolveMediaFolder(parentPath).absolutePath;
-  }
+  const parentPath = normalizeMediaPath(parent) || MEDIA_ROOT_NAME;
+  const absoluteParent = resolveMediaFolder(parentPath).absolutePath;
 
   const relativePath = parentPath ? `${parentPath}/${name}` : name;
   const absolutePath = path.resolve(absoluteParent, name);
@@ -334,7 +259,6 @@ export function createMediaFolder(parent: unknown, folderName: unknown): MediaFo
   }
 
   fs.mkdirSync(absolutePath);
-  if (!parentPath) addManagedRoot(name);
   return toFolderEntry(name, relativePath, absolutePath);
 }
 
@@ -343,12 +267,11 @@ export function renameMediaFolder(folder: unknown, newFolderName: unknown): {
   newPath: string;
   folder: MediaFolderEntry;
 } {
-  const oldPath = normalizeMediaPath(folder);
   const name = validateMediaName(newFolderName);
-  const { absolutePath } = resolveMediaFolder(oldPath);
+  const { relativePath: oldPath, absolutePath } = resolveMediaFolder(folder);
   const segments = oldPath.split('/');
 
-  if (segments.length === 1 && DEFAULT_MEDIA_ROOTS.includes(oldPath as typeof DEFAULT_MEDIA_ROOTS[number])) {
+  if (oldPath === MEDIA_ROOT_NAME) {
     throw new MediaLibraryError('系统媒体文件夹不能重命名', 'PROTECTED_FOLDER', 409);
   }
 
@@ -364,17 +287,14 @@ export function renameMediaFolder(folder: unknown, newFolderName: unknown): {
   }
 
   fs.renameSync(absolutePath, newAbsolutePath);
-  if (segments.length === 1) replaceManagedRoot(oldPath, name);
 
   return { oldPath, newPath, folder: toFolderEntry(name, newPath, newAbsolutePath) };
 }
 
 export function deleteMediaFolder(folder: unknown, recursive = false): { deletedPath: string } {
-  const relativePath = normalizeMediaPath(folder);
-  const { absolutePath } = resolveMediaFolder(relativePath);
-  const segments = relativePath.split('/');
+  const { relativePath, absolutePath } = resolveMediaFolder(folder);
 
-  if (segments.length === 1 && DEFAULT_MEDIA_ROOTS.includes(relativePath as typeof DEFAULT_MEDIA_ROOTS[number])) {
+  if (relativePath === MEDIA_ROOT_NAME) {
     throw new MediaLibraryError('系统媒体文件夹不能删除', 'PROTECTED_FOLDER', 409);
   }
 
@@ -387,6 +307,5 @@ export function deleteMediaFolder(folder: unknown, recursive = false): { deleted
   if (recursive) fs.rmSync(absolutePath, { recursive: true });
   else fs.rmdirSync(absolutePath);
 
-  if (segments.length === 1) removeManagedRoot(relativePath);
   return { deletedPath: relativePath };
 }

@@ -40,19 +40,40 @@ test('media folders support create, list, rename, and recursive delete', () => {
   try {
     process.chdir(testDirectory);
     createMediaFolder('', '文章图片');
-    createMediaFolder('文章图片', '2026');
+    createMediaFolder('uploads/文章图片', '2026');
+    assert.equal(fs.existsSync(path.join(testDirectory, 'public', 'uploads', '文章图片', '2026')), true);
+    assert.equal(fs.existsSync(path.join(testDirectory, 'public', '文章图片')), false);
 
     assert.deepEqual(
       new Set(listMediaFolder('').folders.map((folder) => folder.path)),
-      new Set(['blog-covers', 'uploads', '文章图片']),
+      new Set(['uploads/文章图片']),
     );
-    assert.equal(listMediaFolder('文章图片').folders[0]?.path, '文章图片/2026');
+    assert.equal(listMediaFolder('').currentFolder, '');
+    assert.equal(listMediaFolder('uploads/文章图片').folders[0]?.path, 'uploads/文章图片/2026');
 
-    const renamed = renameMediaFolder('文章图片/2026', '归档');
-    assert.equal(renamed.newPath, '文章图片/归档');
-    assert.throws(() => deleteMediaFolder('文章图片'), /不为空/);
-    deleteMediaFolder('文章图片', true);
-    assert.equal(listMediaFolder('').folders.some((folder) => folder.path === '文章图片'), false);
+    const renamed = renameMediaFolder('uploads/文章图片/2026', '归档');
+    assert.equal(renamed.newPath, 'uploads/文章图片/归档');
+    assert.throws(() => deleteMediaFolder('uploads/文章图片'), /不为空/);
+    deleteMediaFolder('uploads/文章图片', true);
+    assert.equal(listMediaFolder('').folders.some((folder) => folder.path === 'uploads/文章图片'), false);
+  } finally {
+    process.chdir(originalDirectory);
+    fs.rmSync(testDirectory, { recursive: true, force: true });
+  }
+});
+
+test('media folders cannot escape the uploads root', () => {
+  const originalDirectory = process.cwd();
+  const testDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'media-library-root-'));
+
+  try {
+    process.chdir(testDirectory);
+    assert.throws(() => createMediaFolder('blog-covers', 'legacy'), /不属于媒体库/);
+    assert.throws(() => mediaPathToUrl('blog-covers/example.webp'), /不属于媒体库/);
+    assert.throws(() => renameMediaFolder('uploads', 'images'), /不能重命名/);
+    assert.throws(() => renameMediaFolder('', 'images'), /不能重命名/);
+    assert.throws(() => deleteMediaFolder('uploads', true), /不能删除/);
+    assert.throws(() => deleteMediaFolder('', true), /不能删除/);
   } finally {
     process.chdir(originalDirectory);
     fs.rmSync(testDirectory, { recursive: true, force: true });

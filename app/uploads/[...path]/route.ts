@@ -1,41 +1,44 @@
+import { NextResponse } from 'next/server';
+
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { NextResponse } from 'next/server';
+import {
+  MEDIA_IMAGE_EXTENSIONS,
+  MediaLibraryError,
+  resolveMediaFile,
+} from '@/lib/media-library';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const SAFE_IMAGE_FILENAME = /^[a-z0-9][a-z0-9._-]{0,254}\.(?:jpe?g|png|gif|webp)$/i;
 const CONTENT_TYPES: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',
   '.gif': 'image/gif',
   '.webp': 'image/webp',
+  '.bmp': 'image/bmp',
 };
 
 interface UploadRouteProps {
-  params: Promise<{ filename: string }>;
+  params: Promise<{ path: string[] }>;
 }
 
 export async function GET(_request: Request, { params }: UploadRouteProps) {
-  const { filename } = await params;
-
-  if (!SAFE_IMAGE_FILENAME.test(filename) || path.basename(filename) !== filename) {
-    return new NextResponse(null, { status: 404 });
-  }
-
-  const extension = path.extname(filename).toLowerCase();
-  const uploadDir = path.resolve(process.cwd(), 'public', 'uploads');
-  const filePath = path.resolve(uploadDir, filename);
-
-  if (path.dirname(filePath) !== uploadDir) {
+  const { path: segments } = await params;
+  if (!Array.isArray(segments) || segments.length === 0) {
     return new NextResponse(null, { status: 404 });
   }
 
   try {
-    const file = await fs.readFile(filePath);
+    const target = resolveMediaFile(['uploads', ...segments].join('/'));
+    const extension = path.extname(target.absolutePath).toLowerCase();
+    if (!MEDIA_IMAGE_EXTENSIONS.includes(extension)) {
+      return new NextResponse(null, { status: 404 });
+    }
+    const file = await fs.readFile(target.absolutePath);
+
     return new NextResponse(new Uint8Array(file), {
       headers: {
         'Content-Type': CONTENT_TYPES[extension] || 'application/octet-stream',
@@ -45,14 +48,13 @@ export async function GET(_request: Request, { params }: UploadRouteProps) {
       },
     });
   } catch (error) {
-    const code = (error as NodeJS.ErrnoException).code;
-    if (code === 'ENOENT' || code === 'EISDIR') {
+    if (error instanceof MediaLibraryError) {
       return new NextResponse(null, { status: 404 });
     }
     console.error('[Uploads] Read file error:', error);
     return NextResponse.json(
       { success: false, message: '读取图片失败' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

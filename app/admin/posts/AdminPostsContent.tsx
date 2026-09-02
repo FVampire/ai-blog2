@@ -157,45 +157,42 @@ export default function AdminPostsContent({
   return (
     <AdminLayout>
       <div className="posts-page">
-        <div className="page-header">
+        <div className="list-page-toolbar">
           <h1 className="page-title">文章管理</h1>
-          <button className="btn-primary" onClick={() => router.push('/admin/posts/new')}>
-            <AdminIcon name="posts" size={17} /> 新建文章
-          </button>
-        </div>
-
-        <div className="filters">
           <form className="search-box-admin" onSubmit={handleSearchSubmit}>
             <span className="search-icon-admin" aria-hidden="true">⌕</span>
-            <input type="text" placeholder="搜索文章标题或作者..." value={searchTerm}
+            <input type="text" placeholder="搜索标题或作者..." value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)} className="search-input-admin" />
             <button type="submit" className="search-submit-admin">搜索</button>
           </form>
-          <div className="filter-group">
-            <label>状态筛选：</label>
-            <select value={status} onChange={(e) => handleStatusChange(e.target.value as StatusFilter)} className="filter-select">
-              <option value="all">全部</option>
-              <option value="published">已发布</option>
-              <option value="draft">草稿</option>
-              <option value="archived">已归档</option>
-            </select>
-          </div>
+          <select value={status} onChange={(e) => handleStatusChange(e.target.value as StatusFilter)} className="filter-select" aria-label="状态筛选">
+            <option value="all">全部状态</option>
+            <option value="published">已发布</option>
+            <option value="draft">草稿</option>
+            <option value="archived">已归档</option>
+          </select>
+          <button className="btn-primary" onClick={() => router.push('/admin/posts/new')}>
+            <AdminIcon name="posts" size={16} /> 新建文章
+          </button>
         </div>
         {attention && <div className="active-filter-note"><span>当前只看：{attention === 'cover' ? '缺少封面' : '未设专栏'}</span><button className="text-button" onClick={() => router.push(buildUrl({ page: 1, attention: null }))}>清除筛选</button></div>}
 
-        <div className="filters" aria-label="批量操作">
-          <span>已选择 {selectedIds.length} 篇</span>
-          <select value={bulkAction} onChange={(event) => setBulkAction(event.target.value)} className="filter-select">
-            <option value="">选择批量操作</option>
-            <option value="published">设为已发布</option>
-            <option value="draft">设为草稿</option>
-            <option value="archived">设为已归档</option>
-            <option value="delete">批量删除</option>
-          </select>
-          <button type="button" className="btn-secondary" disabled={!bulkAction || selectedIds.length === 0 || bulkLoading} onClick={handleBulkApply}>
-            {bulkLoading ? '处理中...' : '应用'}
-          </button>
-        </div>
+        {selectedIds.length > 0 && (
+          <div className="list-bulk-bar" aria-label="批量操作">
+            <strong>已选 {selectedIds.length} 篇</strong>
+            <select value={bulkAction} onChange={(event) => setBulkAction(event.target.value)} className="filter-select">
+              <option value="">选择批量操作</option>
+              <option value="published">设为已发布</option>
+              <option value="draft">设为草稿</option>
+              <option value="archived">设为已归档</option>
+              <option value="delete">批量删除</option>
+            </select>
+            <button type="button" className="btn-secondary" disabled={!bulkAction || bulkLoading} onClick={handleBulkApply}>
+              {bulkLoading ? '处理中...' : '应用'}
+            </button>
+            <button type="button" className="text-button" onClick={() => { setSelectedIds([]); setBulkAction(''); }}>取消选择</button>
+          </div>
+        )}
 
         <div className="data-table">
           <table>

@@ -175,6 +175,7 @@ export default function AdminMedia() {
   const formatDate = (dateString: string) => new Date(dateString).toLocaleString('zh-CN');
 
   const isEmpty = folders.length === 0 && images.length === 0;
+  const uploadFolder = currentFolder || 'uploads';
 
   return (
     <AdminLayout>
@@ -186,7 +187,7 @@ export default function AdminMedia() {
           </div>
           <div className="media-header-actions">
             <button type="button" className="btn-secondary" onClick={openCreateDialog}>＋ 新建文件夹</button>
-            <button type="button" className="btn-primary" onClick={() => setShowUploadModal(true)} disabled={!currentFolder}>↑ 上传图片</button>
+            <button type="button" className="btn-primary" onClick={() => setShowUploadModal(true)}>↑ 上传图片</button>
           </div>
         </div>
 
@@ -289,11 +290,11 @@ export default function AdminMedia() {
           </div>
         )}
 
-        {showUploadModal && currentFolder && (
+        {showUploadModal && (
           <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
             <div className="modal-content" onClick={(event) => event.stopPropagation()}>
-              <div className="modal-header"><div><h2>上传图片</h2><p className="media-modal-path">保存到 /{currentFolder}</p></div><button className="modal-close" onClick={() => setShowUploadModal(false)}>✕</button></div>
-              <div className="modal-body"><ImageUpload folder={currentFolder} onUploadSuccess={handleUploadSuccess} onUploadError={(error) => console.error(error)} /></div>
+              <div className="modal-header"><div><h2>上传图片</h2><p className="media-modal-path">保存到 /{uploadFolder}</p></div><button className="modal-close" onClick={() => setShowUploadModal(false)}>✕</button></div>
+              <div className="modal-body"><ImageUpload folder={uploadFolder} onUploadSuccess={handleUploadSuccess} onUploadError={(error) => console.error(error)} /></div>
             </div>
           </div>
         )}

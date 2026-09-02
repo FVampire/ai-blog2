@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { needsModeration, getFilterReason } from '@/lib/content-filter';
 import { query } from '@/lib/db';
+import { formatIpCity, resolveIpLocation } from '@/lib/ip-location';
 import { enforceRateLimit, getClientIp } from '@/lib/rate-limit-api';
 
 export async function GET(
@@ -81,11 +82,8 @@ export async function POST(
     let city = '';
     if (ipAddress && ipAddress !== 'unknown') {
       try {
-        const geo = await fetch(`http://ip-api.com/json/${ipAddress}?lang=zh-CN`);
-        if (geo.ok) {
-          const data = await geo.json();
-          city = data.city || '';
-        }
+        const geo = await resolveIpLocation(ipAddress);
+        city = formatIpCity(geo.selected);
       } catch {
         // ignore geo errors
       }
