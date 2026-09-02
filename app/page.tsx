@@ -35,12 +35,21 @@ interface HomePageProps {
 
 const STATIC_PROJECTS = [
   {
+    slug: "ai-garment-pattern-agent",
+    href: "/projects/ai-garment-pattern-agent",
+    name: "AI 服装打版 Agent",
+    meta: "agent/cad · 2026",
+    image: "/projects/ai-garment-pattern-agent/pattern-complete.webp",
+  },
+  {
+    slug: "moling",
     href: "/projects/moling",
     name: "墨灵 Moling",
     meta: "workbench · 2026",
     image: "/projects/moling/moling-project-overview-full-v5.png",
   },
   {
+    slug: "forgetting-tide",
     href: "/projects/forgetting-tide",
     name: "遗忘潮汐",
     meta: "godot · 2026",
@@ -83,7 +92,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const lead = posts[0];
   const tools = getAvailableTools();
   const latestUpdate = lead?.publishedAt ? formatDate(lead.publishedAt) : "—";
-  const totalProjects = Math.max(STATIC_PROJECTS.length, projects.length);
+  const staticSlugs = new Set<string>(
+    STATIC_PROJECTS.map((project) => project.slug),
+  );
+  const totalProjects =
+    STATIC_PROJECTS.length +
+    projects.filter((project) => !staticSlugs.has(project.slug)).length;
 
   return (
     <div className="site-shell">

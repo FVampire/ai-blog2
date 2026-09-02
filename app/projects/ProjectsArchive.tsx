@@ -13,6 +13,17 @@ interface Props {
 
 const FEATURED = [
   {
+    href: "/projects/ai-garment-pattern-agent",
+    path: "projects/ai-garment-pattern-agent",
+    name: "AI 服装打版 Agent",
+    kind: "agent/cad",
+    year: "2026",
+    description: "从款式语义到可验证纸样的智能制版系统。",
+    image: "/projects/ai-garment-pattern-agent/pattern-complete.webp",
+    tags: ["REV 0.1", "StyleGraph", "DXF"],
+    caption: "FIG. 2-1  seam.png",
+  },
+  {
     href: "/projects/moling",
     path: "projects/moling",
     name: "墨灵 Moling",
@@ -21,7 +32,7 @@ const FEATURED = [
     description: "从大纲到可交付章节的写作工作台。",
     image: "/projects/moling/moling-project-overview-full-v5.png",
     tags: ["REV 0.5", "27 steps", "0 fail"],
-    caption: "FIG. 2-1  moling.png",
+    caption: "FIG. 2-2  moling.png",
   },
   {
     href: "/projects/forgetting-tide",
@@ -32,7 +43,7 @@ const FEATURED = [
     description: "叙事构筑与记忆潮汐。",
     image: "/projects/forgetting-tide/hero.png",
     tags: ["REV 0.3", "Godot 4", "deckbuilding"],
-    caption: "FIG. 2-2  tide.png",
+    caption: "FIG. 2-3  tide.png",
   },
 ] as const;
 
@@ -53,7 +64,7 @@ export default function ProjectsArchive({ projects, settings }: Props) {
             </span>
             <span>
               <b>产品与 AI</b>
-              <i>{1 + projects.length}</i>
+              <i>{2 + projects.length}</i>
             </span>
             <span>
               <b>游戏与交互</b>
