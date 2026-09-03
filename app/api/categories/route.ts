@@ -4,7 +4,7 @@ import { TagRepository } from '@/lib/repositories/TagRepository';
 
 export async function GET() {
   try {
-    const tags = await TagRepository.getPopularTags(20);
+    const tags = await TagRepository.getAllTagsWithCount();
     const data = tags.map((t) => ({
       id: t.id,
       name: t.name,

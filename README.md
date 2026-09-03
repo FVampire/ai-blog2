@@ -23,7 +23,7 @@ A complete, production-ready blogging platform built with Next.js, TypeScript, a
 - Drag-and-drop image uploader
 - Media library with preview thumbnails
 - File validation and size limits
-- Direct filesystem storage
+- Tencent COS object storage
 
 ### 📊 Analytics & Tracking
 - Automatic view counting with deduplication

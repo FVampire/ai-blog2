@@ -7,6 +7,7 @@ import TableOfContents from '../../../../../components/TableOfContents';
 import { requireAdminPage } from '../../../../../lib/auth-page';
 import { query } from '../../../../../lib/db';
 import { articleRehypePlugins } from '../../../../../lib/markdown/plugins';
+import { rewriteMarkdownMediaUrls } from '../../../../../lib/media-url';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   await requireAdminPage();
@@ -91,7 +92,7 @@ export default async function PreviewPostPage({ params }: { params: Promise<{ id
                       </div>
                     )}
                     <div className="markdown-preview admin-preview-markdown">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={articleRehypePlugins}>{post.content}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={articleRehypePlugins}>{rewriteMarkdownMediaUrls(post.content)}</ReactMarkdown>
                     </div>
                   </div>
                 </article>

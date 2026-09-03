@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       : Math.min(parsedLimit, MAX_LIMIT);
 
     const folder = searchParams.get('folder') || '';
-    const listing = listMediaFolder(folder);
+    const listing = await listMediaFolder(folder);
     const images = listing.images;
 
     const total = images.length;

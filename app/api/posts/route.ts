@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth, isAuthError, getAuthUser } from '@/lib/auth-middleware-app';
+import { schedulePublishPipeline } from '@/lib/publish/pipeline';
 import { PostRepository } from '@/lib/repositories/PostRepository';
 
 export async function GET(request: NextRequest) {
@@ -125,6 +126,10 @@ export async function POST(request: NextRequest) {
       categoryId: categoryId ?? null,
       tagIds,
     });
+
+    if (post.status === 'published') {
+      schedulePublishPipeline(post.id, { previousStatus: 'draft' });
+    }
 
     return NextResponse.json(
       { success: true, message: '文章创建成功', data: { post } },

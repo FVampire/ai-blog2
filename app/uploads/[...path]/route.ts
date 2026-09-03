@@ -1,25 +1,17 @@
 import { NextResponse } from 'next/server';
 
-import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import {
   MEDIA_IMAGE_EXTENSIONS,
   MediaLibraryError,
-  resolveMediaFile,
+  mediaPathToUrl,
+  normalizeMediaPath,
 } from '@/lib/media-library';
+import { isCosConfigured } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-const CONTENT_TYPES: Record<string, string> = {
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.png': 'image/png',
-  '.gif': 'image/gif',
-  '.webp': 'image/webp',
-  '.bmp': 'image/bmp',
-};
 
 interface UploadRouteProps {
   params: Promise<{ path: string[] }>;
@@ -32,21 +24,18 @@ export async function GET(_request: Request, { params }: UploadRouteProps) {
   }
 
   try {
-    const target = resolveMediaFile(['uploads', ...segments].join('/'));
-    const extension = path.extname(target.absolutePath).toLowerCase();
-    if (!MEDIA_IMAGE_EXTENSIONS.includes(extension)) {
+    const relativePath = normalizeMediaPath(['uploads', ...segments].join('/'));
+    const extension = path.posix.extname(relativePath).toLowerCase();
+    if (!relativePath.startsWith('uploads/') || !MEDIA_IMAGE_EXTENSIONS.includes(extension)) {
       return new NextResponse(null, { status: 404 });
     }
-    const file = await fs.readFile(target.absolutePath);
-
-    return new NextResponse(new Uint8Array(file), {
-      headers: {
-        'Content-Type': CONTENT_TYPES[extension] || 'application/octet-stream',
-        'Content-Length': String(file.byteLength),
-        'Cache-Control': 'public, max-age=31536000, immutable',
-        'X-Content-Type-Options': 'nosniff',
-      },
-    });
+    if (!isCosConfigured()) {
+      return NextResponse.json(
+        { success: false, message: '未配置腾讯云 COS' },
+        { status: 503 },
+      );
+    }
+    return NextResponse.redirect(mediaPathToUrl(relativePath), 302);
   } catch (error) {
     if (error instanceof MediaLibraryError) {
       return new NextResponse(null, { status: 404 });

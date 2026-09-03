@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { PostRepository } from '@/lib/repositories/PostRepository';
 import { ProjectRepository } from '@/lib/repositories/ProjectRepository';
+import { SeriesRepository } from '@/lib/repositories/SeriesRepository';
 import { TagRepository } from '@/lib/repositories/TagRepository';
 import { getAvailableTools } from '@/lib/tools/registry';
 
@@ -15,6 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${base}/`, lastModified: now, changeFrequency: 'daily', priority: 1 },
     { url: `${base}/articles`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${base}/series`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${base}/projects`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${base}/projects/ai-garment-pattern-agent`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/projects/forgetting-tide`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
@@ -74,7 +76,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Sitemap: failed to load projects', error);
   }
 
-  const all = [...staticEntries, ...postEntries, ...tagEntries, ...projectEntries];
+  let seriesEntries: MetadataRoute.Sitemap = [];
+  try {
+    const series = await SeriesRepository.listPublic();
+    seriesEntries = series.map((item) => ({
+      url: `${base}/series/${item.slug}`,
+      lastModified: item.updatedAt ? new Date(item.updatedAt) : now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
+  } catch (error) {
+    console.error('Sitemap: failed to load series', error);
+  }
+
+  const all = [...staticEntries, ...postEntries, ...tagEntries, ...projectEntries, ...seriesEntries];
   const seen = new Set<string>();
   return all.filter((entry) => {
     if (seen.has(entry.url)) return false;

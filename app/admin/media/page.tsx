@@ -164,7 +164,8 @@ export default function AdminMedia() {
   };
 
   const handleCopyUrl = async (url: string) => {
-    await navigator.clipboard.writeText(window.location.origin + url);
+    const value = /^https?:\/\//i.test(url) ? url : `${window.location.origin}${url}`;
+    await navigator.clipboard.writeText(value);
     toast.success('链接已复制到剪贴板');
   };
   const formatSize = (bytes: number) => bytes < 1024

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { recordAuditEvent } from '@/lib/audit-log';
 import { requireRoles, isAuthError } from '@/lib/auth-middleware-app';
 import { query } from '@/lib/db';
+import { schedulePublishPipeline } from '@/lib/publish/pipeline';
 
 const ALLOWED_STATUSES = new Set(['draft', 'published', 'archived']);
 
@@ -32,6 +33,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.action === 'status' && ALLOWED_STATUSES.has(body.status)) {
+      const before = await query('SELECT id, status FROM posts WHERE id = ANY($1::int[])', [ids]);
+      const previous = new Map(before.rows.map((row: { id: number; status: string }) => [Number(row.id), row.status]));
       const result = await query(
         `UPDATE posts
          SET status = $1,
@@ -46,6 +49,11 @@ export async function POST(request: NextRequest) {
         resourceType: 'post',
         metadata: { ids: result.rows.map((row) => row.id), status: body.status },
       });
+      if (body.status === 'published') {
+        result.rows.forEach((row: { id: number }) => {
+          schedulePublishPipeline(Number(row.id), { previousStatus: previous.get(Number(row.id)) || null });
+        });
+      }
       return NextResponse.json({ success: true, message: `已更新 ${result.rowCount} 篇文章`, data: { affected: result.rowCount } });
     }
 

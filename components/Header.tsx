@@ -120,6 +120,7 @@ const Header: React.FC<HeaderProps> = ({
   const navItems: Array<{ href: string; label: string }> = [
     { href: "/", label: "首页" },
     { href: "/articles", label: "文章" },
+    { href: "/series", label: "系列" },
     ...(projectsEnabled
       ? [{ href: "/projects", label: projectsNavLabel }]
       : []),

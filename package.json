@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --experimental-strip-types --test lib/upload-image.test.ts lib/media-library.test.ts lib/markdown/plugins.test.ts lib/auth-cookie.test.ts lib/edge-jwt.test.ts lib/tag-taxonomy.test.ts lib/ip-location.test.ts lib/translation.test.ts",
+    "test": "node --experimental-strip-types --test lib/upload-image.test.ts lib/media-library.test.ts lib/media-url.test.ts lib/markdown/plugins.test.ts lib/auth-cookie.test.ts lib/edge-jwt.test.ts lib/tag-taxonomy.test.ts lib/ip-location.test.ts lib/translation.test.ts lib/feishu.test.ts lib/publish-pipeline.test.ts",
     "migrate": "node scripts/migrate.mjs",
     "deploy": "bash scripts/deploy.sh"
   },
@@ -16,6 +16,7 @@
     "@ai-sdk/anthropic": "^3.0.64",
     "@ai-sdk/google": "^3.0.53",
     "@ai-sdk/openai": "^3.0.48",
+    "@aws-sdk/client-s3": "^3.1124.0",
     "@codemirror/lang-javascript": "^6.2.5",
     "@codemirror/state": "^6.7.1",
     "@codemirror/theme-one-dark": "^6.1.3",

@@ -4,6 +4,7 @@ import {
 } from 'typeorm';
 
 import { PostCategory } from './PostCategory';
+import { PostSeries } from './PostSeries';
 import { Tag } from './Tag';
 import { User } from './User';
 
@@ -52,6 +53,13 @@ export class Post {
 
   @Column({ name: 'next_post_id', type: 'int', nullable: true })
   nextPostId?: number;
+
+  @Column({ name: 'series_id', type: 'int', nullable: true })
+  seriesId?: number | null;
+
+  @ManyToOne(() => PostSeries, (series) => series.posts, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'series_id' })
+  series?: PostSeries;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;

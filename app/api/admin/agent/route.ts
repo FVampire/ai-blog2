@@ -4,6 +4,7 @@ import { recordAuditEvent } from '@/lib/audit-log';
 import { isAuthError, requireRoles } from '@/lib/auth-middleware-app';
 import { initializeDatabase } from '@/lib/datasource';
 import { query } from '@/lib/db';
+import { SeriesRepository } from '@/lib/repositories/SeriesRepository';
 
 interface PostRow {
   id: number;
@@ -79,6 +80,25 @@ export async function GET(request: NextRequest) {
     );
     const posts = postsResult.rows as PostRow[];
     const chainData = buildSeries(posts);
+    let seriesRecords: Awaited<ReturnType<typeof SeriesRepository.listAll>> = [];
+    try {
+      seriesRecords = await SeriesRepository.listAll();
+    } catch (error) {
+      console.warn('Series table is unavailable:', error);
+    }
+    const series = chainData.series.map((group) => {
+      const firstId = group.posts[0]?.id;
+      const record = seriesRecords.find((item) => item.posts.some((post) => post.id === firstId));
+      return {
+        ...group,
+        seriesId: record?.id || null,
+        slug: record?.slug || null,
+        title: record?.title || group.posts[0]?.title || '未命名系列',
+        description: record?.description || '',
+        coverUrl: record?.coverUrl || '',
+        publicUrl: record?.slug ? `/series/${record.slug}` : null,
+      };
+    });
 
     let activity: unknown[] = [];
     let stats = { published30d: 0, uploads30d: 0, projects30d: 0, lastActivityAt: null as string | null };
@@ -110,7 +130,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { ...chainData, posts, activity, stats },
+      data: { series, unassigned: chainData.unassigned, posts, activity, stats },
     });
   } catch (error) {
     console.error('Get Agent console data error:', error);
@@ -166,16 +186,29 @@ export async function PUT(request: NextRequest) {
       }
     });
 
+    const series = await SeriesRepository.saveChain(postIds, {
+      seriesId: body.seriesId ? Number(body.seriesId) : undefined,
+      title: typeof body.title === 'string' ? body.title : undefined,
+      slug: typeof body.slug === 'string' ? body.slug : undefined,
+      description: typeof body.description === 'string' ? body.description : undefined,
+      coverUrl: typeof body.coverUrl === 'string' ? body.coverUrl : undefined,
+      previousPostIds,
+    });
+
     await recordAuditEvent({
       request,
       user: authResult.user,
       action: 'admin.series.update',
       resourceType: 'post_series',
-      resourceId: postIds[0],
-      metadata: { postIds, previousPostIds },
+      resourceId: series.id,
+      metadata: { postIds, previousPostIds, slug: series.slug },
     });
 
-    return NextResponse.json({ success: true, message: '系列顺序已保存' });
+    return NextResponse.json({
+      success: true,
+      message: '系列顺序已保存',
+      data: { seriesId: series.id, slug: series.slug, url: `/series/${series.slug}` },
+    });
   } catch (error) {
     if (error instanceof Error && error.message === 'POST_NOT_FOUND') {
       return NextResponse.json({ success: false, message: '部分文章不存在，请刷新后重试' }, { status: 404 });

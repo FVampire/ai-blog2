@@ -3,6 +3,7 @@ import { In } from 'typeorm';
 import { Post } from '../entities/Post';
 import { PostTag } from '../entities/PostTag';
 import { Tag } from '../entities/Tag';
+import { exposeMediaUrl, storeMediaUrl } from '../media-url';
 import { BaseRepository } from './BaseRepository';
 
 interface PostDTO {
@@ -21,6 +22,9 @@ interface PostDTO {
   publishedAt?: Date;
   prevPostId?: number;
   nextPostId?: number;
+  seriesId?: number | null;
+  seriesSlug?: string;
+  seriesTitle?: string;
   categoryId?: number | null;
   category?: PostCategoryDTO;
   tags: TagDTO[];
@@ -56,7 +60,7 @@ function toDTO(post: Post, authorName?: string, tags?: TagDTO[]): PostDTO {
     slug: post.slug,
     excerpt: post.excerpt || '',
     content: post.content || '',
-    imageUrl: post.imageUrl || '',
+    imageUrl: exposeMediaUrl(post.imageUrl),
     status: post.status,
     views: post.views,
     authorId: post.authorId || 0,
@@ -66,6 +70,9 @@ function toDTO(post: Post, authorName?: string, tags?: TagDTO[]): PostDTO {
     publishedAt: post.publishedAt,
     prevPostId: post.prevPostId,
     nextPostId: post.nextPostId,
+    seriesId: post.seriesId ?? null,
+    seriesSlug: post.series?.slug,
+    seriesTitle: post.series?.title,
     categoryId: post.categoryId,
     category: post.category ? {
       id: post.category.id,
@@ -156,7 +163,7 @@ export class PostRepository extends BaseRepository {
       title: row.title,
       slug: row.slug,
       excerpt: row.excerpt,
-      imageUrl: row.image_url || '',
+      imageUrl: exposeMediaUrl(row.image_url),
       views: row.views,
       authorName: row.author_name,
       publishedAt: row.published_at,
@@ -225,7 +232,17 @@ export class PostRepository extends BaseRepository {
     const repo = await this.getRepo(Post);
     const post = await repo.findOne({
       where: { id },
-      relations: { tags: true, author: true, category: true },
+      relations: { tags: true, author: true, category: true, series: true },
+    });
+    if (!post) return null;
+    return toDTO(post, post.author?.username, extractTags(post));
+  }
+
+  static async getPostBySlugAnyStatus(slug: string): Promise<PostDTO | null> {
+    const repo = await this.getRepo(Post);
+    const post = await repo.findOne({
+      where: { slug },
+      relations: { tags: true, author: true, category: true, series: true },
     });
     if (!post) return null;
     return toDTO(post, post.author?.username, extractTags(post));
@@ -238,7 +255,7 @@ export class PostRepository extends BaseRepository {
     const repo = await this.getRepo(Post);
     const post = await repo.findOne({
       where: { slug, status: 'published' },
-      relations: { tags: true, author: true, category: true },
+      relations: { tags: true, author: true, category: true, series: true },
     });
     if (!post) return null;
     return toDTO(post, post.author?.username, extractTags(post));
@@ -256,6 +273,7 @@ export class PostRepository extends BaseRepository {
     status: 'draft' | 'published' | 'archived';
     authorId: number;
     categoryId?: number | null;
+    seriesId?: number | null;
     tagIds?: number[];
   }): Promise<PostDTO> {
     const ds = await this.getDataSource();
@@ -271,10 +289,11 @@ export class PostRepository extends BaseRepository {
       slug: data.slug,
       excerpt: data.excerpt || '',
       content: data.content || '',
-      imageUrl: data.imageUrl || '',
+      imageUrl: storeMediaUrl(data.imageUrl),
       status: data.status,
       authorId: data.authorId,
       categoryId: data.categoryId ?? null,
+      seriesId: data.seriesId ?? null,
       publishedAt: data.status === 'published' ? new Date() : undefined,
     });
 
@@ -302,6 +321,7 @@ export class PostRepository extends BaseRepository {
     status?: 'draft' | 'published' | 'archived';
     tagIds?: number[];
     categoryId?: number | null;
+    seriesId?: number | null;
     prevPostId?: number;
     nextPostId?: number;
   }): Promise<PostDTO> {
@@ -321,8 +341,9 @@ export class PostRepository extends BaseRepository {
     if (data.slug !== undefined) post.slug = data.slug;
     if (data.excerpt !== undefined) post.excerpt = data.excerpt;
     if (data.content !== undefined) post.content = data.content;
-    if (data.imageUrl !== undefined) post.imageUrl = data.imageUrl;
+    if (data.imageUrl !== undefined) post.imageUrl = storeMediaUrl(data.imageUrl);
     if (data.categoryId !== undefined) post.categoryId = data.categoryId;
+    if (data.seriesId !== undefined) post.seriesId = data.seriesId;
     if (data.status !== undefined) {
       post.status = data.status;
       if (data.status === 'published' && !post.publishedAt) {
@@ -541,7 +562,7 @@ export class PostRepository extends BaseRepository {
       title: row.title,
       slug: row.slug,
       excerpt: row.excerpt,
-      imageUrl: row.image_url || '',
+      imageUrl: exposeMediaUrl(row.image_url),
       views: row.views,
       authorName: row.author_name,
       publishedAt: row.published_at,
@@ -555,5 +576,36 @@ export class PostRepository extends BaseRepository {
       limit,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  /**
+   * ILIKE search that works for Chinese titles and excerpts.
+   */
+  static async searchPublishedLoose(queryString: string, limit = 8): Promise<Array<{
+    id: number;
+    title: string;
+    slug: string;
+    excerpt: string;
+    publishedAt?: Date;
+  }>> {
+    const text = queryString.trim();
+    if (!text) return [];
+    const ds = await this.getDataSource();
+    const rows = await ds.query(
+      `SELECT p.id, p.title, p.slug, p.excerpt, p.published_at
+       FROM posts p
+       WHERE p.status = 'published'
+         AND (p.title ILIKE $1 OR COALESCE(p.excerpt, '') ILIKE $1 OR COALESCE(p.content, '') ILIKE $1)
+       ORDER BY p.published_at DESC NULLS LAST, p.created_at DESC
+       LIMIT $2`,
+      [`%${text}%`, limit],
+    );
+    return rows.map((row: { id: number; title: string; slug: string; excerpt: string; published_at: Date }) => ({
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      excerpt: row.excerpt || '',
+      publishedAt: row.published_at,
+    }));
   }
 }

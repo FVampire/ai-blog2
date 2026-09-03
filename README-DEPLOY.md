@@ -25,6 +25,10 @@ DATABASE_URL=postgresql://用户名:密码@localhost:5432/blog_db
 JWT_SECRET=随便写一个长字符串
 AGENT_API_KEY=你的agent密钥
 SITE_URL=http://localhost:3000
+COS_SECRET_ID=你的COS SecretId
+COS_SECRET_KEY=你的COS SecretKey
+COS_BUCKET=桶名-AppId
+COS_REGION=ap-guangzhou
 ```
 
 初始化数据库（首次）：
@@ -35,6 +39,19 @@ psql -U postgres -d blog_db -f db/schema.sql
 
 # 方式 B：只跑增量迁移（schema 已存在时）
 pnpm migrate
+```
+
+媒体文件走腾讯云 COS，本地 `pnpm dev` 和生产环境读写同一个桶。在 COS 控制台创建存储桶后：
+
+1. 桶名格式为 `名称-AppId`，地域写入 `COS_REGION`。
+2. 给媒体使用独立子账号，只授权该桶的对象读写，不要复用翻译密钥。
+3. 需要能被浏览器和微信直接打开：要么上传时带 `public-read` ACL，要么给 `uploads/*` 配公共读策略。
+4. 可选：绑定已备案自定义域名到 `COS_PUBLIC_BASE_URL`，或前面再挂腾讯云 CDN。
+
+已有本地 `public/uploads` 文件可一次性迁到 COS：
+
+```bash
+node scripts/migrate-uploads-to-cos.mjs
 ```
 
 启动：
@@ -153,7 +170,20 @@ pm2 save
 | `GET/POST /api/agent/projects` | AGENT_API_KEY | 项目管理 |
 | `GET/POST /api/admin/projects` | JWT | 后台项目管理 |
 | `POST /api/deploy/webhook` | DEPLOY_SECRET | 触发部署 |
+| `POST /api/admin/feishu/test` | JWT（admin） | 发送飞书评论通知测试 |
 | `GET /api/projects` | 无 | 公开项目列表 |
+
+### 飞书评论通知
+
+有人发表评论时，博客会向飞书自定义机器人推送卡片。可在管理后台「站点设置 → 评论设置」填写 Webhook，或在 `.env` 中配置：
+
+```env
+FEISHU_WEBHOOK_URL=https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxx
+# 若机器人开启了签名校验：
+FEISHU_WEBHOOK_SECRET=你的签名密钥
+```
+
+环境变量优先于后台配置。创建机器人：飞书群 → 设置 → 群机器人 → 添加自定义机器人。
 
 ---
 

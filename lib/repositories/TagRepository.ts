@@ -1,6 +1,7 @@
 import { BaseRepository } from './BaseRepository';
 import { Tag } from '../entities/Tag';
 import { PostTag } from '../entities/PostTag';
+import { exposeMediaUrl } from '../media-url';
 
 interface TagDTO {
   id: number;
@@ -292,7 +293,7 @@ export class TagRepository extends BaseRepository {
         title: r.title as string,
         slug: r.slug as string,
         excerpt: (r.excerpt as string) || '',
-        imageUrl: (r.image_url as string) || '',
+        imageUrl: exposeMediaUrl((r.image_url as string) || ''),
         publishedAt: r.published_at as Date | null,
         tags: (r.tags as Array<{ name: string; slug: string; color: string }>) || [],
       })),

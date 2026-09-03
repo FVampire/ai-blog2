@@ -46,6 +46,7 @@ const navGroups: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { href: '/admin/projects', label: '项目', icon: 'projects', roles: ['admin', 'editor'] },
       { href: '/admin/settings', label: '站点设置', icon: 'settings', roles: ['admin'] },
+      { href: '/admin/distribution', label: '分发记录', icon: 'integrations', roles: ['admin'] },
     ],
   },
   {

@@ -5,7 +5,7 @@ import { requireRoles, isAuthError } from '@/lib/auth-middleware-app';
 import {
   createMediaFolder,
   deleteMediaFolder,
-  mediaPathToUrl,
+  mediaPathToStoredUrl,
   MediaLibraryError,
   renameMediaFolder,
   resolveMediaFolder,
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const { parent = '', name } = await request.json();
-    const folder = createMediaFolder(parent, name);
+    const folder = await createMediaFolder(parent, name);
     await recordAuditEvent({
       request,
       user: authResult.user,
@@ -51,13 +51,13 @@ export async function PATCH(request: NextRequest) {
   const authResult = requireRoles(request, ['admin', 'editor']);
   if (isAuthError(authResult)) return authResult;
 
-  let renamed: ReturnType<typeof renameMediaFolder> | null = null;
+  let renamed: Awaited<ReturnType<typeof renameMediaFolder>> | null = null;
   try {
     const { path, name } = await request.json();
-    renamed = renameMediaFolder(path, name);
+    renamed = await renameMediaFolder(path, name);
     const updatedPosts = await renamePostMediaReferences(
-      mediaPathToUrl(renamed.oldPath),
-      mediaPathToUrl(renamed.newPath),
+      mediaPathToStoredUrl(renamed.oldPath),
+      mediaPathToStoredUrl(renamed.newPath),
     );
     await recordAuditEvent({
       request,
@@ -71,7 +71,7 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     if (renamed) {
       try {
-        renameMediaFolder(renamed.newPath, renamed.oldPath.split('/').pop());
+        await renameMediaFolder(renamed.newPath, renamed.oldPath.split('/').pop());
       } catch (rollbackError) {
         console.error('Rollback folder rename failed:', rollbackError);
       }
@@ -86,8 +86,8 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const { path, recursive = false } = await request.json();
-    const target = resolveMediaFolder(path);
-    const references = await countPostMediaReferences(mediaPathToUrl(target.relativePath));
+    const target = await resolveMediaFolder(path);
+    const references = await countPostMediaReferences(mediaPathToStoredUrl(target.relativePath));
     if (references > 0) {
       return NextResponse.json(
         {
@@ -99,7 +99,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const deleted = deleteMediaFolder(path, Boolean(recursive));
+    const deleted = await deleteMediaFolder(path, Boolean(recursive));
     await recordAuditEvent({
       request,
       user: authResult.user,

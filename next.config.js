@@ -19,6 +19,7 @@ const nextConfig = {
       },
     ],
   },
+  serverExternalPackages: ['@aws-sdk/client-s3'],
   // TypeORM imports all drivers; tell webpack to ignore the ones we don't need
   webpack: (config) => {
     config.resolve.fallback = {

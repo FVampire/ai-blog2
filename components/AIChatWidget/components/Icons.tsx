@@ -18,14 +18,21 @@ function baseProps({ size = 20, ...rest }: IconProps) {
 }
 
 export function BotIcon(props: IconProps) {
+  const { size = 20, ...rest } = props;
   return (
-    <svg {...baseProps(props)}>
-      <rect x="5" y="8" width="14" height="11" rx="3" />
-      <path d="M12 8V5" />
-      <circle cx="12" cy="4" r="1.4" fill="currentColor" stroke="none" />
-      <circle cx="9.2" cy="13" r="1.15" fill="currentColor" stroke="none" />
-      <circle cx="14.8" cy="13" r="1.15" fill="currentColor" stroke="none" />
-      <path d="M9 16.2h6" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      {...rest}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M12 2.5C6.2 2.5 1.5 6.7 1.5 11.8c0 2.7 1.4 5.1 3.6 6.8v3.6c0 .7.8 1.1 1.4.7l3.6-2.2c.6.1 1.2.2 1.9.2 5.8 0 10.5-4.2 10.5-9.3S17.8 2.5 12 2.5zM8.2 12.2a1.25 1.25 0 1 1 2.5 0 1.25 1.25 0 0 1-2.5 0zm3.55 0a1.25 1.25 0 1 1 2.5 0 1.25 1.25 0 0 1-2.5 0zm3.55 0a1.25 1.25 0 1 1 2.5 0 1.25 1.25 0 0 1-2.5 0z"
+      />
     </svg>
   );
 }

@@ -348,7 +348,7 @@ const AIChatWidget: React.FC = () => {
         aria-label={chat.isOpen ? '关闭对话' : `打开${assistantName}`}
         aria-expanded={chat.isOpen}
       >
-        {chat.isOpen ? <CloseIcon size={22} /> : <BotIcon size={24} />}
+        {chat.isOpen ? <CloseIcon size={22} /> : <BotIcon size={26} />}
       </button>
 
       {chat.isOpen && (

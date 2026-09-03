@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import fs from 'fs';
-
 import { requireAuth, isAuthError, requireAgentAuth } from '@/lib/auth-middleware-app';
-import { mediaPathToUrl, MediaLibraryError, resolveMediaFolder } from '@/lib/media-library';
+import { MediaLibraryError, putMediaFile } from '@/lib/media-library';
 import { validateImageFile } from '@/lib/upload-image';
 
 function isAuthorized(request: NextRequest): boolean {
@@ -41,18 +39,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const uploadDir = resolveMediaFolder(folder);
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     const filename = `${uniqueSuffix}${validation.extension}`;
-    const filePath = `${uploadDir.absolutePath}/${filename}`;
-
-    fs.writeFileSync(filePath, validation.buffer);
+    const stored = await putMediaFile(folder, filename, validation.buffer, validation.mimeType);
 
     return NextResponse.json({
       success: true,
       message: '上传成功',
       data: {
-        url: mediaPathToUrl(`${uploadDir.relativePath}/${filename}`),
+        url: stored.url,
+        path: stored.relativePath,
         filename: validation.originalName,
         size: validation.size,
         mimetype: validation.mimeType,

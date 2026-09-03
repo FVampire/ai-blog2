@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { requireAgentAuth } from '@/lib/auth-middleware-app';
-import { generateSlug, resolveTagIds } from '@/lib/agent-utils';
-import { PostRepository } from '@/lib/repositories/PostRepository';
-import { TagRepository } from '@/lib/repositories/TagRepository';
-import { query } from '@/lib/db';
+import { DEFAULT_AUTHOR_ID, publishPostFromAgent } from '@/lib/agent/publish-post';
 import { recordAuditEvent } from '@/lib/audit-log';
-
-const DEFAULT_AUTHOR_ID = parseInt(process.env.AGENT_AUTHOR_ID || '1', 10);
+import { requireAgentAuth } from '@/lib/auth-middleware-app';
+import { query } from '@/lib/db';
+import { schedulePublishPipeline } from '@/lib/publish/pipeline';
+import { PostRepository } from '@/lib/repositories/PostRepository';
+import { SeriesRepository } from '@/lib/repositories/SeriesRepository';
 
 export async function POST(request: NextRequest) {
   const authResult = requireAgentAuth(request);
@@ -15,39 +14,16 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const {
-      title,
-      content,
-      excerpt,
-      tags = [],
-      status = 'published',
-      slug: customSlug,
-      imageUrl,
-    } = body;
-
-    if (!title) {
-      return NextResponse.json(
-        { success: false, message: '标题不能为空' },
-        { status: 400 }
-      );
-    }
-
-    const slug = customSlug || generateSlug(title);
-
-    let tagIds: number[] = [];
-    if (tags.length > 0) {
-      tagIds = await resolveTagIds(tags, TagRepository, (data) => TagRepository.createTag(data));
-    }
-
-    const post = await PostRepository.createPost({
-      title,
-      slug,
-      excerpt: excerpt || title.slice(0, 200),
-      content: content || '',
-      imageUrl: imageUrl || '',
-      status: status as 'draft' | 'published' | 'archived',
-      authorId: DEFAULT_AUTHOR_ID,
-      tagIds,
+    const result = await publishPostFromAgent({
+      title: body.title,
+      content: body.content,
+      excerpt: body.excerpt,
+      tags: body.tags,
+      status: body.status,
+      slug: body.slug,
+      imageUrl: body.imageUrl,
+      projectSlug: body.projectSlug,
+      seriesSlug: body.seriesSlug,
     });
 
     await recordAuditEvent({
@@ -55,23 +31,24 @@ export async function POST(request: NextRequest) {
       user: { userId: DEFAULT_AUTHOR_ID, username: 'Agent', email: '', role: 'agent' },
       action: 'agent.post.publish',
       resourceType: 'post',
-      resourceId: post.id,
-      metadata: { title: post.title, slug: post.slug, status: post.status },
+      resourceId: result.post.id,
+      metadata: { title: result.post.title, slug: result.post.slug, status: result.post.status },
     });
 
-    const siteUrl = process.env.SITE_URL || '';
-    const postUrl = `/posts/${post.slug}`;
+    if (result.post.status === 'published') {
+      schedulePublishPipeline(result.post.id, { previousStatus: 'draft' });
+    }
 
     return NextResponse.json({
       success: true,
-      message: status === 'published' ? '文章已发布' : '文章已保存为草稿',
+      message: result.post.status === 'published' ? '文章已发布' : '文章已保存为草稿',
       data: {
-        id: post.id,
-        slug: post.slug,
-        title: post.title,
-        status: post.status,
-        url: postUrl,
-        fullUrl: siteUrl ? `${siteUrl}${postUrl}` : postUrl,
+        id: result.post.id,
+        slug: result.post.slug,
+        title: result.post.title,
+        status: result.post.status,
+        url: result.url,
+        fullUrl: result.fullUrl,
       },
     }, { status: 201 });
   } catch (error) {
@@ -79,7 +56,7 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : '发布失败';
     return NextResponse.json(
       { success: false, message },
-      { status: 500 }
+      { status: 400 }
     );
   }
 }
@@ -128,6 +105,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const post = await PostRepository.updatePost(postId, { prevPostId, nextPostId });
+    await SeriesRepository.ensureForLinkedPost(post.id);
     await recordAuditEvent({
       request,
       user: { userId: DEFAULT_AUTHOR_ID, username: 'Agent', email: '', role: 'agent' },
@@ -176,6 +154,7 @@ export async function GET(request: NextRequest) {
         publish: 'POST /api/agent/publish',
         upload: 'POST /api/agent/upload',
         projects: 'GET/POST /api/agent/projects',
+        mcp: 'POST /api/mcp',
       },
     },
   });
