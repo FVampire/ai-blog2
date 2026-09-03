@@ -61,3 +61,17 @@ export async function listDistributionJobs(limit = 50): Promise<Array<Distributi
   );
   return rows.rows as Array<DistributionJob & { postTitle?: string; postSlug?: string }>;
 }
+
+export async function markDistributionJobSent(jobId: number): Promise<boolean> {
+  const result = await query(
+    `UPDATE distribution_jobs
+     SET status = 'sent',
+         result = COALESCE(result, '{}'::jsonb) || $2::jsonb,
+         error = NULL,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = $1 AND status = 'needs_manual'
+     RETURNING id`,
+    [jobId, JSON.stringify({ stage: 'manually_published', markedAt: new Date().toISOString() })],
+  );
+  return result.rows.length > 0;
+}

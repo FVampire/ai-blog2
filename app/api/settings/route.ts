@@ -25,6 +25,16 @@ function serializeSettingValue(value: unknown, type: string): string {
 
 const SENSITIVE_SETTING_KEYS = ['ai_api_key', 'ai_embedding_api_key', 'feishu_webhook_url', 'feishu_webhook_secret'];
 const SENSITIVE_KEY_PATTERNS = ['api_key', 'apikey', 'secret', 'token', 'password', 'webhook'];
+const ENV_ONLY_DISTRIBUTION_KEYS = new Set([
+  'distribute_indexnow_key',
+  'distribute_webhook_url',
+  'distribute_telegram_bot_token',
+  'distribute_discord_webhook_url',
+  'distribute_wechat_app_secret',
+  'distribute_bilibili_webhook',
+  'distribute_xiaohongshu_webhook',
+  'distribute_douyin_webhook',
+]);
 
 // Only settings represented by a supported admin control may be changed through this endpoint.
 // Database rows are not an authorization boundary: deployments can contain internal-only keys.
@@ -48,12 +58,9 @@ const WRITABLE_SETTING_KEYS = new Set([
   'ai_vector_search_weight_content', 'ai_vector_search_weight_excerpt',
   'ai_temperature', 'ai_max_tokens', 'mcp_enabled', 'mcp_allow_user_select',
   'distribute_enabled', 'distribute_on_update',
-  'distribute_indexnow_enabled', 'distribute_indexnow_key',
-  'distribute_webhook_url',
-  'distribute_telegram_enabled', 'distribute_telegram_bot_token', 'distribute_telegram_chat_id',
-  'distribute_discord_webhook_url',
-  'distribute_wechat_enabled', 'distribute_wechat_app_id', 'distribute_wechat_app_secret',
-  'distribute_bilibili_webhook', 'distribute_xiaohongshu_webhook', 'distribute_douyin_webhook',
+  'distribute_indexnow_enabled',
+  'distribute_telegram_enabled', 'distribute_telegram_chat_id',
+  'distribute_wechat_enabled', 'distribute_wechat_app_id',
 ]);
 
 function isSensitiveKey(key: string): boolean {
@@ -79,7 +86,7 @@ export async function GET(request: NextRequest) {
     const settingsDetails: Record<string, { value: unknown; type: string; description: string }> = {};
 
     result.rows.forEach((row: any) => {
-      const masked = !canReadSecrets && isSensitiveKey(row.key);
+      const masked = ENV_ONLY_DISTRIBUTION_KEYS.has(row.key) || (!canReadSecrets && isSensitiveKey(row.key));
       const value = masked ? null : parseSettingValue(row.value, row.type);
       settings[row.key] = value;
       settingsDetails[row.key] = {
@@ -91,7 +98,23 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { settings, details: settingsDetails },
+      data: {
+        settings,
+        details: settingsDetails,
+        distributionEnvironment: {
+          indexNow: Boolean(process.env.INDEXNOW_KEY),
+          genericWebhook: Boolean(process.env.DISTRIBUTE_WEBHOOK_URL),
+          telegramToken: Boolean(process.env.TELEGRAM_BOT_TOKEN),
+          telegramChatId: Boolean(process.env.TELEGRAM_CHAT_ID),
+          discordWebhook: Boolean(process.env.DISCORD_WEBHOOK_URL),
+          wechatAppId: Boolean(process.env.WECHAT_APP_ID),
+          wechatAppSecret: Boolean(process.env.WECHAT_APP_SECRET),
+          wechatAutoPublish: String(process.env.WECHAT_AUTO_PUBLISH || '').toLowerCase() === 'true',
+          bilibiliWebhook: Boolean(process.env.BILIBILI_WEBHOOK_URL),
+          xiaohongshuWebhook: Boolean(process.env.XIAOHONGSHU_WEBHOOK_URL),
+          douyinWebhook: Boolean(process.env.DOUYIN_WEBHOOK_URL),
+        },
+      },
     });
   } catch (error) {
     console.error('Get settings error:', error);

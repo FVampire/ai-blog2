@@ -66,9 +66,7 @@ async function embedPost(postId: number): Promise<void> {
 async function notifyIndexNow(postSlug: string, postId: number): Promise<void> {
   if (!(await settingFlag('distribute_indexnow_enabled', false))) return;
   const key = String(
-    process.env.INDEXNOW_KEY ||
-    (await SettingsRepository.getSettingValue('distribute_indexnow_key', '')) ||
-    '',
+    process.env.INDEXNOW_KEY || '',
   ).trim();
   if (!key) {
     await createDistributionJob({

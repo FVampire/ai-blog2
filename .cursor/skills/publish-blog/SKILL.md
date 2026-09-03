@@ -102,9 +102,15 @@ Configure in Admin → 站点设置 → 发布分发, or env:
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` | Telegram |
 | `DISCORD_WEBHOOK_URL` | Discord |
 | `WECHAT_APP_ID` / `WECHAT_APP_SECRET` | WeChat MP draft box |
+| `WECHAT_AUTO_PUBLISH` | Set `true` to submit the WeChat draft for publishing when the account has permission |
 | `DISTRIBUTE_WEBHOOK_URL` | Generic JSON webhook |
+| `BILIBILI_WEBHOOK_URL` | Bilibili automation webhook |
+| `XIAOHONGSHU_WEBHOOK_URL` | Xiaohongshu automation webhook |
+| `DOUYIN_WEBHOOK_URL` | Douyin automation webhook |
 
-Bilibili / 小红书 / 抖音 have no official personal posting API. The pipeline writes platform-adapted copy and POSTs it to the webhook you configure (n8n etc.). If no webhook is set, the copy is stored in Admin → 分发记录 for copy-paste.
+Bilibili / 小红书 / 抖音 have no general-purpose official personal posting API. The pipeline writes platform-adapted copy and POSTs it to the webhook you configure (n8n etc.). If no webhook is set, the publishing package is stored in Admin → 分发记录, where an admin can copy or download it, open the creator center, and mark it as published.
+
+Secrets and credential-bearing webhook URLs are read only from `.env` or the process environment. The Admin settings page reports whether each variable is configured without returning its value.
 
 ### Response
 

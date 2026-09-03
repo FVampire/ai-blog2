@@ -12,7 +12,7 @@ interface Job {
   postId: number;
   channel: string;
   status: string;
-  payload: { title?: string; text?: string; url?: string } | null;
+  payload: { title?: string; text?: string; tags?: string[]; url?: string; coverUrl?: string } | null;
   error: string | null;
   createdAt: string;
   postTitle?: string;
@@ -26,6 +26,35 @@ const STATUS_LABEL: Record<string, string> = {
   needs_manual: '待手动发布',
   pending: '等待中',
 };
+
+const CHANNEL_LABEL: Record<string, string> = {
+  bilibili: 'B 站',
+  xiaohongshu: '小红书',
+  douyin: '抖音',
+  wechat: '微信公众号',
+  telegram: 'Telegram',
+  discord: 'Discord',
+  webhook: '通用 Webhook',
+  indexnow: 'IndexNow',
+};
+
+const CREATOR_URL: Record<string, string> = {
+  bilibili: 'https://member.bilibili.com/platform/home',
+  xiaohongshu: 'https://creator.xiaohongshu.com/publish/publish',
+  douyin: 'https://creator.douyin.com/creator-micro/content/upload',
+};
+
+function publishingText(job: Job): string {
+  if (!job.payload) return '';
+  const tags = (job.payload.tags || []).map((tag) => `#${tag}`).join(' ');
+  const body = job.payload.text || '';
+  return [
+    job.payload.title,
+    body,
+    tags && !body.includes(tags) ? tags : '',
+    job.payload.url && !body.includes(job.payload.url) ? job.payload.url : '',
+  ].filter(Boolean).join('\n\n');
+}
 
 export default function DistributionPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -44,9 +73,42 @@ export default function DistributionPage() {
   }, []);
 
   const copyText = async (job: Job) => {
-    const text = job.payload?.text || JSON.stringify(job.payload, null, 2);
+    const text = publishingText(job) || JSON.stringify(job.payload, null, 2);
     await navigator.clipboard.writeText(text);
     toast.success('已复制平台文案');
+  };
+
+  const downloadPackage = (job: Job) => {
+    const payload = {
+      platform: job.channel,
+      postId: job.postId,
+      postTitle: job.postTitle,
+      ...job.payload,
+      publishingText: publishingText(job),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+    const href = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = href;
+    anchor.download = `${job.channel}-${job.postSlug || job.postId}.json`;
+    anchor.click();
+    URL.revokeObjectURL(href);
+    toast.success('发布包已下载');
+  };
+
+  const markPublished = async (job: Job) => {
+    const result = await authJson('/api/admin/distribution', {
+      method: 'PATCH',
+      body: JSON.stringify({ jobId: job.id }),
+    });
+    if (!result.success) {
+      toast.error(result.message || '更新状态失败');
+      return;
+    }
+    setJobs((current) => current.map((item) => (
+      item.id === job.id ? { ...item, status: 'sent', error: null } : item
+    )));
+    toast.success('已标记为人工发布');
   };
 
   return (
@@ -71,13 +133,22 @@ export default function DistributionPage() {
             <div className="agent-publish-row" key={job.id}>
               <div>
                 <strong>{job.postTitle || `文章 #${job.postId}`}</strong>
-                <span>{job.channel} · {STATUS_LABEL[job.status] || job.status}</span>
+                <span>{CHANNEL_LABEL[job.channel] || job.channel} · {STATUS_LABEL[job.status] || job.status}</span>
                 {job.error && <p>{job.error}</p>}
               </div>
               <div className="agent-publish-links">
                 {job.postSlug && <Link href={`/posts/${job.postSlug}`} target="_blank">文章</Link>}
                 {(job.status === 'needs_manual' || job.payload?.text) && (
                   <button type="button" className="btn-small" onClick={() => void copyText(job)}>复制文案</button>
+                )}
+                {job.status === 'needs_manual' && CREATOR_URL[job.channel] && (
+                  <button type="button" className="btn-small" onClick={() => downloadPackage(job)}>下载发布包</button>
+                )}
+                {job.status === 'needs_manual' && CREATOR_URL[job.channel] && (
+                  <a href={CREATOR_URL[job.channel]} target="_blank" rel="noreferrer">打开创作中心</a>
+                )}
+                {job.status === 'needs_manual' && CREATOR_URL[job.channel] && (
+                  <button type="button" className="btn-small" onClick={() => void markPublished(job)}>标记已发布</button>
                 )}
               </div>
             </div>

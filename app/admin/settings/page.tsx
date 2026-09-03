@@ -15,6 +15,7 @@ import VectorManager from "../../../components/admin/VectorManager";
 
 interface SettingDetail { value: any; type: string; description: string; }
 type SettingsDetails = Record<string, SettingDetail>;
+type DistributionEnvironment = Record<string, boolean>;
 
 export default function AdminSettings() {
   const pathname = usePathname();
@@ -27,11 +28,12 @@ export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState(section === 'integrations' ? 'ai' : 'basic');
   const [socialLinks, setSocialLinks] = useState<Array<{ platform: string; name: string; url: string }>>([]);
   const [maskedKeys, setMaskedKeys] = useState<string[]>([]);
+  const [distributionEnvironment, setDistributionEnvironment] = useState<DistributionEnvironment>({});
 
   useEffect(() => { fetchSettings(); }, []);
 
   const fetchSettings = async () => {
-    const result = await authJson<{ settings: Record<string, any>; details: SettingsDetails }>("/api/settings");
+    const result = await authJson<{ settings: Record<string, any>; details: SettingsDetails; distributionEnvironment: DistributionEnvironment }>("/api/settings");
     setLoading(false);
 
     if (!result.success || !result.data) {
@@ -42,6 +44,7 @@ export default function AdminSettings() {
     setSettings(result.data.settings);
     setDetails(result.data.details);
     setMaskedKeys(collectMaskedKeys(result.data.details));
+    setDistributionEnvironment(result.data.distributionEnvironment || {});
     if (result.data.settings.about_social_links) setSocialLinks(result.data.settings.about_social_links);
   };
 
@@ -160,7 +163,7 @@ export default function AdminSettings() {
           </div>
           <div className={`settings-content ${activeTab === "vector" || activeTab === "mcp" ? "grid-layout" : ""}`}>
             {activeTab === "ai" ? (<AISettings settings={settings} onChange={handleChange} />)
-              : activeTab === "distribute" ? (<DistributionSettings settings={settings} onChange={handleChange} />)
+              : activeTab === "distribute" ? (<DistributionSettings settings={settings} environment={distributionEnvironment} onChange={handleChange} />)
               : activeTab === "vector" ? (<VectorManager />)
               : activeTab === "mcp" ? (<MCPManager settings={settings} details={details} onChange={handleChange} />)
               : (<>

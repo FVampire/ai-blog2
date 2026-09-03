@@ -4,6 +4,7 @@ import { absoluteUrl, siteBaseUrl } from '../site-url';
 import { renderMarkdown } from '../tools/markdown/render';
 import { createDistributionJob, hasSuccessfulJob } from './jobs';
 import { buildSocialCopies, maybeRewriteSocialCopy, type SocialCopy, type SocialPlatform } from './social-copy';
+import { createWechatDraft, submitWechatDraft } from './wechat-client';
 
 export interface DistributePost {
   id: number;
@@ -25,6 +26,7 @@ interface ChannelConfig {
   wechatEnabled: boolean;
   wechatAppId: string;
   wechatAppSecret: string;
+  wechatAutoPublish: boolean;
   bilibiliWebhook: string;
   xiaohongshuWebhook: string;
   douyinWebhook: string;
@@ -46,20 +48,11 @@ function flag(value: unknown): boolean {
 async function loadChannelConfig(): Promise<ChannelConfig> {
   const rows = await SettingsRepository.getSettingsByKeys([
     'distribute_enabled',
-    'distribute_webhook_url',
     'distribute_telegram_enabled',
-    'distribute_telegram_bot_token',
     'distribute_telegram_chat_id',
-    'distribute_discord_webhook_url',
     'distribute_wechat_enabled',
     'distribute_wechat_app_id',
-    'distribute_wechat_app_secret',
-    'distribute_bilibili_webhook',
-    'distribute_xiaohongshu_webhook',
-    'distribute_douyin_webhook',
     'feishu_notify_enabled',
-    'feishu_webhook_url',
-    'feishu_webhook_secret',
   ]);
   const settings: Record<string, string> = {};
   rows.forEach((row) => {
@@ -68,20 +61,21 @@ async function loadChannelConfig(): Promise<ChannelConfig> {
 
   return {
     enabled: flag(settings.distribute_enabled ?? 'true'),
-    webhookUrl: process.env.DISTRIBUTE_WEBHOOK_URL || settings.distribute_webhook_url || '',
+    webhookUrl: process.env.DISTRIBUTE_WEBHOOK_URL || '',
     telegramEnabled: flag(settings.distribute_telegram_enabled),
-    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || settings.distribute_telegram_bot_token || '',
+    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN || '',
     telegramChatId: process.env.TELEGRAM_CHAT_ID || settings.distribute_telegram_chat_id || '',
-    discordWebhookUrl: process.env.DISCORD_WEBHOOK_URL || settings.distribute_discord_webhook_url || '',
+    discordWebhookUrl: process.env.DISCORD_WEBHOOK_URL || '',
     wechatEnabled: flag(settings.distribute_wechat_enabled),
     wechatAppId: process.env.WECHAT_APP_ID || settings.distribute_wechat_app_id || '',
-    wechatAppSecret: process.env.WECHAT_APP_SECRET || settings.distribute_wechat_app_secret || '',
-    bilibiliWebhook: settings.distribute_bilibili_webhook || '',
-    xiaohongshuWebhook: settings.distribute_xiaohongshu_webhook || '',
-    douyinWebhook: settings.distribute_douyin_webhook || '',
+    wechatAppSecret: process.env.WECHAT_APP_SECRET || '',
+    wechatAutoPublish: flag(process.env.WECHAT_AUTO_PUBLISH),
+    bilibiliWebhook: process.env.BILIBILI_WEBHOOK_URL || '',
+    xiaohongshuWebhook: process.env.XIAOHONGSHU_WEBHOOK_URL || '',
+    douyinWebhook: process.env.DOUYIN_WEBHOOK_URL || '',
     feishuEnabled: flag(settings.feishu_notify_enabled) || Boolean(process.env.FEISHU_WEBHOOK_URL),
-    feishuWebhookUrl: process.env.FEISHU_WEBHOOK_URL || settings.feishu_webhook_url || '',
-    feishuSecret: process.env.FEISHU_WEBHOOK_SECRET || settings.feishu_webhook_secret || '',
+    feishuWebhookUrl: process.env.FEISHU_WEBHOOK_URL || '',
+    feishuSecret: process.env.FEISHU_WEBHOOK_SECRET || '',
   };
 }
 
@@ -189,27 +183,6 @@ async function sendFeishu(config: ChannelConfig, post: DistributePost, url: stri
   }
 }
 
-async function uploadWechatImage(accessToken: string, imageUrl: string): Promise<string | null> {
-  if (!imageUrl) return null;
-  try {
-    const remote = await fetch(publishedMediaUrl(imageUrl));
-    if (!remote.ok) return null;
-    const bytes = Buffer.from(await remote.arrayBuffer());
-    const filename = imageUrl.split('/').pop()?.split('?')[0] || 'cover.jpg';
-    const form = new FormData();
-    form.append('media', new Blob([new Uint8Array(bytes)]), filename);
-    const response = await fetch(
-      `https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${accessToken}&type=image`,
-      { method: 'POST', body: form },
-    );
-    const data = await response.json() as { media_id?: string; errmsg?: string };
-    return data.media_id || null;
-  } catch (error) {
-    console.error('WeChat image upload error:', error);
-    return null;
-  }
-}
-
 async function sendWechatDraft(config: ChannelConfig, post: DistributePost, copy: SocialCopy) {
   if (!config.wechatEnabled) return;
   if (!config.wechatAppId || !config.wechatAppSecret) {
@@ -219,42 +192,33 @@ async function sendWechatDraft(config: ChannelConfig, post: DistributePost, copy
   if (await hasSuccessfulJob(post.id, 'wechat')) return;
 
   try {
-    const tokenRes = await fetch(
-      `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${config.wechatAppId}&secret=${config.wechatAppSecret}`,
-    );
-    const tokenData = await tokenRes.json() as { access_token?: string; errmsg?: string };
-    if (!tokenData.access_token) {
-      await record(post.id, 'wechat', 'failed', copy, tokenData, tokenData.errmsg || '获取 access_token 失败');
-      return;
-    }
-
     const html = await renderMarkdown(
       rewriteMarkdownMediaUrls(post.content || post.excerpt || post.title),
       { allowHtml: false, sanitize: true },
     );
-    const thumbMediaId = await uploadWechatImage(tokenData.access_token, post.imageUrl);
-    if (!thumbMediaId) {
-      await record(post.id, 'wechat', 'needs_manual', { ...copy, html }, undefined, '封面未能上传到公众号素材库，草稿需要 thumb_media_id');
+    const draft = await createWechatDraft({
+      appId: config.wechatAppId,
+      appSecret: config.wechatAppSecret,
+      title: copy.title,
+      digest: copy.text,
+      content: html,
+      sourceUrl: copy.url,
+      coverUrl: post.imageUrl,
+    });
+    if (config.wechatAutoPublish) {
+      const published = await submitWechatDraft(
+        config.wechatAppId,
+        config.wechatAppSecret,
+        draft.mediaId,
+      );
+      await record(post.id, 'wechat', 'sent', copy, {
+        stage: 'publish_submitted',
+        mediaId: draft.mediaId,
+        publishId: published.publishId,
+      });
       return;
     }
-
-    const payload = {
-      articles: [{
-        title: copy.title,
-        author: '',
-        digest: copy.text,
-        content: html,
-        content_source_url: copy.url,
-        thumb_media_id: thumbMediaId,
-        need_open_comment: 0,
-        only_fans_can_comment: 0,
-      }],
-    };
-    const result = await postJson(
-      `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${tokenData.access_token}`,
-      payload,
-    );
-    await record(post.id, 'wechat', result.ok ? 'sent' : 'failed', payload, result, result.ok ? undefined : result.body);
+    await record(post.id, 'wechat', 'sent', copy, { stage: 'draft_created', mediaId: draft.mediaId });
   } catch (error) {
     await record(post.id, 'wechat', 'failed', copy, undefined, error instanceof Error ? error.message : '公众号草稿创建失败');
   }
@@ -272,7 +236,7 @@ async function sendPlatformWebhook(
     return;
   }
   try {
-    const result = await postJson(webhookUrl, { event: 'post.published', platform: channel, ...copy });
+    const result = await postJson(webhookUrl, { event: 'post.published', ...copy });
     await record(postId, channel, result.ok ? 'sent' : 'failed', copy, result, result.ok ? undefined : result.body);
   } catch (error) {
     await record(postId, channel, 'failed', copy, undefined, error instanceof Error ? error.message : '平台 Webhook 失败');
