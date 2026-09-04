@@ -19,7 +19,7 @@ const FEATURED = [
     kind: "appearance",
     year: "2026",
     description: "从自然美颜与智能换景，到静态和实时视频换装。",
-    image: "/projects/wardrobe-lab/live-tryon-cover.jpg",
+    image: "/projects/wardrobe-lab/tryon-workspace.webp",
     tags: ["REV 0.1", "美颜换景", "视频换装"],
     caption: "FIG. 2-1  wardrobe.jpg",
   },

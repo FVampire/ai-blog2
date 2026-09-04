@@ -39,7 +39,7 @@ const STATIC_PROJECTS = [
     href: "/projects/wardrobe-lab",
     name: "Wardrobe Lab",
     meta: "appearance · 2026",
-    image: "/projects/wardrobe-lab/live-tryon-cover.jpg",
+    image: "/projects/wardrobe-lab/tryon-workspace.webp",
   },
   {
     slug: "ai-garment-pattern-agent",
