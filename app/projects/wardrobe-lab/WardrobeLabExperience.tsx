@@ -25,7 +25,7 @@ const stages = [
   { id: "02", name: "抠图", en: "CUTOUT", time: "1.1s", runner: "LOCAL", src: `${ASSET}/pipeline/02-cutout-v4.webp`, input: "00_normalized.webp", output: "01_person_cutout.png" },
   { id: "03", name: "解析", en: "PARSING", time: "1.4s", runner: "ONNX", src: `${ASSET}/pipeline/03-parsing-v4.webp`, input: "00_normalized.webp", output: "02_human_parsing.png" },
   { id: "04", name: "美颜", en: "BEAUTY", time: "0.9s", runner: "LOCAL", src: `${ASSET}/pipeline/04-beauty-v4.webp`, input: "01_cutout + 02_parsing", output: "03_beautified.png" },
-  { id: "05", name: "换装", en: "TRY ON", time: "9.8s", runner: "CLOUD", src: `${ASSET}/pipeline/05-dressed-v4.webp`, input: "03_beautified + garment", output: "04_dressed_cutout.png" },
+  { id: "05", name: "换装", en: "TRY ON", time: "9.8s", runner: "CLOUD", src: `${ASSET}/pipeline/05-dressed-v5.webp`, input: "03_beautified + garment", output: "04_dressed_cutout.png" },
   { id: "06", name: "合成", en: "COMPOSITE", time: "0.7s", runner: "LOCAL", src: `${ASSET}/pipeline/06-final-v4.webp`, input: "04_dressed + 05_background", output: "06_final.png" },
 ] as const;
 
@@ -277,7 +277,7 @@ export default function WardrobeLabExperience() {
 
       <section className={styles.section} id="compare">
         <header className={styles.sectionHead}><div><p className={styles.kicker}>03 / BEFORE — AFTER</p><h2>改了什么，<br />没改什么。</h2></div><p>三组滑块分别验证肤色、服装与场景。拖动分界线，变化应该只出现在它该出现的地方。</p></header>
-        <div className={styles.compareGrid}><CompareCard before={`${ASSET}/pipeline/01-input-v4.webp`} after={`${ASSET}/pipeline/04-beauty-v4.webp`} title="自然美颜" note="保留五官与皮肤纹理" initial={44} /><CompareCard before={`${ASSET}/pipeline/04-beauty-v4.webp`} after={`${ASSET}/pipeline/05-dressed-v4.webp`} title="快速换装" note="姿态、发型与脸不变" initial={58} /><CompareCard before={`${ASSET}/pipeline/05-dressed-v4.webp`} after={`${ASSET}/pipeline/06-final-v4.webp`} title="智能换景" note="环境光与接触阴影重算" initial={50} /></div>
+        <div className={styles.compareGrid}><CompareCard before={`${ASSET}/pipeline/01-input-v4.webp`} after={`${ASSET}/pipeline/04-beauty-v4.webp`} title="自然美颜" note="保留五官与皮肤纹理" initial={44} /><CompareCard before={`${ASSET}/pipeline/04-beauty-v4.webp`} after={`${ASSET}/pipeline/05-dressed-v5.webp`} title="快速换装" note="姿态、发型与脸不变" initial={58} /><CompareCard before={`${ASSET}/pipeline/05-dressed-v5.webp`} after={`${ASSET}/pipeline/06-final-v4.webp`} title="智能换景" note="环境光与接触阴影重算" initial={50} /></div>
       </section>
 
       <section className={`${styles.section} ${styles.identitySection}`} id="identity">
