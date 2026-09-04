@@ -243,7 +243,7 @@
 
 .lookSwitcher {
   display: grid;
-  grid-template-columns: minmax(210px, 0.78fr) 88px minmax(320px, 1.22fr);
+  grid-template-columns: minmax(260px, 1fr) 88px minmax(260px, 1fr);
   gap: 0;
   height: clamp(360px, 36vw, 460px);
   min-height: 0;
@@ -255,15 +255,18 @@
 .sourceLook,
 .resultLook {
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   min-width: 0;
+  min-height: 0;
   margin: 0;
+  overflow: hidden;
   background: var(--panel);
 }
 
 .sourceLook > div,
 .resultLook > div {
   position: relative;
+  height: 100%;
   min-height: 0;
   overflow: hidden;
   background: #202226;
@@ -1857,7 +1860,7 @@
   .topbar { grid-template-columns: 1fr 1fr; }
   .hero { grid-template-columns: 1fr 0.9fr; }
   .heroCopy { padding: 5vw; }
-  .lookSwitcher { grid-template-columns: minmax(220px, 0.75fr) 90px minmax(320px, 1.25fr); }
+  .lookSwitcher { grid-template-columns: minmax(220px, 1fr) 80px minmax(220px, 1fr); }
   .garmentPicker {
     grid-template-columns: 150px repeat(7, 140px);
     overflow-x: auto;
@@ -1891,7 +1894,7 @@
   .archFlow,
   .failureGrid { margin-top: 24px; }
 
-  .lookSwitcher { min-height: 420px; }
+  .lookSwitcher { height: 400px; min-height: 0; }
   .sourceLook > div,
   .resultLook > div { min-height: 0; }
   .sourceLook figcaption,
@@ -2010,6 +2013,12 @@
     grid-template-columns: 1fr;
     height: auto;
     min-height: 0;
+  }
+
+  .sourceLook,
+  .resultLook {
+    grid-template-rows: 330px auto;
+    height: auto;
   }
 
   .sourceLook > div,
