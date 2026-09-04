@@ -41,7 +41,7 @@ const liveLooks = [
 const failures = [
   { id: "FAIL_01", name: "光源不足", en: "LOW LIGHT", reason: "左侧原图面部曝光不足；右侧服装正常换上，但眼袋、法令纹和皮肤纹理被补重，人物明显显老。", before: `${ASSET}/failures/01-lowlight-before-v3.webp`, after: `${ASSET}/failures/01-lowlight-after-v3.webp` },
   { id: "FAIL_02", name: "主体与背景近色", en: "LOW CONTRAST", reason: "左侧人物与背景颜色接近；右侧换景后位置保持对齐，但袖边、衣摆和发丝被错误侵蚀，出现局部变形。", before: `${ASSET}/failures/02-lowcontrast-before-v3.webp`, after: `${ASSET}/failures/02-lowcontrast-after-v3.webp` },
-  { id: "FAIL_03", name: "像素过低", en: "LOW RES", reason: "左侧整张原图分辨率不足；右侧西装正常生成，但模型重建出的眼位、笑容和脸颊轮廓发生变形。", before: `${ASSET}/failures/03-lowres-before-v3.webp`, after: `${ASSET}/failures/03-lowres-after-v4.webp` },
+  { id: "FAIL_03", name: "像素过低", en: "LOW RES", reason: "左侧整张原图分辨率不足；右侧西装正常生成，但模型把有限的面部信息补成了另一个人，身份发生漂移。", before: `${ASSET}/failures/03-lowres-before-v3.webp`, after: `${ASSET}/failures/03-lowres-after-v4.webp` },
 ] as const;
 
 const faceLandmarks: ReadonlyArray<readonly [number, number]> = [

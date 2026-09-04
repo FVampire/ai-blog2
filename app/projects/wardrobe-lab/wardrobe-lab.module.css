@@ -1638,6 +1638,57 @@
   .archFlow > div { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
 }
 
+@media (min-width: 761px) and (max-height: 850px) {
+  .section,
+  .pipelineSection,
+  .identitySection,
+  .uiSection,
+  .archSection {
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+
+  .sectionHead h2 { font-size: clamp(2.3rem, 4vw, 4rem); }
+  .lookSwitcher,
+  .pipelineMain,
+  .compareGrid,
+  .identityBoard,
+  .screenTabs,
+  .liveDemo,
+  .archFlow,
+  .failureGrid { margin-top: 24px; }
+
+  .lookSwitcher { min-height: 420px; }
+  .sourceLook > div,
+  .resultLook > div { min-height: 340px; }
+  .sourceLook figcaption,
+  .resultLook figcaption { min-height: 68px; padding: 10px 14px; }
+
+  .stageViewer,
+  .stageImage { min-height: 350px; }
+  .stageDetail { padding: 18px; }
+  .stageDetail h3 { margin-top: 20px; font-size: clamp(2.2rem, 3.4vw, 3.6rem); }
+  .stageDetail dl div { padding: 7px 0; }
+  .scrubber { padding: 30px 18px 14px; }
+  .stageTabs img { height: 54px; }
+
+  .compareFrame { height: 300px; }
+  .identityBoard figure { height: 320px; }
+  .screenFrame { min-height: 460px; }
+  .workbenchMock { height: 430px; }
+  .mockCanvas .compareFrame { height: 292px; }
+  .reviewScreen,
+  .liveMock,
+  .batchMock { min-height: 430px; }
+  .reviewRail { padding-top: 14px; padding-bottom: 14px; }
+  .reviewRail img { height: 160px; }
+  .liveMockStage { height: 310px; }
+  .batchGrid figure { height: 145px; }
+
+  .liveDemo { min-height: 460px; }
+  .failureCompare { height: 320px; }
+}
+
 @media (max-width: 760px) {
   .topbar {
     min-height: 58px;
