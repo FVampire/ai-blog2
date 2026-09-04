@@ -45,6 +45,24 @@ export default async function AdminToolsPage() {
             </div>
             <span className={styles.arrow}>→</span>
           </Link>
+          <Link className={styles.card} href="/admin/tools/gemini">
+            <span className={styles.icon}><AdminIcon name="tools" size={22} /></span>
+            <div>
+              <h2>Gemini API 调用台</h2>
+              <p>验证 Gemini 模型配置、提示词与 Token 用量。</p>
+              <small>需要 GEMINI_API_KEY</small>
+            </div>
+            <span className={styles.arrow}>→</span>
+          </Link>
+          <Link className={styles.card} href="/admin/tools/currency">
+            <span className={styles.icon}><AdminIcon name="tools" size={22} /></span>
+            <div>
+              <h2>Frankfurter 汇率查询</h2>
+              <p>查询最新或历史参考汇率并完成金额换算。</p>
+              <small>免 API Key</small>
+            </div>
+            <span className={styles.arrow}>→</span>
+          </Link>
         </div>
       </div>
     </AdminLayout>

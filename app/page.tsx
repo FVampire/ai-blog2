@@ -35,6 +35,13 @@ interface HomePageProps {
 
 const STATIC_PROJECTS = [
   {
+    slug: "wardrobe-lab",
+    href: "/projects/wardrobe-lab",
+    name: "Wardrobe Lab",
+    meta: "appearance · 2026",
+    image: "/projects/wardrobe-lab/live-tryon-cover.jpg",
+  },
+  {
     slug: "ai-garment-pattern-agent",
     href: "/projects/ai-garment-pattern-agent",
     name: "AI 服装打版 Agent",
