@@ -590,7 +590,8 @@
 }
 .sampleFigure {
   position: relative;
-  min-height: 620px;
+  min-height: 0;
+  aspect-ratio: 8 / 5;
   margin: 0 0 18px;
   overflow: hidden;
   background: #b9afa1;
@@ -627,7 +628,8 @@
 }
 .evidenceImage {
   position: relative;
-  min-height: 440px;
+  min-height: 0;
+  aspect-ratio: 8 / 5;
   background: #eee8dd;
 }
 .evidenceImage img {
@@ -959,7 +961,7 @@
     padding: 20px;
   }
   .sampleFigure {
-    min-height: 480px;
+    min-height: 0;
   }
   .darkPanel,
   .roadmap {
@@ -1011,7 +1013,7 @@
     grid-template-columns: 1fr;
   }
   .sampleFigure {
-    min-height: 420px;
+    min-height: 0;
   }
   .sampleFigure figcaption {
     flex-direction: column;

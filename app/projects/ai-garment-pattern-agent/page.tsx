@@ -26,10 +26,10 @@ const SITE_URL = (
   "http://localhost:3000"
 ).replace(/\/$/, "");
 const BASE_PATH = "/projects/ai-garment-pattern-agent";
-const PAGE_IMAGE = `${BASE_PATH}/pattern-complete.webp`;
+const PAGE_IMAGE = `${BASE_PATH}/real-workbench-pattern.webp`;
 const PAGE_TITLE = "SEAM · AI 服装打版 Agent - 五月的火";
 const PAGE_DESCRIPTION =
-  "从一句自然语言款式描述，到可校验、可交付、可回流的女衬衫头版纸样与样衣包。";
+  "从自然语言和参考图，到可校验纸样、3D 结构预览、工艺包与 SVG、PDF、DXF 导出的 AI 服装打版工作台。";
 
 export const metadata: Metadata = {
   title: { absolute: PAGE_TITLE },
@@ -45,9 +45,9 @@ export const metadata: Metadata = {
     images: [
       {
         url: PAGE_IMAGE,
-        width: 1800,
-        height: 773,
-        alt: "SEAM 自动生成的衬衫纸样",
+        width: 1600,
+        height: 1000,
+        alt: "SEAM 真实运行的 2D 衬衫纸样工作台",
       },
     ],
   },
@@ -71,7 +71,7 @@ const difficulties = [
   {
     no: "01",
     title: "画得像 ≠ 缝得上",
-    copy: "模型能画出像纸样的图，却不能保证闭合、配对和可缝合。7 类纸样展开为 14 个裁片，关键缝合边必须严格配伍；厘米级偏差到了样衣室，就是一块废布。",
+    copy: "模型能画出像纸样的图，却不能保证闭合、配对和可缝合。本次真实会话展开为 13 个裁片，关键缝合边必须严格配伍；厘米级偏差到了样衣室，就是一块废布。",
     answer: "几何交给确定性内核，模型只到结构为止。",
   },
   {
@@ -127,16 +127,16 @@ const mechanismBlocks = [
 
 const boundaryCases = [
   {
-    title: "连衣裙",
-    at: "结构解析后停止",
-    message: "UNSUPPORTED_CATEGORY · dress",
-    copy: "当前白名单只有女式基础衬衫，不会借用衬衫模块强行拼出裙装。",
+    title: "未注册结构",
+    at: "Pattern Planner 停止",
+    message: "UNSUPPORTED_PATTERN_OPERATION",
+    copy: "基础品类链路已经扩展，但遇到没有确定性几何实现的结构组合，仍会显式停止。",
   },
   {
-    title: "针织",
-    at: "材料确认时停止",
-    message: "UNSUPPORTED_MATERIAL · knit",
-    copy: "负松量、弹性回复和缝制工艺超出当前梭织几何模型。",
+    title: "生产状态",
+    at: "提升生产状态前停止",
+    message: "EXPERIMENTAL_PATTERN",
+    copy: "自动校验通过不等于工业准确；黄金纸样、CAD 往返、版师签核与实物样衣缺一不可。",
   },
   {
     title: "多码推档",
@@ -147,17 +147,15 @@ const boundaryCases = [
 ] as const;
 
 const routes = [
-  ["NOW", "单基码女衬衫", "165/84A · V1 头版验证"],
-  ["NEXT", "推档 S / M / L", "建立关键点与围度推档规则"],
-  ["THEN", "第二品类", "以结构白名单扩展，而不是通用品类承诺"],
+  ["NOW", "八类基础版链路", "T 恤、衬衫、卫衣、裙、裤与 POLO"],
+  ["NEXT", "黄金纸样与样衣", "逐品类完成版师校准和 CAD 往返"],
+  ["THEN", "推档 XS—XL", "建立关键点、围度与长度档差规则"],
   ["LATER", "面料库与排料", "把缩水、门幅和真实唛架接入用量计算"],
 ] as const;
 
-// TEMP_ASSET: generated visuals. Replace src values when real sample-room evidence exists.
-// The temporary state intentionally stays in source and is never rendered as a badge or label.
 const evidenceAssets = {
-  sample: `${BASE_PATH}/evidence-head-sample.webp`,
-  overlay: `${BASE_PATH}/evidence-pattern-overlay.webp`,
+  pattern: `${BASE_PATH}/real-workbench-pattern.webp`,
+  techPack: `${BASE_PATH}/real-tech-pack.webp`,
 } as const;
 
 // TODO(evidence): add verified downloadUrl, repositoryUrl and contactUrl before exposing those actions.
@@ -235,7 +233,7 @@ export default function GarmentPatternAgentPage() {
           <dl className={styles.heroMeta}>
             <div>
               <dt>SCOPE</dt>
-              <dd>女衬衫 / 165/84A</dd>
+              <dd>8 类基础版 / XS—XL</dd>
             </div>
             <div>
               <dt>CORE</dt>
@@ -243,7 +241,7 @@ export default function GarmentPatternAgentPage() {
             </div>
             <div>
               <dt>OUTPUT</dt>
-              <dd>样衣包 / DXF / 1:1</dd>
+              <dd>SVG / PDF / DXF / Tech Pack</dd>
             </div>
             <div>
               <dt>STATUS</dt>
@@ -294,8 +292,8 @@ export default function GarmentPatternAgentPage() {
                   <dd>段自然语言输入</dd>
                 </div>
                 <div>
-                  <dt>07</dt>
-                  <dd>类纸样 · 14 个裁片</dd>
+                  <dt>13</dt>
+                  <dd>个真实会话裁片</dd>
                 </div>
                 <div>
                   <dt>12</dt>
@@ -414,8 +412,8 @@ export default function GarmentPatternAgentPage() {
                   </div>
                 </div>
                 <p className={styles.mechanismNote}>
-                  共 7 类纸样，按裁剪数量展开为 14 个裁片。默认缝份 10 mm，领部
-                  8 mm，下摆 30 mm。
+                  本次真实会话检查 13 个裁片与 76 个工艺标记。默认缝份 10
+                  mm，领部 8 mm，下摆 30 mm。
                 </p>
               </article>
 
@@ -565,67 +563,67 @@ export default function GarmentPatternAgentPage() {
                 index="04"
                 eyebrow="SHOW THE RECEIPTS"
                 title={"把结果放到可\u2060验\u2060证的尺度上"}
-                copy="一套系统是否成立，不看它声称做了什么，而看产物能不能被打开、测量、裁剪、缝制和回改。"
+                copy="两张截图来自同一份女士衬衫会话：先生成并校验纸样，再在原会话内展开工艺单、BOM 与样衣复核。"
               />
               <figure className={styles.sampleFigure}>
                 <Image
-                  src={evidenceAssets.sample}
-                  alt="女衬衫头版样衣、纸样与裁片工作台"
+                  src={evidenceAssets.pattern}
+                  alt="SEAM 真实运行的女士衬衫 2D 纸样工作台，显示 13 个裁片和九阶段进度"
                   fill
                   sizes="(max-width: 880px) 100vw, 78vw"
                 />
                 <figcaption>
-                  <span>EVIDENCE 01</span>
-                  <b>1:1 出纸 → 裁片 → 头版样衣</b>
+                  <span>REAL UI 01 · PATTERN</span>
+                  <b>2D 纸样 · 13 裁片 · 76 工艺标记</b>
                 </figcaption>
               </figure>
               <div className={styles.evidenceGrid}>
                 <figure>
                   <div className={styles.evidenceImage}>
                     <Image
-                      src={evidenceAssets.overlay}
-                      alt="人工版师纸样与 SEAM 纸样的叠图对照"
+                      src={evidenceAssets.techPack}
+                      alt="SEAM 真实工艺包界面，显示 12 道工序、BOM 与样衣验证入口"
                       fill
                       sizes="(max-width: 880px) 100vw, 50vw"
                     />
                   </div>
                   <figcaption>
-                    <span>EVIDENCE 02 · PATTERN OVERLAY</span>
-                    <h3>差异被标出来，比“完全一致”可信</h3>
+                    <span>REAL UI 02 · TECH PACK</span>
+                    <h3>校验完成后，继续生成工艺包</h3>
                     <p>
-                      红线代表人工基准，蓝线代表
-                      SEAM。对照重点放在肩点、袖山和圆弧下摆，而不是只看轮廓像不像。
+                      同一会话内生成 12
+                      道工序、BOM、参考用量和样衣复核入口；量产用量仍明确要求实际排料复核。
                     </p>
                   </figcaption>
                 </figure>
                 <article className={styles.metricsCard}>
-                  <span>EVIDENCE 03 · MEASURED</span>
-                  <h3>配对关系可被复算</h3>
+                  <span>REAL RUN · VERIFIED</span>
+                  <h3>截图对应的数据清单</h3>
                   <dl>
                     <div>
-                      <dt>肩缝</dt>
-                      <dd>12.42 / 12.39 cm</dd>
-                      <small>Δ 0.03 cm</small>
+                      <dt>Agent 工作流</dt>
+                      <dd>9 / 9</dd>
+                      <small>进入人工审核阶段</small>
                     </div>
                     <div>
-                      <dt>袖山 / 袖窿</dt>
-                      <dd>48.10 / 47.72 cm</dd>
-                      <small>吃势 0.38 cm</small>
+                      <dt>裁片检查</dt>
+                      <dd>13 / 13</dd>
+                      <small>process_validated</small>
                     </div>
                     <div>
-                      <dt>合法纸样</dt>
-                      <dd>7 / 7</dd>
-                      <small>纸样闭合且无自交</small>
+                      <dt>工艺标记</dt>
+                      <dd>76</dd>
+                      <small>净版 · 工艺线 · 刀口 · 布纹</small>
                     </div>
                     <div>
-                      <dt>生产注释</dt>
-                      <dd>4 / 4</dd>
-                      <small>纱向 · 刀口 · 钻孔 · 名称</small>
+                      <dt>可交付文件</dt>
+                      <dd>09</dd>
+                      <small>SVG · PDF · DXF · JSON · HTML</small>
                     </div>
                   </dl>
                   <p>
-                    这些值进入 validation.json；WARN 需要人工判断，ERROR
-                    直接阻断 DXF 导出。
+                    文件清单写入 SHA-256；自动校验通过后仍保留 Experimental
+                    水印，等待打版师与实物样衣复核。
                   </p>
                 </article>
               </div>

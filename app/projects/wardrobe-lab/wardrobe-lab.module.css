@@ -123,9 +123,9 @@
 .heroImage img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center;
-  filter: saturate(0.92) contrast(1.02) brightness(1.03);
+  object-fit: cover;
+  object-position: center 58%;
+  filter: saturate(0.86) contrast(1.04) brightness(0.9);
   transform: none;
 }
 
@@ -245,7 +245,7 @@
   display: grid;
   grid-template-columns: minmax(260px, 1fr) 88px minmax(260px, 1fr);
   gap: 0;
-  height: clamp(360px, 36vw, 460px);
+  height: clamp(460px, 40vw, 580px);
   min-height: 0;
   margin-top: 32px;
   border: 1px solid var(--line);
@@ -498,6 +498,88 @@
   text-align: right;
 }
 
+@media (min-width: 761px) {
+  .looksSection,
+  .pipelineSection {
+    padding-top: clamp(32px, 4.5vh, 48px);
+    padding-bottom: clamp(32px, 4.5vh, 48px);
+  }
+
+  .looksSection .sectionHead,
+  .pipelineSection .sectionHead {
+    grid-template-columns: 1.25fr 0.75fr;
+    gap: 5vw;
+  }
+
+  .looksSection .sectionHead h2,
+  .pipelineSection .sectionHead h2 {
+    margin-top: 12px;
+    font-size: clamp(2.7rem, 4vw, 4.25rem);
+  }
+
+  .looksSection .sectionHead > p,
+  .pipelineSection .sectionHead > p {
+    max-width: 420px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .looksSection .lookSwitcher {
+    height: clamp(620px, 72svh, 760px);
+    margin-top: 20px;
+  }
+
+  .looksSection .sourceLook figcaption,
+  .looksSection .resultLook figcaption {
+    min-height: 64px;
+    padding: 10px 14px;
+  }
+
+  .looksSection .garmentPicker,
+  .looksSection .lookReadout {
+    margin-top: 8px;
+  }
+
+  .looksSection .garmentPicker button {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .looksSection .garmentPicker button img {
+    width: 32px;
+    height: 40px;
+  }
+
+  .looksSection .lookReadout {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .pipelineSection .pipelineMain {
+    margin-top: 20px;
+  }
+
+  .pipelineSection .stageViewer {
+    height: clamp(580px, 66svh, 700px);
+  }
+
+  .pipelineSection .scrubber {
+    padding: 28px 18px 12px;
+  }
+
+  .pipelineSection .scrubberLine {
+    top: 28px;
+  }
+
+  .pipelineSection .scrubber > input {
+    top: 15px;
+  }
+
+  .pipelineSection .stageTabs img {
+    height: 64px;
+  }
+}
+
 .pipelineSection {
   width: min(1440px, calc(100% - 6.8vw));
   padding-right: 0;
@@ -514,12 +596,13 @@
 .stageViewer {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.5fr);
-  min-height: 460px;
+  height: clamp(400px, 32vw, 480px);
+  min-height: 0;
 }
 
 .stageImage {
   position: relative;
-  min-height: 460px;
+  min-height: 0;
   overflow: hidden;
   background-color: #17181b;
   background-image:
@@ -860,7 +943,7 @@
 .identityBoard figure {
   position: relative;
   min-width: 0;
-  height: 560px;
+  height: 520px;
   margin: 0;
   overflow: hidden;
   background: #202226;
@@ -973,13 +1056,155 @@
 .screenFrame {
   min-height: 0;
   margin-top: 32px;
-  padding: clamp(12px, 2vw, 28px);
+  padding: 0;
+  overflow: hidden;
   border: 1px solid var(--line);
   background:
     linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
     #0a0b0c;
   background-size: 24px 24px;
+}
+
+.workbenchShell {
+  display: grid;
+}
+
+.workbenchShell .screenTabs {
+  margin-top: 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.pipelineSteps {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+  background: #121315;
+}
+
+.pipelineSteps li {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px 16px;
+  border-right: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.pipelineSteps li:last-child {
+  border-right: 0;
+}
+
+.pipelineSteps span {
+  font: 9px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.12em;
+}
+
+.pipelineSteps b {
+  font: 500 14px/1.2 var(--font-body, inherit);
+}
+
+.pipelineSteps small {
+  font: 9px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.08em;
+}
+
+.pipelineSteps li[data-state="done"] {
+  color: #c8c4bc;
+}
+
+.pipelineSteps li[data-state="current"] {
+  color: #17120d;
+  background: var(--accent);
+}
+
+.pipelineSteps li[data-state="current"] span,
+.pipelineSteps li[data-state="current"] small {
+  color: rgba(23, 18, 13, 0.72);
+}
+
+.workbenchShot {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  aspect-ratio: 1586 / 992;
+  background: #16130f;
+}
+
+.workbenchShot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top;
+}
+
+.workbenchShot figcaption {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  left: 14px;
+  z-index: 1;
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  padding: 10px 12px;
+  color: #efe7db;
+  background: rgba(14, 15, 17, 0.82);
+  font: 10px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.08em;
+}
+
+.workbenchShot figcaption span {
+  color: var(--accent);
+}
+
+.workbenchShot figcaption b {
+  margin-right: auto;
+  font: 500 13px/1.2 var(--font-body, inherit);
+  letter-spacing: 0;
+}
+
+.workbenchShot figcaption em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.workbenchMeta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--line);
+  background: #121315;
+}
+
+.workbenchMeta article {
+  min-width: 0;
+  padding: 18px 20px 20px;
+  border-right: 1px solid var(--line);
+}
+
+.workbenchMeta article:last-child {
+  border-right: 0;
+}
+
+.workbenchMeta span {
+  color: var(--accent);
+  font: 9px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.12em;
+}
+
+.workbenchMeta b {
+  display: block;
+  margin: 8px 0 10px;
+  font: 500 18px/1.2 var(--font-body, inherit);
+}
+
+.workbenchMeta p {
+  margin: 0;
+  color: var(--muted);
+  font: 12px / 1.7 var(--font-body, inherit);
 }
 
 .capabilityWorkbench {
@@ -1217,6 +1442,150 @@
   justify-self: end;
   color: var(--muted);
   font-style: normal;
+}
+
+.appWorkbench {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr) 236px;
+  grid-template-rows: 44px minmax(540px, 1fr);
+  min-height: 620px;
+  overflow: hidden;
+  background: #101113;
+}
+
+.appWorkbench .mockTop {
+  grid-column: 1 / -1;
+}
+
+.appWorkbench .capabilityNav {
+  display: flex;
+  flex-direction: column;
+}
+
+.appWorkbench .capabilityNav button {
+  cursor: default;
+}
+
+.wbCanvas {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  background: #0d0e10;
+}
+
+.wbCanvas .pipelineSteps {
+  border-bottom: 1px solid var(--line);
+}
+
+.wbStage {
+  min-width: 0;
+  min-height: 0;
+  padding: 12px;
+}
+
+.wbStage .compareCard {
+  height: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.wbStage .compareFrame {
+  height: 100%;
+  min-height: 420px;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%),
+    #16130f;
+  background-size: 18px 18px;
+}
+
+.wbInspector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px;
+  border-left: 1px solid var(--line);
+  background: #131417;
+}
+
+.wbInspector > span {
+  color: var(--muted);
+  font: 9px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.11em;
+}
+
+.wbInspector > b {
+  font: 500 18px/1.2 var(--font-body, inherit);
+}
+
+.wbInspector > p {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font: 12px / 1.65 var(--font-body, inherit);
+}
+
+.wbScenes {
+  display: grid;
+  gap: 8px;
+}
+
+.wbScenes button {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 6px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: #101113;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wbScenes img {
+  width: 52px;
+  height: 68px;
+  object-fit: cover;
+  object-position: top center;
+  background: #0a0b0c;
+}
+
+.wbScenes em {
+  font-style: normal;
+  font-size: 12px;
+}
+
+.wbSceneActive {
+  color: var(--ink);
+  border-color: var(--accent);
+  background: rgba(217, 161, 91, 0.08);
+}
+
+.wbLight {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--accent);
+  font: 10px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.08em;
+}
+
+.wbLight input {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.wbDone {
+  margin-top: auto;
+  padding: 12px;
+  color: #17120d;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  font-size: 12px;
+  cursor: default;
 }
 
 .workbenchMock {
@@ -1650,6 +2019,87 @@
   background: #121315;
 }
 
+.archLanes {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 18px;
+  align-items: stretch;
+  margin-top: 32px;
+}
+
+.archLanes > i {
+  align-self: center;
+  color: var(--accent);
+  font: 11px ui-monospace, Consolas, monospace;
+  font-style: normal;
+  letter-spacing: 0.08em;
+}
+
+.archLanes article {
+  display: grid;
+  align-content: start;
+  min-height: 220px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.archLanes span,
+.archLanes p {
+  color: var(--muted);
+}
+
+.archLanes span {
+  font: 9px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.1em;
+}
+
+.archLanes b {
+  margin: 14px 0 8px;
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.archLanes p {
+  margin: 0 0 22px;
+  font: 13px / 1.7 var(--font-body, inherit);
+}
+
+.archLanes ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.archLanes li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+}
+
+.archLanes em {
+  color: var(--accent);
+  font: 10px ui-monospace, Consolas, monospace;
+  font-style: normal;
+  letter-spacing: 0.08em;
+}
+
+.archLanes li span {
+  margin-left: auto;
+  color: var(--accent);
+  font: 9px ui-monospace, Consolas, monospace;
+}
+
+.archLanes .archCore {
+  border-color: var(--accent);
+  background: linear-gradient(140deg, rgba(217, 161, 91, 0.13), var(--panel));
+}
+
 .archFlow {
   display: grid;
   grid-template-columns: 1fr auto 1.2fr auto 1.3fr;
@@ -1872,6 +2322,7 @@
   .archFlow { grid-template-columns: 1fr auto 1fr; }
   .archFlow > i:nth-of-type(2) { display: none; }
   .archFlow > div { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
+  .archLanes { grid-template-columns: 1fr auto 1fr; }
 }
 
 @media (min-width: 761px) and (max-height: 850px) {
@@ -1885,6 +2336,8 @@
   }
 
   .sectionHead h2 { font-size: clamp(2.3rem, 4vw, 4rem); }
+  .looksSection .sectionHead h2,
+  .pipelineSection .sectionHead h2 { font-size: clamp(2.3rem, 3.5vw, 3.7rem); }
   .lookSwitcher,
   .pipelineMain,
   .compareGrid,
@@ -1892,25 +2345,29 @@
   .screenTabs,
   .liveDemo,
   .archFlow,
+  .archLanes,
   .failureGrid { margin-top: 24px; }
 
-  .lookSwitcher { height: 400px; min-height: 0; }
+  .looksSection .lookSwitcher { height: clamp(440px, 64svh, 560px); min-height: 0; }
   .sourceLook > div,
   .resultLook > div { min-height: 0; }
   .sourceLook figcaption,
   .resultLook figcaption { min-height: 68px; padding: 10px 14px; }
 
+  .pipelineSection .stageViewer { height: clamp(440px, 62svh, 540px); }
   .stageViewer,
-  .stageImage { min-height: 350px; }
+  .stageImage { min-height: 0; }
   .stageDetail { padding: 18px; }
   .stageDetail h3 { margin-top: 20px; font-size: clamp(2.2rem, 3.4vw, 3.6rem); }
   .stageDetail dl div { padding: 7px 0; }
   .scrubber { padding: 30px 18px 14px; }
-  .stageTabs img { height: 54px; }
+  .pipelineSection .stageTabs img { height: 54px; }
 
   .compareFrame { height: 300px; }
   .identityBoard figure { height: 460px; }
   .screenFrame { min-height: 460px; }
+  .appWorkbench { grid-template-rows: 44px minmax(460px, 1fr); min-height: 520px; }
+  .wbStage .compareFrame { min-height: 360px; }
   .workbenchMock { height: 430px; }
   .mockCanvas .compareFrame { height: 292px; }
   .reviewScreen,
@@ -2005,6 +2462,7 @@
   .screenTabs,
   .liveDemo,
   .archFlow,
+  .archLanes,
   .failureGrid {
     margin-top: 28px;
   }
@@ -2084,9 +2542,46 @@
 
   .screenTabs button { padding: 14px 10px; }
   .screenTabs small { display: none; }
-  .screenFrame { min-height: auto; padding: 8px; }
+  .screenFrame { min-height: auto; padding: 0; }
+  .pipelineSteps { grid-template-columns: repeat(5, minmax(88px, 1fr)); overflow-x: auto; }
+  .pipelineSteps li { min-width: 88px; padding: 12px; }
+  .workbenchShot figcaption { flex-wrap: wrap; gap: 8px; }
+  .workbenchShot figcaption b { margin-right: 0; }
+  .workbenchMeta { grid-template-columns: 1fr; }
+  .workbenchMeta article { border-right: 0; border-bottom: 1px solid var(--line); }
+  .workbenchMeta article:last-child { border-bottom: 0; }
   .capabilityWorkbench { grid-template-columns: 1fr; grid-template-rows: 50px auto auto; min-height: 0; }
   .capabilityNav { display: none; }
+  .appWorkbench {
+    grid-template-columns: 1fr;
+    grid-template-rows: 44px auto auto auto;
+    min-height: 0;
+  }
+  .appWorkbench .capabilityNav {
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .appWorkbench .capabilityNav > b {
+    display: none;
+  }
+  .appWorkbench .capabilityNav button {
+    flex: 1;
+    min-width: 88px;
+    border-bottom: 0;
+    border-right: 1px solid var(--line);
+  }
+  .wbInspector {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+  .wbStage .compareFrame { min-height: 360px; }
+  .wbScenes { grid-template-columns: repeat(3, 1fr); }
+  .wbScenes button { grid-template-columns: 1fr; }
+  .wbScenes img { width: 100%; height: 90px; }
   .capabilityCanvas { min-height: 560px; }
   .capabilityInspector { border-top: 1px solid var(--line); border-left: 0; }
   .capabilityStage { min-height: 430px; }
@@ -2121,6 +2616,8 @@
   .archFlow > i { justify-self: center; transform: rotate(90deg); }
   .archFlow > i:nth-of-type(2) { display: block; }
   .archFlow > div { grid-column: auto; grid-template-columns: 1fr; }
+  .archLanes { grid-template-columns: 1fr; }
+  .archLanes > i { justify-self: center; transform: rotate(90deg); }
   .gantt { padding: 18px 12px; overflow-x: auto; }
   .ganttAxis, .ganttRow { min-width: 640px; }
 
