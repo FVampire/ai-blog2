@@ -95,35 +95,38 @@
 .hero {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
-  min-height: min(760px, calc(100svh - 58px));
+  grid-template-columns: minmax(320px, 0.82fr) minmax(420px, 1.18fr);
+  height: clamp(380px, 48svh, 500px);
+  min-height: 0;
   overflow: hidden;
   border-bottom: 1px solid var(--line);
 }
 
 .heroImage {
   position: relative;
-  min-height: 560px;
+  min-height: 0;
   overflow: hidden;
-  background: #202226;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(217, 161, 91, 0.1), transparent 42%),
+    #17181b;
 }
 
 .heroImage::after {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, transparent 68%, rgba(14, 15, 17, 0.6)),
-    linear-gradient(0deg, rgba(14, 15, 17, 0.45), transparent 36%);
+    linear-gradient(90deg, transparent 80%, rgba(14, 15, 17, 0.46)),
+    linear-gradient(0deg, rgba(14, 15, 17, 0.18), transparent 32%);
   content: "";
 }
 
 .heroImage img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: 50% 22%;
-  filter: saturate(0.8) contrast(1.05);
-  transform: scale(1.03);
+  object-fit: contain;
+  object-position: center;
+  filter: saturate(0.92) contrast(1.02) brightness(1.03);
+  transform: none;
 }
 
 .heroImage > span {
@@ -140,7 +143,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 4vw 5vw 6vw;
+  padding: 3vw 4vw 4vw;
 }
 
 .kicker {
@@ -159,7 +162,7 @@
 }
 
 .heroCopy h1 {
-  font-size: clamp(3.4rem, 5vw, 5.8rem);
+  font-size: clamp(2.7rem, 4vw, 4.6rem);
   line-height: 0.94;
 }
 
@@ -242,7 +245,8 @@
   display: grid;
   grid-template-columns: minmax(210px, 0.78fr) 88px minmax(320px, 1.22fr);
   gap: 0;
-  min-height: 520px;
+  height: clamp(360px, 36vw, 460px);
+  min-height: 0;
   margin-top: 32px;
   border: 1px solid var(--line);
   background: #0a0b0c;
@@ -260,7 +264,7 @@
 .sourceLook > div,
 .resultLook > div {
   position: relative;
-  min-height: 440px;
+  min-height: 0;
   overflow: hidden;
   background: #202226;
 }
@@ -270,12 +274,12 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center top;
+  object-fit: contain;
+  object-position: center;
 }
 
 .sourceLook img {
-  filter: saturate(0.65) brightness(0.82);
+  filter: saturate(0.92) brightness(1.02);
 }
 
 .resultLook img {
@@ -492,9 +496,9 @@
 }
 
 .pipelineSection {
-  width: 100%;
-  padding-right: 3.4vw;
-  padding-left: 3.4vw;
+  width: min(1440px, calc(100% - 6.8vw));
+  padding-right: 0;
+  padding-left: 0;
   background: #111214;
 }
 
@@ -685,9 +689,10 @@
 .stageTabs img {
   grid-column: 1 / -1;
   width: 100%;
-  height: 78px;
-  object-fit: cover;
-  object-position: top;
+  height: 96px;
+  object-fit: contain;
+  object-position: center;
+  background: #0d0e10;
   filter: grayscale(1) brightness(0.6);
 }
 
@@ -748,8 +753,8 @@
 .compareFrame > img,
 .compareAfter img {
   display: block;
-  object-fit: cover;
-  object-position: center top;
+  object-fit: contain;
+  object-position: center;
 }
 
 .compareAfter {
@@ -852,7 +857,7 @@
 .identityBoard figure {
   position: relative;
   min-width: 0;
-  height: 380px;
+  height: 560px;
   margin: 0;
   overflow: hidden;
   background: #202226;
@@ -861,7 +866,8 @@
 .identityBoard figure img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
 }
 
 .landmarkPortrait canvas {
@@ -962,7 +968,8 @@
 }
 
 .screenFrame {
-  min-height: 560px;
+  min-height: 0;
+  margin-top: 32px;
   padding: clamp(12px, 2vw, 28px);
   border: 1px solid var(--line);
   background:
@@ -970,6 +977,216 @@
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
     #0a0b0c;
   background-size: 24px 24px;
+}
+
+.capabilityWorkbench {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 300px;
+  grid-template-rows: 44px 1fr;
+  min-height: 560px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #101113;
+}
+
+.capabilityNav,
+.capabilityInspector {
+  min-width: 0;
+  padding: 16px;
+  background: #131417;
+}
+
+.capabilityNav {
+  border-right: 1px solid var(--line);
+}
+
+.capabilityNav > b,
+.capabilityInspector > span {
+  display: block;
+  margin-bottom: 18px;
+  color: var(--muted);
+  font: 9px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.11em;
+}
+
+.capabilityNav button {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 8px;
+  color: var(--muted);
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  font-size: 11px;
+  text-align: left;
+}
+
+.capabilityNav button span {
+  color: var(--dim);
+  font: 9px ui-monospace, Consolas, monospace;
+}
+
+.capabilityNav .capabilityActive {
+  color: var(--accent);
+  background: rgba(217, 161, 91, 0.08);
+}
+
+.capabilityCanvas {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  padding: 18px;
+}
+
+.capabilityCanvas > header,
+.capabilityCanvas > footer {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.capabilityCanvas > header {
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.capabilityCanvas > header div {
+  display: grid;
+  gap: 6px;
+}
+
+.capabilityCanvas > header span,
+.capabilityCanvas > header em {
+  color: var(--muted);
+  font: 9px ui-monospace, Consolas, monospace;
+  font-style: normal;
+  letter-spacing: 0.08em;
+}
+
+.capabilityCanvas > header b {
+  font-size: 13px;
+}
+
+.capabilityStage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.02) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.02) 25%, transparent 25%),
+    #0d0e10;
+  background-size: 20px 20px;
+}
+
+.capabilityStage img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.capabilityStage > div {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 10px;
+  color: var(--muted);
+  background: rgba(14, 15, 17, 0.84);
+  font: 8px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.08em;
+}
+
+.capabilityCanvas > footer {
+  justify-content: center;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.capabilityCanvas > footer button {
+  padding: 9px 12px;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  background: #191a1d;
+  font-size: 10px;
+}
+
+.capabilityCanvas > footer button:last-child {
+  color: #17120d;
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.capabilityInspector {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--line);
+}
+
+.capabilityList {
+  display: grid;
+}
+
+.capabilityList article {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 0;
+  border-top: 1px solid var(--line);
+}
+
+.capabilityList article div {
+  display: grid;
+  gap: 5px;
+}
+
+.capabilityList article b {
+  font-size: 11px;
+}
+
+.capabilityList article small,
+.capabilityList article em,
+.queueStatus span,
+.queueStatus small {
+  color: var(--muted);
+  font: 8px/1.5 ui-monospace, Consolas, monospace;
+  font-style: normal;
+}
+
+.capabilityList article em {
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.queueStatus {
+  display: grid;
+  gap: 9px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.queueStatus b {
+  font-size: 13px;
+}
+
+.queueStatus i {
+  height: 3px;
+  background: var(--line);
+}
+
+.queueStatus i u {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--accent);
 }
 
 .mockTop {
@@ -1303,9 +1520,25 @@
 }
 
 .liveViewport video {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 140ms ease;
+}
+
+.liveVideoStack {
+  position: absolute;
+  inset: 0;
+  background: #08090a;
+}
+
+.liveViewport .liveVideoActive {
+  opacity: 1;
+  visibility: visible;
 }
 
 .liveViewport::after {
@@ -1558,8 +1791,8 @@
 .failureCompare img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center top;
+  object-fit: contain;
+  object-position: center;
   filter: saturate(0.75);
 }
 
@@ -1660,7 +1893,7 @@
 
   .lookSwitcher { min-height: 420px; }
   .sourceLook > div,
-  .resultLook > div { min-height: 340px; }
+  .resultLook > div { min-height: 0; }
   .sourceLook figcaption,
   .resultLook figcaption { min-height: 68px; padding: 10px 14px; }
 
@@ -1673,7 +1906,7 @@
   .stageTabs img { height: 54px; }
 
   .compareFrame { height: 300px; }
-  .identityBoard figure { height: 320px; }
+  .identityBoard figure { height: 460px; }
   .screenFrame { min-height: 460px; }
   .workbenchMock { height: 430px; }
   .mockCanvas .compareFrame { height: 292px; }
@@ -1698,30 +1931,32 @@
   .status { font-size: 8px; }
 
   .hero {
-    display: flex;
-    min-height: calc(100svh - 58px);
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 360px auto;
+    height: auto;
+    min-height: 0;
   }
 
   .heroImage {
-    position: absolute;
-    inset: 0;
+    position: relative;
     min-height: 0;
   }
 
   .heroImage::after {
-    background: linear-gradient(0deg, rgba(14, 15, 17, 0.98) 12%, rgba(14, 15, 17, 0.6) 62%, rgba(14, 15, 17, 0.2));
+    background: linear-gradient(0deg, rgba(14, 15, 17, 0.35), transparent 42%);
   }
 
   .heroCopy {
     position: relative;
     z-index: 2;
-    justify-content: flex-end;
+    justify-content: flex-start;
     width: 100%;
     min-width: 0;
-    padding: 48px 18px 68px;
+    padding: 32px 18px 64px;
   }
 
-  .heroCopy h1 { font-size: clamp(3.15rem, 15vw, 5.4rem); }
+  .heroCopy h1 { font-size: clamp(2.8rem, 13vw, 4.5rem); }
   .heroCopy > p:nth-of-type(2) {
     max-width: 100%;
     margin-top: 30px;
@@ -1750,6 +1985,12 @@
     padding-left: 18px;
   }
 
+  .pipelineSection {
+    width: calc(100% - 36px);
+    padding-right: 0;
+    padding-left: 0;
+  }
+
   .sectionHead { grid-template-columns: 1fr; gap: 20px; }
   .sectionHead h2 { font-size: clamp(2.8rem, 14vw, 4.4rem); }
   .sectionHead > p { font-size: 0.94rem; }
@@ -1767,12 +2008,14 @@
 
   .lookSwitcher {
     grid-template-columns: 1fr;
+    height: auto;
     min-height: 0;
   }
 
   .sourceLook > div,
   .resultLook > div {
-    min-height: 360px;
+    height: 330px;
+    min-height: 0;
   }
 
   .lookTransfer {
@@ -1826,13 +2069,18 @@
   .compareFrame { height: 420px; }
 
   .identityBoard { grid-template-columns: 1fr; }
-  .identityBoard figure { height: 300px; }
+  .identityBoard figure { height: 480px; }
   .identityScore { min-height: 210px; border: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
   .identityScore i { height: 34px; }
 
   .screenTabs button { padding: 14px 10px; }
   .screenTabs small { display: none; }
   .screenFrame { min-height: auto; padding: 8px; }
+  .capabilityWorkbench { grid-template-columns: 1fr; grid-template-rows: 50px auto auto; min-height: 0; }
+  .capabilityNav { display: none; }
+  .capabilityCanvas { min-height: 560px; }
+  .capabilityInspector { border-top: 1px solid var(--line); border-left: 0; }
+  .capabilityStage { min-height: 430px; }
   .workbenchMock { grid-template-columns: 1fr; grid-template-rows: 50px auto auto auto; height: auto; }
   .mockAssets { display: none; }
   .mockCanvas { min-height: 420px; padding: 10px; }
