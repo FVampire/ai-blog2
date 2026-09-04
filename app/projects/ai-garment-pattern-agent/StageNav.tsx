@@ -34,8 +34,8 @@ export default function StageNav({ stages }: { stages: readonly NavItem[] }) {
   }, [stages]);
 
   return (
-    <nav className={styles.stageNav} aria-label="制版阶段">
-      <p>PIPELINE</p>
+    <nav className={styles.stageNav} aria-label="案例章节">
+      <p>CASE STUDY</p>
       {stages.map((stage) => (
         <a
           key={stage.id}
