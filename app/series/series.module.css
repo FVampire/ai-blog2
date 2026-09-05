@@ -1,3 +1,8 @@
+.index {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
 .list {
   display: grid;
   gap: 20px;
@@ -6,7 +11,7 @@
 
 .card {
   display: grid;
-  grid-template-columns: 180px 1fr;
+  grid-template-columns: 180px minmax(0, 1fr);
   gap: 24px;
   padding: 18px 0;
   border-top: 1px solid var(--border, #d8dee4);
@@ -15,9 +20,15 @@
 }
 
 .cover {
-  min-height: 110px;
+  aspect-ratio: 18 / 11;
+  align-self: start;
   background: #dbe4e6 center/cover no-repeat;
   border-radius: 4px;
+}
+
+.body {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .body h2 {
@@ -40,6 +51,7 @@
 
 .meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 10px;
 }

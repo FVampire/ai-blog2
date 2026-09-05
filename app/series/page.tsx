@@ -40,7 +40,7 @@ export default async function SeriesIndexPage() {
     <div className="site-shell">
       <Header />
       <main className="archive-layout">
-        <section className="archive-main">
+        <section className={`archive-main ${styles.index}`}>
           <p className="index-path">系列 /</p>
           <h1>文章系列</h1>
           <p className="archive-count">{series.length} series · ordered reading</p>
