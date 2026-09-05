@@ -46,7 +46,7 @@ const STATIC_PROJECTS = [
     href: "/projects/ai-garment-pattern-agent",
     name: "AI 服装打版 Agent",
     meta: "agent/cad · 2026",
-    image: "/projects/ai-garment-pattern-agent/pattern-complete.webp",
+    image: "/projects/ai-garment-pattern-agent/studio-vision-v2.webp",
   },
   {
     slug: "moling",

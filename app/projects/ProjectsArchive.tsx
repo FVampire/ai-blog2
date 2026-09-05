@@ -29,9 +29,9 @@ const FEATURED = [
     name: "AI 服装打版 Agent",
     kind: "agent/cad",
     year: "2026",
-    description: "从款式语义到可验证纸样的智能制版系统。",
-    image: "/projects/ai-garment-pattern-agent/pattern-complete.webp",
-    tags: ["REV 0.1", "StyleGraph", "BOM"],
+    description: "从设计对话到纸样与样衣技术包的 AI 制版工作台。",
+    image: "/projects/ai-garment-pattern-agent/studio-vision-v2.webp",
+    tags: ["对话改版", "2D / 3D", "Tech Pack"],
     caption: "FIG. 2-2  seam.png",
   },
   {

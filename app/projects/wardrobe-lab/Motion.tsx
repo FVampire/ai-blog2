@@ -6,6 +6,7 @@ import { motionLooks, motionPath } from "./presentation-data";
 import s from "./studio.module.css";
 
 export default function Motion({ live = false }: { live?: boolean }) {
+  const [mobile, setMobile] = useState(true);
   const [active, setActive] = useState(1);
   const [pending, setPending] = useState<number | null>(null);
   const [playing, setPlaying] = useState(true);
@@ -15,6 +16,14 @@ export default function Motion({ live = false }: { live?: boolean }) {
   const [failed, setFailed] = useState(false);
   const videos = useRef<Array<HTMLVideoElement | null>>([]);
   const container = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 760px), (pointer: coarse)");
+    const update = () => setMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     const preload = new IntersectionObserver(
@@ -41,14 +50,20 @@ export default function Motion({ live = false }: { live?: boolean }) {
   }, []);
 
   // Keep buffered video elements mounted. Changing a look never changes a src.
-  // Decode the collection together only while on screen; pause every track off screen.
+  // Phones decode only the current and requested track. Desktop keeps the pool warm.
   useEffect(() => {
     const tracks = videos.current;
-    tracks.forEach((video) => {
-      if (playing && visible && loaded) void video?.play().catch(() => {});
+    tracks.forEach((video, index) => {
+      if (
+        playing &&
+        visible &&
+        loaded &&
+        (!mobile || index === active || index === pending)
+      )
+        void video?.play().catch(() => {});
       else video?.pause();
     });
-    if (!visible || !loaded) return;
+    if (!visible || !loaded || mobile) return;
     const sync = window.setInterval(() => {
       const source = tracks[active];
       if (!source || source.readyState < 2 || source.seeking) return;
@@ -56,6 +71,7 @@ export default function Motion({ live = false }: { live?: boolean }) {
         if (
           !video ||
           video === source ||
+          video === tracks[pending ?? -1] ||
           video.readyState < 2 ||
           video.seeking ||
           !Number.isFinite(video.duration)
@@ -67,11 +83,12 @@ export default function Motion({ live = false }: { live?: boolean }) {
       });
     }, 250);
     return () => window.clearInterval(sync);
-  }, [playing, visible, loaded, active]);
+  }, [playing, visible, loaded, active, pending, mobile]);
 
   useEffect(() => {
     if (pending === null) return;
     let frame = 0;
+    let aligned = false;
     const deadline = performance.now() + 8000;
     const reveal = () => {
       const source = videos.current[active];
@@ -83,15 +100,18 @@ export default function Motion({ live = false }: { live?: boolean }) {
       }
       if (
         target &&
-        target.readyState >= 2 &&
-        !target.seeking &&
-        Number.isFinite(target.duration)
+        target.readyState >= 1 &&
+        Number.isFinite(target.duration) &&
+        target.duration > 0
       ) {
-        const position = (source?.currentTime || 0) % target.duration;
-        if (Math.abs(target.currentTime - position) > 0.12)
-          target.currentTime = position;
-        else {
-          // The old track remains visible until the new track has a decoded, aligned frame.
+        if (!aligned) {
+          // Seek once. Chasing a moving source repeatedly can starve mobile decoders.
+          aligned = true;
+          const position = (source?.currentTime || 0) % target.duration;
+          if (Math.abs(target.currentTime - position) > 0.12)
+            target.currentTime = position;
+        }
+        if (target.readyState >= 2 && !target.seeking) {
           setActive(pending);
           setPending(null);
           return;
@@ -134,9 +154,17 @@ export default function Motion({ live = false }: { live?: boolean }) {
             muted
             playsInline
             loop
-            preload="auto"
+            preload={
+              mobile && index !== active && index !== pending
+                ? "metadata"
+                : "auto"
+            }
             onCanPlay={() => {
-              if (playing && visible)
+              if (
+                playing &&
+                visible &&
+                (!mobile || index === active || index === pending)
+              )
                 void videos.current[index]?.play().catch(() => {});
             }}
             onTimeUpdate={() => {
@@ -185,7 +213,10 @@ export default function Motion({ live = false }: { live?: boolean }) {
               }}
             >
               <img src={motionPath(look.id, "jpg")} alt="" loading="lazy" />
-              <span>{look.name}</span>
+              <span>
+                {look.name}
+                {pending === index ? " ···" : ""}
+              </span>
             </button>
           ))}
         </div>
