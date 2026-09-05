@@ -1792,3 +1792,16 @@
     scroll-behavior: auto !important;
   }
 }
+/* Buffered tracks share one viewport; inactive tracks keep their decoder warm. */
+.motionScreen video.motionTrackActive,
+.motionScreen video.motionTrackHidden {
+  position: absolute;
+  inset: 0;
+}
+.motionTrackActive {
+  opacity: 1;
+}
+.motionTrackHidden {
+  opacity: 0;
+  pointer-events: none;
+}

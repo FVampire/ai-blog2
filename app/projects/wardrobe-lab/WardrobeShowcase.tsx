@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 import Link from "next/link";
 
-import { looks, stages, motionLooks, motionPath } from "./presentation-data";
+import Motion from "./Motion";
+import { looks, stages } from "./presentation-data";
 import s from "./studio.module.css";
 
 function Compare({ before, after }: { before: string; after: string }) {
@@ -30,113 +31,6 @@ function Compare({ before, after }: { before: string; after: string }) {
         value={split}
         onChange={(e) => setSplit(+e.target.value)}
       />
-    </div>
-  );
-}
-
-function Motion({ live = false }: { live?: boolean }) {
-  const [active, setActive] = useState(1);
-  const [playing, setPlaying] = useState(true);
-  const [visible, setVisible] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [failed, setFailed] = useState(false);
-  const video = useRef<HTMLVideoElement>(null);
-  const container = useRef<HTMLDivElement>(null);
-  const position = useRef(0);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => setVisible(entry.isIntersecting),
-      { threshold: 0.15 },
-    );
-    if (container.current) observer.observe(container.current);
-    return () => observer.disconnect();
-  }, []);
-  useEffect(() => {
-    if (playing && visible) void video.current?.play().catch(() => {});
-    else video.current?.pause();
-  }, [playing, visible, active]);
-  const capture = () => {
-    if (!video.current || video.current.readyState < 2) return;
-    const canvas = document.createElement("canvas");
-    canvas.width = video.current.videoWidth;
-    canvas.height = video.current.videoHeight;
-    canvas.getContext("2d")?.drawImage(video.current, 0, 0);
-    const link = document.createElement("a");
-    link.download = "wardrobe-frame.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  };
-  return (
-    <div ref={container} className={s.motion}>
-      <div className={s.motionScreen}>
-        <video
-          ref={video}
-          src={visible ? motionPath(motionLooks[active].id) : undefined}
-          poster={motionPath(motionLooks[active].id, "jpg")}
-          muted
-          playsInline
-          loop
-          preload="metadata"
-          onLoadedMetadata={() => {
-            if (video.current) {
-              video.current.currentTime =
-                position.current % (video.current.duration || 1);
-              if (playing && visible) void video.current.play().catch(() => {});
-            }
-          }}
-          onTimeUpdate={() => {
-            if (video.current)
-              setProgress(
-                (video.current.currentTime / (video.current.duration || 1)) *
-                  100,
-              );
-          }}
-          onError={() => setFailed(true)}
-        />
-        <div className={s.motionHud}>
-          <span>
-            <i /> {live ? "LIVE SESSION" : "MOTION STUDIO"}
-          </span>
-          <span>IDENTITY LOCK ON</span>
-        </div>
-        <div className={s.motionBottom}>
-          <b>
-            {motionLooks[active].name}
-            <small> / MOTION COLLECTION</small>
-          </b>
-          <button
-            onClick={() => setPlaying(!playing)}
-            aria-label={playing ? "暂停视频" : "播放视频"}
-          >
-            {playing ? "Ⅱ" : "▶"}
-          </button>
-        </div>
-        {failed && <p className={s.videoError}>视频加载失败，请切换造型重试</p>}
-      </div>
-      <div className={s.videoProgress}>
-        <i style={{ width: `${progress}%` }} />
-      </div>
-      <div className={s.motionControls}>
-        <div>
-          {motionLooks.map((look, index) => (
-            <button
-              key={look.id}
-              aria-pressed={active === index}
-              onClick={() => {
-                position.current = video.current?.currentTime || 0;
-                setFailed(false);
-                setActive(index);
-              }}
-            >
-              <img src={motionPath(look.id, "jpg")} alt="" loading="lazy" />
-              <span>{look.name}</span>
-            </button>
-          ))}
-        </div>
-        <button className={s.outlineButton} onClick={capture}>
-          截取画面 ↗
-        </button>
-      </div>
     </div>
   );
 }
