@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import WardrobeLabExperience from "./WardrobeLabExperience";
+import WardrobeShowcase from "./WardrobeShowcase";
 
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -9,12 +9,12 @@ const SITE_URL = (
 ).replace(/\/$/, "");
 
 export const metadata: Metadata = {
-  title: "Wardrobe Lab · 可回看的 AI 换装工作台",
+  title: "Wardrobe Lab · 万千造型，始终是你",
   description:
-    "从输入、抠图、解析、美颜、换装到合成，每一步都可以亲手拖动回看。",
+    "从一张照片到一整个动态衣橱。图像换装、视频创作、实时预览与批量成片，在同一个工作台完成。",
   alternates: { canonical: `${SITE_URL}/projects/wardrobe-lab` },
 };
 
 export default function WardrobeLabPage() {
-  return <WardrobeLabExperience />;
+  return <WardrobeShowcase />;
 }
