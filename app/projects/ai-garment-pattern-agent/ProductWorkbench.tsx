@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 
 import styles from "./showcase.module.css";
+import TechPackPreview from "./TechPackPreview";
 const views = [
   {
     title: "设计与 3D",
@@ -20,9 +21,9 @@ const views = [
     label: "PATTERN WORKSPACE",
     headline: "从服装结构，深入到每一片纸样。",
     copy: "查看衣身、袖片、领与克夫的结构关系，在纸样画布上检查轮廓和工艺标记，连接参数调整与文件输出。",
-    image: "real-workbench-pattern.webp",
-    alt: "SEAM 现有工作台的二维纸样画布",
-    caption: "工作台实机画面",
+    image: "pattern-complete.webp",
+    alt: "衬衫 CAD 纸样细节与工艺标记",
+    caption: "CAD 纸样细节示例",
     tags: ["参数化裁片", "缝份与纱向", "几何校验"],
   },
   {
@@ -32,7 +33,7 @@ const views = [
     copy: "把工序、面辅料和成衣尺寸集中整理，配合可打印技术包，为样衣制作与后续复核建立清楚的参照。",
     image: "real-tech-pack.webp",
     alt: "SEAM 现有工作台的样衣技术包",
-    caption: "工作台实机画面",
+    caption: "技术包产品演示",
     tags: ["工艺操作卡", "面辅料 BOM", "尺寸与公差"],
   },
 ];
@@ -83,14 +84,18 @@ export default function ProductWorkbench() {
         tabIndex={0}
       >
         <figure>
-          <div className={styles.viewImage}>
-            <Image
-              src={`/projects/ai-garment-pattern-agent/${view.image}`}
-              alt={view.alt}
-              fill
-              sizes="(max-width: 760px) 100vw, 850px"
-            />
-          </div>
+          {active === 2 ? (
+            <TechPackPreview />
+          ) : (
+            <div className={styles.viewImage}>
+              <Image
+                src={`/projects/ai-garment-pattern-agent/${view.image}`}
+                alt={view.alt}
+                fill
+                sizes="(max-width: 760px) 100vw, 850px"
+              />
+            </div>
+          )}
           <figcaption>{view.caption}</figcaption>
         </figure>
         <div className={styles.viewCopy}>

@@ -1,6 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { motionLooks, motionPath } from "./presentation-data";
 import s from "./studio.module.css";
@@ -16,6 +16,53 @@ export default function Motion({ live = false }: { live?: boolean }) {
   const [failed, setFailed] = useState(false);
   const videos = useRef<Array<HTMLVideoElement | null>>([]);
   const container = useRef<HTMLDivElement>(null);
+  const playback = useRef({ active, pending, playing, visible, mobile });
+  playback.current = { active, pending, playing, visible, mobile };
+
+  const playTrack = useCallback((index: number) => {
+    const video = videos.current[index];
+    if (!video) return;
+    video.muted = true;
+    void video.play().catch((error: DOMException) => {
+      const state = playback.current;
+      // Aborted plays are expected when a newer selection supersedes this track.
+      if (
+        error.name === "AbortError" ||
+        !state.visible ||
+        index !== (state.pending ?? state.active)
+      )
+        return;
+      setPlaying(false); // Expose a real play control if the browser denies autoplay.
+    });
+  }, []);
+
+  const selectLook = (index: number) => {
+    setFailed(false);
+    if (index === active) {
+      setPending(null);
+      return;
+    }
+    if (mobile)
+      videos.current.forEach((video, i) => {
+        if (i !== index) video?.pause();
+      });
+    setPending(index);
+    // Start directly in the tap gesture, before React effects lose user activation.
+    if (playing) playTrack(index);
+  };
+
+  const togglePlayback = () => {
+    const index = pending ?? active;
+    const video = videos.current[index];
+    if (!video) return;
+    if (video.paused || !playing) {
+      setPlaying(true);
+      playTrack(index);
+    } else {
+      setPlaying(false);
+      videos.current.forEach((track) => track?.pause());
+    }
+  };
 
   useEffect(() => {
     const query = window.matchMedia("(max-width: 760px), (pointer: coarse)");
@@ -50,7 +97,7 @@ export default function Motion({ live = false }: { live?: boolean }) {
   }, []);
 
   // Keep buffered video elements mounted. Changing a look never changes a src.
-  // Phones decode only the current and requested track. Desktop keeps the pool warm.
+  // Phones play one track at a time: concurrent play can suspend the newly selected track on iOS.
   useEffect(() => {
     const tracks = videos.current;
     tracks.forEach((video, index) => {
@@ -58,9 +105,9 @@ export default function Motion({ live = false }: { live?: boolean }) {
         playing &&
         visible &&
         loaded &&
-        (!mobile || index === active || index === pending)
+        (!mobile || index === (pending ?? active))
       )
-        void video?.play().catch(() => {});
+        playTrack(index);
       else video?.pause();
     });
     if (!visible || !loaded || mobile) return;
@@ -83,7 +130,7 @@ export default function Motion({ live = false }: { live?: boolean }) {
       });
     }, 250);
     return () => window.clearInterval(sync);
-  }, [playing, visible, loaded, active, pending, mobile]);
+  }, [playing, visible, loaded, active, pending, mobile, playTrack]);
 
   useEffect(() => {
     if (pending === null) return;
@@ -163,9 +210,9 @@ export default function Motion({ live = false }: { live?: boolean }) {
               if (
                 playing &&
                 visible &&
-                (!mobile || index === active || index === pending)
+                (!mobile || index === (pending ?? active))
               )
-                void videos.current[index]?.play().catch(() => {});
+                playTrack(index);
             }}
             onTimeUpdate={() => {
               const video = videos.current[index];
@@ -189,7 +236,7 @@ export default function Motion({ live = false }: { live?: boolean }) {
             <small> / MOTION COLLECTION</small>
           </b>
           <button
-            onClick={() => setPlaying(!playing)}
+            onClick={togglePlayback}
             aria-label={playing ? "暂停视频" : "播放视频"}
           >
             {playing ? "Ⅱ" : "▶"}
@@ -207,10 +254,7 @@ export default function Motion({ live = false }: { live?: boolean }) {
               key={look.id}
               aria-pressed={active === index}
               aria-busy={pending === index}
-              onClick={() => {
-                setFailed(false);
-                setPending(index === active ? null : index);
-              }}
+              onClick={() => selectLook(index)}
             >
               <img src={motionPath(look.id, "jpg")} alt="" loading="lazy" />
               <span>

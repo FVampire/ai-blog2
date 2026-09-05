@@ -709,3 +709,115 @@
     padding: 70px 0;
   }
 }
+.packPreview {
+  background: #fafaf6;
+  padding: 22px;
+  border: 1px solid #d9dbcf;
+}
+.packPreview header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 15px;
+  font-size: 9px;
+  color: var(--muted);
+}
+.packPreview header b {
+  font-size: 15px;
+  letter-spacing: 0.2em;
+  color: var(--ink);
+}
+.packPreviewTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 23px 0;
+}
+.packPreviewTitle small {
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+.packPreviewTitle h4 {
+  font-size: 23px;
+  font-weight: 500;
+  margin: 6px 0 0;
+}
+.packPreviewTitle > span {
+  font-size: 10px;
+  color: #54705d;
+  padding: 7px 12px;
+  background: #e7edde;
+}
+.packMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.packMetrics > div {
+  border: 1px solid var(--line);
+  padding: 12px;
+}
+.packMetrics small {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.packMetrics b {
+  font-size: 11px;
+  font-weight: 500;
+}
+.packTable h5 {
+  font-size: 12px;
+  font-weight: 500;
+  margin: 20px 0 10px;
+}
+.packTable > div {
+  display: grid;
+  grid-template-columns: 30px 1fr 1.8fr;
+  border-top: 1px solid var(--line);
+  padding: 10px 0;
+  font-size: 10px;
+}
+.packTable > div > span:first-child {
+  color: var(--muted);
+}
+.packTable > div > span:last-child {
+  color: var(--muted);
+}
+.packPreview footer {
+  border-top: 1px solid var(--line);
+  margin-top: 10px;
+  padding-top: 13px;
+  font-size: 10px;
+}
+.packPreview footer p {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  margin: 10px 0 0;
+  font-size: 9px;
+}
+@media (max-width: 760px) {
+  .packPreview {
+    padding: 13px;
+  }
+  .packPreview header {
+    font-size: 7px;
+  }
+  .packMetrics > div {
+    padding: 8px;
+  }
+  .packMetrics b {
+    font-size: 9px;
+  }
+  .packTable > div {
+    font-size: 8px;
+    grid-template-columns: 22px 1fr 1.7fr;
+  }
+  .packPreview footer p {
+    font-size: 8px;
+    gap: 10px;
+  }
+}
