@@ -7,14 +7,14 @@ import styles from "./showcase.module.css";
 import TechPackPreview from "./TechPackPreview";
 const views = [
   {
-    title: "设计与 3D",
+    title: "智能工作台",
     label: "DESIGN STUDIO",
     headline: "先看整体，再深入细节。",
-    copy: "将服装外观、结构预览与设计对话放在同一视野，围绕廓形、领袖和面料意图持续推敲。",
+    copy: "左侧编排制版任务，中间查看款式和裁片，右侧调整结构参数。11 项款式操作与 25 项装配关系，汇入同一个工作区。",
     image:
-      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592690503-637778501.webp",
-    alt: "衬衫产品概念工作台，包含三维外观和二维结构",
-    caption: "产品效果演示 · AI 生成视觉",
+      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788615421150-775873709.webp",
+    alt: "手工构建的裹式上衣智能工作台",
+    caption: "工作台界面演示 · 真实案例数据",
     tags: ["款式参考", "结构预览", "设计对话"],
   },
   {
@@ -23,9 +23,9 @@ const views = [
     headline: "从服装结构，深入到每一片纸样。",
     copy: "查看衣身、袖片、领与克夫的结构关系，在纸样画布上检查轮廓和工艺标记，连接参数调整与文件输出。",
     image:
-      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592692271-19848115.webp",
-    alt: "衬衫 CAD 纸样细节与工艺标记",
-    caption: "CAD 纸样细节示例",
+      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788615422732-486445896.webp",
+    alt: "真实项目的十四个裁片几何在纸样工作区排列",
+    caption: "纸样工作区演示 · 真实 PatternGraph 轮廓",
     tags: ["参数化裁片", "缝份与纱向", "几何校验"],
   },
   {
@@ -75,7 +75,7 @@ export default function ProductWorkbench() {
             {item.title}
           </button>
         ))}
-        <span className={styles.viewProject}>EVERYDAY SHIRT / 款式探索</span>
+        <span className={styles.viewProject}>WRAP BLOUSE / 工程视图</span>
       </div>
       <div
         id="workbench-panel"
@@ -98,7 +98,19 @@ export default function ProductWorkbench() {
               />
             </div>
           )}
-          <figcaption>{view.caption}</figcaption>
+          <figcaption>
+            {view.caption}
+            {view.image && (
+              <a
+                href={view.image}
+                target="_blank"
+                rel="noreferrer"
+                className={styles.zoomLink}
+              >
+                查看高清 ↗
+              </a>
+            )}
+          </figcaption>
         </figure>
         <div className={styles.viewCopy}>
           <p className={styles.eyebrow}>{view.label}</p>

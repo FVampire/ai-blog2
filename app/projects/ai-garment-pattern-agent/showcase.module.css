@@ -821,3 +821,18 @@
     gap: 10px;
   }
 }
+.zoomLink {
+  float: right;
+  color: #476349;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (min-width: 1001px) {
+  .heroCopy {
+    grid-template-columns: 1.8fr 1fr;
+    gap: 35px;
+  }
+  .heroCopy h1 {
+    font-size: clamp(30px, 3.2vw, 43px);
+  }
+}

@@ -47,7 +47,7 @@ const STATIC_PROJECTS = [
     name: "AI 服装打版 Agent",
     meta: "agent/cad · 2026",
     image:
-      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592690503-637778501.webp",
+      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788615421150-775873709.webp",
   },
   {
     slug: "moling",

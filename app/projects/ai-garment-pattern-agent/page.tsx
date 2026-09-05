@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import type { Metadata } from "next";
 
+import { CaseBreakdown, CapabilityGrid, DesignRange } from "./CapabilityStory";
 import ProductWorkbench from "./ProductWorkbench";
 import styles from "./showcase.module.css";
 import Footer from "../../../components/Footer";
@@ -15,29 +16,29 @@ const SITE = (
   "http://localhost:3000"
 ).replace(/\/$/, "");
 const description =
-  "SEAM AI 服装打版工作台：把参考图与设计语言连接到款式结构、2D 纸样、3D 预览和样衣技术包，让每一次改版都有迹可循。";
+  "SEAM 服装制版 AI 工程系统：多模态款式理解、组合式制版、确定性 CAD、几何与缝长校验，连接复杂设计、整套纸样和样衣技术包。";
 export const metadata: Metadata = {
-  title: { absolute: "SEAM · 从灵感到纸样 - 五月的火" },
+  title: { absolute: "SEAM · 服装制版的 AI 工程系统 - 五月的火" },
   description,
   alternates: { canonical: `${SITE}${BASE}` },
   openGraph: {
-    title: "SEAM · 从灵感到纸样",
+    title: "SEAM · 服装制版的 AI 工程系统",
     description,
     type: "article",
     url: `${SITE}${BASE}`,
     images: [
       {
-        url: "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592690503-637778501.webp",
+        url: "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788615421150-775873709.webp",
         alt: "SEAM 产品效果演示",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SEAM · 从灵感到纸样",
+    title: "SEAM · 服装制版的 AI 工程系统",
     description,
     images: [
-      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592690503-637778501.webp",
+      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788615421150-775873709.webp",
     ],
   },
 };
@@ -89,16 +90,20 @@ export default function GarmentPatternAgentPage() {
           </div>
           <div className={styles.heroCopy}>
             <div>
-              <p className={styles.eyebrow}>让创意，沿着每一道缝线落地。</p>
+              <p className={styles.eyebrow}>
+                看懂款式 · 编排制版 · 几何校验 · 工程交付
+              </p>
               <h1>
-                从灵感到纸样。
+                服装制版的 AI 工程系统。
                 <br />
-                <span>和 AI 一起，把衣服做出来。</span>
+                <span>让复杂设计，成为整套纸样。</span>
               </h1>
             </div>
             <div className={styles.intro}>
               <p>
-                把参考图、设计对话与精确制版放进同一个工作台。从一件衣服的轮廓，到每一片纸样的细节，让设计与制作保持连接。
+                从多模态款式理解，到组合式结构操作、确定性 CAD
+                与样衣技术包。SEAM
+                把设计师的表达，转化为可计算、可校验、可持续改版的服装工程。
               </p>
               <a className={styles.primary} href="#workbench">
                 探索工作台 <span>↗</span>
@@ -111,18 +116,18 @@ export default function GarmentPatternAgentPage() {
           <figure className={styles.heroVisual}>
             <Image
               src={
-                "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592690503-637778501.webp"
+                "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788615421150-775873709.webp"
               }
-              alt="SEAM 产品效果演示：设计对话、白色衬衫三维视图与二维纸样并列的工作台"
+              alt="SEAM 高保真工作台：裹式上衣设计参考、真实裁片几何、结构参数和校验结果"
               unoptimized
-              width={1568}
-              height={1003}
+              width={2400}
+              height={1500}
               priority
               sizes="(max-width: 760px) 100vw, 1280px"
             />
             <figcaption>
               <span>01 / THE CONNECTED WORKSPACE</span>
-              <span>产品效果演示 · AI 生成视觉</span>
+              <span>工作台界面演示 · 真实案例数据</span>
             </figcaption>
           </figure>
           <div className={styles.featureStrip}>
@@ -135,6 +140,7 @@ export default function GarmentPatternAgentPage() {
             <span>样衣技术包</span>
           </div>
         </section>
+        <CaseBreakdown />
         <section className={styles.section} id="workflow">
           <div className={styles.sectionHead}>
             <p className={styles.eyebrow}>01 / FROM IDEA TO SAMPLE</p>
@@ -160,15 +166,19 @@ export default function GarmentPatternAgentPage() {
               02 / ONE DESIGN, THREE PERSPECTIVES
             </p>
             <h2>看见衣服，也看清它的构成。</h2>
-            <p>以一件日常衬衫为线索，探索设计、纸样与交付之间的关系。</p>
+            <p>
+              一件裹式上衣，连接款式意图、结构参数、14
+              个裁片与装配关系。界面由静态工作台实际渲染，裁片和参数取自项目会话。
+            </p>
           </div>
           <ProductWorkbench />
         </section>
+        <CapabilityGrid />
         <section className={styles.dialogueSection} id="iteration">
           <div>
             <p className={styles.eyebrow}>03 / DESIGN THROUGH DIALOGUE</p>
             <h2>
-              “袖子再长 3cm。”
+              “克夫加高 1cm。”
               <br />
               <span>让改版像沟通一样自然。</span>
             </h2>
@@ -188,38 +198,39 @@ export default function GarmentPatternAgentPage() {
           >
             <header>
               <span className={styles.dot} />
-              EVERYDAY SHIRT <span>改版示例 / V02</span>
+              WRAP BLOUSE <span>改版示例 / V02</span>
             </header>
             <div className={styles.userMessage}>
-              保持落肩廓形，袖子加长 3cm。
+              保持泡袖和交叠结构，克夫加高 1cm。
             </div>
             <div className={styles.agentMessage}>
               <b>SEAM</b>
               <p>
-                本次调整袖长，保留领型、门襟和衣身松量。下面是改版前后的尺寸对照。
+                本次调整克夫高度，保留袖口围度与交叠结构。纸样重新计算后，检查袖口装配关系并更新版本。
               </p>
             </div>
             <div className={styles.delta}>
-              <span>袖长</span>
+              <span>克夫高度</span>
               <span>
-                52 cm <i>→</i> <b>55 cm</b>
+                60 mm <i>→</i> <b>70 mm</b>
               </span>
-              <em>+3 cm</em>
+              <em>+10 mm</em>
             </div>
             <div className={styles.delta}>
-              <span>衣长</span>
+              <span>挂面宽度</span>
               <span>
-                68 cm <i>→</i> <b>68 cm</b>
+                65 mm <i>→</i> <b>65 mm</b>
               </span>
               <small>保持</small>
             </div>
             <footer>参数变化 → 纸样重算 → 几何检查 → 版本留存</footer>
           </div>
         </section>
+        <DesignRange />
         <section className={styles.section} id="delivery">
           <div className={styles.sectionHead}>
             <p className={styles.eyebrow}>04 / MADE FOR THE NEXT HANDOFF</p>
-            <h2>交出去的，是一份完整的设计语言。</h2>
+            <h2>交付到 CAD，也交付到样衣室。</h2>
             <p>
               从屏幕上的衣服，到样衣室里的第一针。把制作需要的信息放在一起。
             </p>
@@ -230,8 +241,8 @@ export default function GarmentPatternAgentPage() {
                 <span>SEAM / PROJECT PACKAGE</span>
                 <span>↗</span>
               </div>
-              <h3>Everyday Shirt</h3>
-              <p>日常衬衫 · 样衣技术包</p>
+              <h3>Wrap Blouse</h3>
+              <p>裹式上衣 · 样衣技术包</p>
               {[
                 ["01", "纸样与裁片", "SVG / PDF / DXF"],
                 ["02", "工艺操作卡", "制作顺序 · 工艺要求"],
@@ -259,8 +270,8 @@ export default function GarmentPatternAgentPage() {
                 <span>02 / HANDOFF</span>
                 <h3>让设计师和版师说同一种语言。</h3>
                 <p>
-                  片名、缝份、纱向与工艺信息跟随纸样，SVG、PDF 与 DXF
-                  服务于查看、打印和 CAD 交接。
+                  DXF 按 AAMA 数字图层组织裁线、刀口、纱向、钻孔和缝线，保留裁片
+                  BLOCK 与工艺语义；SVG、PDF 和结构化清单共同服务于后续交接。
                 </p>
               </article>
               <article>
@@ -305,9 +316,9 @@ export default function GarmentPatternAgentPage() {
         <section className={styles.closing}>
           <p className={styles.eyebrow}>SEAM / AI GARMENT PATTERN AGENT</p>
           <h2>
-            让好设计，
+            从一张款式图，
             <br />
-            更接近一件真正的衣服。
+            走向一整套服装工程。
           </h2>
           <Link className={styles.primary} href="/projects">
             探索更多项目 <span>↗</span>

@@ -29,9 +29,9 @@ const FEATURED = [
     name: "AI 服装打版 Agent",
     kind: "agent/cad",
     year: "2026",
-    description: "从设计对话到纸样与样衣技术包的 AI 制版工作台。",
+    description: "从复杂款式理解到组合制版、几何校验与样衣交付的 AI 工程系统。",
     image:
-      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592690503-637778501.webp",
+      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788615421150-775873709.webp",
     tags: ["对话改版", "2D / 3D", "Tech Pack"],
     caption: "FIG. 2-2  seam.png",
   },
