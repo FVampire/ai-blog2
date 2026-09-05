@@ -26,14 +26,19 @@ export const metadata: Metadata = {
     type: "article",
     url: `${SITE}${BASE}`,
     images: [
-      { url: `${BASE}/studio-vision-v2.webp`, alt: "SEAM 产品效果演示" },
+      {
+        url: "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592690503-637778501.webp",
+        alt: "SEAM 产品效果演示",
+      },
     ],
   },
   twitter: {
     card: "summary_large_image",
     title: "SEAM · 从灵感到纸样",
     description,
-    images: [`${BASE}/studio-vision-v2.webp`],
+    images: [
+      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592690503-637778501.webp",
+    ],
   },
 };
 const steps = [
@@ -105,8 +110,11 @@ export default function GarmentPatternAgentPage() {
           </div>
           <figure className={styles.heroVisual}>
             <Image
-              src={`${BASE}/studio-vision-v2.webp`}
+              src={
+                "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592690503-637778501.webp"
+              }
               alt="SEAM 产品效果演示：设计对话、白色衬衫三维视图与二维纸样并列的工作台"
+              unoptimized
               width={1568}
               height={1003}
               priority

@@ -11,7 +11,8 @@ const views = [
     label: "DESIGN STUDIO",
     headline: "先看整体，再深入细节。",
     copy: "将服装外观、结构预览与设计对话放在同一视野，围绕廓形、领袖和面料意图持续推敲。",
-    image: "studio-vision-v2.webp",
+    image:
+      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592690503-637778501.webp",
     alt: "衬衫产品概念工作台，包含三维外观和二维结构",
     caption: "产品效果演示 · AI 生成视觉",
     tags: ["款式参考", "结构预览", "设计对话"],
@@ -21,7 +22,8 @@ const views = [
     label: "PATTERN WORKSPACE",
     headline: "从服装结构，深入到每一片纸样。",
     copy: "查看衣身、袖片、领与克夫的结构关系，在纸样画布上检查轮廓和工艺标记，连接参数调整与文件输出。",
-    image: "pattern-complete.webp",
+    image:
+      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592692271-19848115.webp",
     alt: "衬衫 CAD 纸样细节与工艺标记",
     caption: "CAD 纸样细节示例",
     tags: ["参数化裁片", "缝份与纱向", "几何校验"],
@@ -31,7 +33,6 @@ const views = [
     label: "SAMPLE HANDOFF",
     headline: "让制作信息，跟着设计一起走。",
     copy: "把工序、面辅料和成衣尺寸集中整理，配合可打印技术包，为样衣制作与后续复核建立清楚的参照。",
-    image: "real-tech-pack.webp",
     alt: "SEAM 现有工作台的样衣技术包",
     caption: "技术包产品演示",
     tags: ["工艺操作卡", "面辅料 BOM", "尺寸与公差"],
@@ -84,12 +85,13 @@ export default function ProductWorkbench() {
         tabIndex={0}
       >
         <figure>
-          {active === 2 ? (
+          {!view.image ? (
             <TechPackPreview />
           ) : (
             <div className={styles.viewImage}>
               <Image
-                src={`/projects/ai-garment-pattern-agent/${view.image}`}
+                src={view.image}
+                unoptimized
                 alt={view.alt}
                 fill
                 sizes="(max-width: 760px) 100vw, 850px"

@@ -30,7 +30,8 @@ const FEATURED = [
     kind: "agent/cad",
     year: "2026",
     description: "从设计对话到纸样与样衣技术包的 AI 制版工作台。",
-    image: "/projects/ai-garment-pattern-agent/studio-vision-v2.webp",
+    image:
+      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592690503-637778501.webp",
     tags: ["对话改版", "2D / 3D", "Tech Pack"],
     caption: "FIG. 2-2  seam.png",
   },
@@ -106,7 +107,13 @@ export default function ProjectsArchive({ projects, settings }: Props) {
                 <figure>
                   <span>{project.caption}</span>
                   <div>
-                    <Image src={project.image} alt="" fill sizes="420px" />
+                    <Image
+                      src={project.image}
+                      unoptimized={project.image.startsWith("https://")}
+                      alt=""
+                      fill
+                      sizes="420px"
+                    />
                   </div>
                   <figcaption>
                     图 {project.caption.slice(5)} <i>8%</i>

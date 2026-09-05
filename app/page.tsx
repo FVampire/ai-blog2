@@ -46,7 +46,8 @@ const STATIC_PROJECTS = [
     href: "/projects/ai-garment-pattern-agent",
     name: "AI 服装打版 Agent",
     meta: "agent/cad · 2026",
-    image: "/projects/ai-garment-pattern-agent/studio-vision-v2.webp",
+    image:
+      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788592690503-637778501.webp",
   },
   {
     slug: "moling",
@@ -241,7 +242,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             {STATIC_PROJECTS.map((project) => (
               <Link href={project.href} key={project.href}>
                 <span className="rail-project-image">
-                  <Image src={project.image} alt="" fill sizes="150px" />
+                  <Image
+                    src={project.image}
+                    unoptimized={project.image.startsWith("https://")}
+                    alt=""
+                    fill
+                    sizes="150px"
+                  />
                 </span>
                 <span>
                   <strong>{project.name}</strong>
