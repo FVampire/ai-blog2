@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { CaseBreakdown, CapabilityGrid, DesignRange } from "./CapabilityStory";
+import FourViewStory from "./FourViewStory";
 import ProductWorkbench from "./ProductWorkbench";
 import styles from "./showcase.module.css";
 import Footer from "../../../components/Footer";
@@ -140,6 +141,7 @@ export default function GarmentPatternAgentPage() {
             <span>样衣技术包</span>
           </div>
         </section>
+        <FourViewStory />
         <CaseBreakdown />
         <section className={styles.section} id="workflow">
           <div className={styles.sectionHead}>
@@ -168,7 +170,7 @@ export default function GarmentPatternAgentPage() {
             <h2>看见衣服，也看清它的构成。</h2>
             <p>
               一件裹式上衣，连接款式意图、结构参数、14
-              个裁片与装配关系。界面由静态工作台实际渲染，裁片和参数取自项目会话。
+              个裁片与装配关系。裁片、参数与 BOM 参考用量取自同一项目会话。
             </p>
           </div>
           <ProductWorkbench />

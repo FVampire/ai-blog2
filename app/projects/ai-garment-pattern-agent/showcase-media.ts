@@ -1,4 +1,8 @@
 export const SHOWCASE_MEDIA = {
+  fourViews:
+    "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788617760954-893120393.webp",
+  reconstruction:
+    "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788617768766-283778962.webp",
   "studio-v3":
     "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788615421150-775873709.webp",
   "pattern-v3":

@@ -765,7 +765,7 @@
   margin-bottom: 8px;
 }
 .packMetrics b {
-  font-size: 11px;
+  font-size: 25px;
   font-weight: 500;
 }
 .packTable h5 {
@@ -774,11 +774,12 @@
   margin: 20px 0 10px;
 }
 .packTable > div {
+  gap: 12px;
   display: grid;
-  grid-template-columns: 30px 1fr 1.8fr;
+  grid-template-columns: 60px 1fr 90px;
   border-top: 1px solid var(--line);
-  padding: 10px 0;
-  font-size: 10px;
+  padding: 14px 0;
+  font-size: 12px;
 }
 .packTable > div > span:first-child {
   color: var(--muted);
@@ -810,14 +811,15 @@
     padding: 8px;
   }
   .packMetrics b {
-    font-size: 9px;
+    font-size: 19px;
   }
   .packTable > div {
-    font-size: 8px;
-    grid-template-columns: 22px 1fr 1.7fr;
+    font-size: 11px;
+    grid-template-columns: 32px 1fr 55px;
   }
   .packPreview footer p {
-    font-size: 8px;
+    flex-direction: column;
+    font-size: 10px;
     gap: 10px;
   }
 }
