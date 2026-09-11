@@ -1,221 +1,267 @@
-'use client';
-
-import React from "react";
-
-interface AISettingsProps {
+"use client";
+import React, { useState } from "react";
+import { authJson } from "../authFetch";
+interface Props {
   settings: Record<string, any>;
   onChange: (key: string, value: any) => void;
 }
-
-const AISettings: React.FC<AISettingsProps> = ({ settings, onChange }) => {
-  const settingLabels: Record<string, string> = {
-    ai_enabled: "启用AI功能",
-    ai_provider: "AI服务商",
-    ai_api_key: "API密钥",
-    ai_api_base_url: "API地址(可选)",
-    ai_model: "模型名称",
-    ai_model_light: "轻量模型名称",
-    ai_embedding_model: "Embedding模型名称",
-    ai_assistant_enabled: "启用AI助手",
-    ai_assistant_name: "助手名称",
-    ai_assistant_welcome: "欢迎语",
-    ai_assistant_system_prompt: "系统提示词",
-  };
-
-  // 渲染开关
-  const renderToggle = (key: string) => (
-    <label className="toggle-switch">
-      <input
-        type="checkbox"
-        checked={settings[key] === true}
-        onChange={(e) => onChange(key, e.target.checked)}
-      />
-      <span className="toggle-slider"></span>
-    </label>
-  );
-
-  // 渲染 AI 服务商下拉
-  const renderProviderSelect = () => (
-    <select
-      value={settings["ai_provider"] || "openai"}
-      onChange={(e) => onChange("ai_provider", e.target.value)}
-      className="settings-select"
-    >
-      <option value="openai">OpenAI (GPT-4/GPT-3.5)</option>
-      <option value="anthropic">Anthropic (Claude)</option>
-      <option value="deepseek">DeepSeek</option>
-      <option value="moonshot">Moonshot (月之暗面)</option>
-      <option value="qwen">通义千问</option>
-      <option value="other">其他 (OpenAI 兼容)</option>
-    </select>
-  );
-
-  return (
-    <div className="ai-settings">
-      {/* Section 1: 通用设置 */}
-      <div className="setting-group">
-        <div className="group-header">
-          <h2 className="group-title">通用设置</h2>
-          <p className="group-desc">控制 AI 功能的全局开关。</p>
-        </div>
-        <div className="group-content">
-          <div className="setting-item">
-            <div className="setting-label">
-              <span className="label-text">{settingLabels["ai_enabled"]}</span>
-              <span className="label-desc">开启后，系统将允许使用 AI 相关的所有功能模块。</span>
-            </div>
-            <div className="setting-control">{renderToggle("ai_enabled")}</div>
-          </div>
-          <div className="setting-item">
-            <div className="setting-label">
-              <span className="label-text">{settingLabels["ai_assistant_enabled"]}</span>
-              <span className="label-desc">在界面右下角显示悬浮 AI 助手聊天窗口。</span>
-            </div>
-            <div className="setting-control">{renderToggle("ai_assistant_enabled")}</div>
-          </div>
-        </div>
+export default function AISettings({ settings, onChange }: Props) {
+  const [testing, setTesting] = useState("");
+  const [result, setResult] = useState("");
+  const [serverId, setServerId] = useState("");
+  const [toolsDraft, setToolsDraft] = useState<string | null>(null);
+  const [toolsError, setToolsError] = useState("");
+  const field = (key: string, label: string, type = "text", hint = "") => (
+    <div className="setting-item full-width" key={key}>
+      <label htmlFor={key} className="setting-label">
+        <span className="label-text">{label}</span>
+        {hint && <span className="label-desc">{hint}</span>}
+      </label>
+      <div className="setting-control">
+        {type === "boolean" ? (
+          <input
+            id={key}
+            type="checkbox"
+            checked={settings[key] === true}
+            onChange={(e) => onChange(key, e.target.checked)}
+          />
+        ) : type === "textarea" ? (
+          <textarea
+            id={key}
+            className="settings-textarea"
+            value={settings[key] || ""}
+            onChange={(e) => onChange(key, e.target.value)}
+            rows={3}
+          />
+        ) : (
+          <input
+            id={key}
+            type={type}
+            step={type === "number" ? "any" : undefined}
+            className="settings-input"
+            autoComplete={type === "password" ? "new-password" : undefined}
+            value={settings[key] ?? ""}
+            placeholder={
+              type === "password" && settings[key] === null
+                ? "密钥已隐藏；不修改则保留，输入新值可替换"
+                : ""
+            }
+            onChange={(e) =>
+              onChange(
+                key,
+                type === "number" ? Number(e.target.value) : e.target.value,
+              )
+            }
+          />
+        )}
       </div>
-
-      {/* Section 2: API 配置 */}
-      <div className="setting-group">
-        <div className="group-header">
-          <h2 className="group-title">API 配置</h2>
-          <p className="group-desc">连接第三方 AI 服务商的必要参数。</p>
-        </div>
-        <div className="group-content">
-          <div className="setting-item full-width">
-            <div className="setting-label">
-              <span className="label-text">{settingLabels["ai_provider"]}</span>
-            </div>
-            <div className="setting-control">{renderProviderSelect()}</div>
-          </div>
-          <div className="setting-item full-width">
-            <div className="setting-label">
-              <span className="label-text">{settingLabels["ai_api_key"]}</span>
-            </div>
-            <div className="setting-control">
-              <input
-                type="password"
-                value={settings["ai_api_key"] || ""}
-                onChange={(e) => onChange("ai_api_key", e.target.value)}
-                placeholder="sk-xxxxxxxxxxxxxxxx"
-                className="settings-input"
-              />
-            </div>
-          </div>
-          <div className="setting-item full-width">
-            <div className="setting-label">
-              <span className="label-text">{settingLabels["ai_api_base_url"]}</span>
-            </div>
-            <div className="setting-control">
-              <input
-                type="text"
-                value={settings["ai_api_base_url"] || ""}
-                onChange={(e) => onChange("ai_api_base_url", e.target.value)}
-                placeholder="https://api.openai.com/v1"
-                className="settings-input"
-              />
-            </div>
-          </div>
-          <div className="setting-item">
-            <div className="setting-label">
-              <span className="label-text">{settingLabels["ai_model"]}</span>
-            </div>
-            <div className="setting-control">
-              <input
-                type="text"
-                value={settings["ai_model"] || ""}
-                onChange={(e) => onChange("ai_model", e.target.value)}
-                placeholder="gpt-4-turbo"
-                className="settings-input"
-              />
-            </div>
-          </div>
-          <div className="setting-item">
-            <div className="setting-label">
-              <span className="label-text">{settingLabels["ai_model_light"]}</span>
-            </div>
-            <div className="setting-control">
-              <input
-                type="text"
-                value={settings["ai_model_light"] || ""}
-                onChange={(e) => onChange("ai_model_light", e.target.value)}
-                placeholder="gpt-3.5-turbo"
-                className="settings-input"
-              />
-            </div>
-          </div>
-          <div className="setting-item full-width">
-            <div className="setting-label">
-              <span className="label-text">{settingLabels["ai_embedding_model"]}</span>
-            </div>
-            <div className="setting-control">
-              <input
-                type="text"
-                value={settings["ai_embedding_model"] || ""}
-                onChange={(e) => onChange("ai_embedding_model", e.target.value)}
-                placeholder="text-embedding-ada-002"
-                className="settings-input"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Section 3: AI 助手配置 */}
-      <div className="setting-group">
-        <div className="group-header">
-          <h2 className="group-title">AI 助手配置</h2>
-          <p className="group-desc">自定义助手的行为和形象。</p>
-        </div>
-        <div className="group-content">
-          <div className="setting-item full-width">
-            <div className="setting-label">
-              <span className="label-text">{settingLabels["ai_assistant_name"]}</span>
-            </div>
-            <div className="setting-control">
-              <input
-                type="text"
-                value={settings["ai_assistant_name"] || ""}
-                onChange={(e) => onChange("ai_assistant_name", e.target.value)}
-                placeholder="智能小助手"
-                className="settings-input"
-              />
-            </div>
-          </div>
-          <div className="setting-item full-width">
-            <div className="setting-label">
-              <span className="label-text">{settingLabels["ai_assistant_welcome"]}</span>
-            </div>
-            <div className="setting-control">
-              <textarea
-                value={settings["ai_assistant_welcome"] || ""}
-                onChange={(e) => onChange("ai_assistant_welcome", e.target.value)}
-                placeholder="你好！我是你的 AI 助手，有什么可以帮你的吗？"
-                rows={2}
-                className="settings-textarea"
-              />
-            </div>
-          </div>
-          <div className="setting-item full-width">
-            <div className="setting-label">
-              <span className="label-text">{settingLabels["ai_assistant_system_prompt"]}</span>
-            </div>
-            <div className="setting-control">
-              <textarea
-                value={settings["ai_assistant_system_prompt"] || ""}
-                onChange={(e) => onChange("ai_assistant_system_prompt", e.target.value)}
-                placeholder="你是一个乐于助人的助手..."
-                rows={4}
-                className="settings-textarea"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
   );
-};
-
-export default AISettings;
+  const test = async (kind: string) => {
+    setTesting(kind);
+    setResult("");
+    try {
+      const response = await authJson<{ name: string; readOnly: boolean }[]>(
+        "/api/admin/ai/test",
+        {
+          method: "POST",
+          body: JSON.stringify({ kind, serverId: Number(serverId) }),
+        },
+      );
+      setResult(
+        response.message +
+          (Array.isArray(response.data)
+            ? "\n" +
+              response.data
+                .map(
+                  (t) =>
+                    `${t.name}：${t.readOnly ? "只读，可加入公开白名单" : "不可向访客开放"}`,
+                )
+                .join("\n")
+            : ""),
+      );
+    } finally {
+      setTesting("");
+    }
+  };
+  return (
+    <div className="ai-settings">
+      <div className="setting-group">
+        <div className="group-header">
+          <h2 className="group-title">模型与访问</h2>
+          <p className="group-desc">
+            先保存配置，再测试连接。测试模型和向量服务会产生少量调用费用。
+          </p>
+        </div>
+        <div className="group-content">
+          {field("ai_enabled", "启用 AI 功能", "boolean")}
+          {field("ai_assistant_enabled", "启用公开聊天助手", "boolean")}
+          <div className="setting-item">
+            <label htmlFor="ai_provider">服务商</label>
+            <select
+              id="ai_provider"
+              className="settings-select"
+              value={settings.ai_provider || "openai"}
+              onChange={(e) => onChange("ai_provider", e.target.value)}
+            >
+              {[
+                ["openai", "OpenAI"],
+                ["anthropic", "Anthropic"],
+                ["deepseek", "DeepSeek"],
+                ["moonshot", "Moonshot"],
+                ["qwen", "通义千问"],
+                ["other", "其他 OpenAI 兼容接口"],
+              ].map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {field("ai_api_key", "API 密钥", "password")}
+          {field(
+            "ai_api_base_url",
+            "API 地址",
+            "url",
+            "留空使用服务商默认地址；其他兼容接口必须填写。",
+          )}
+          {field("ai_model", "模型名称")}
+          {field(
+            "ai_temperature_enabled",
+            "发送温度参数（不支持此参数的模型请关闭）",
+            "boolean",
+          )}
+          {field(
+            "ai_temperature",
+            settings.ai_provider === "anthropic"
+              ? "温度（0–1）"
+              : "温度（0–2）",
+            "number",
+          )}
+          {field("ai_max_tokens", "最大输出 Token（128–16384）", "number")}
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={!!testing}
+            onClick={() => void test("model")}
+          >
+            测试已保存的模型配置
+          </button>
+        </div>
+      </div>
+      <div className="setting-group">
+        <div className="group-header">
+          <h2 className="group-title">助手内容</h2>
+        </div>
+        <div className="group-content">
+          {field("ai_assistant_name", "助手名称")}
+          {field("ai_assistant_avatar", "助手头像 URL")}
+          {field("ai_assistant_welcome", "欢迎语", "textarea")}
+          {field("ai_assistant_system_prompt", "系统提示词", "textarea")}
+        </div>
+      </div>
+      <div className="setting-group">
+        <div className="group-header">
+          <h2 className="group-title">全站知识库</h2>
+          <p className="group-desc">
+            当前文章模式直接读取正文。全站模式需要向量服务和文章索引；更换模型后需在向量管理中重建索引。
+          </p>
+        </div>
+        <div className="group-content">
+          {field("ai_vector_search_enabled", "允许全站文章检索", "boolean")}
+          {field("ai_embedding_api_key", "Embedding 密钥", "password")}
+          {field("ai_embedding_api_base_url", "Embedding API 地址", "url")}
+          {field("ai_embedding_model", "Embedding 模型")}
+          {field(
+            "ai_embedding_dimensions",
+            "向量维度（当前索引固定为 1024）",
+            "number",
+          )}
+          {field("ai_vector_search_threshold", "相似度阈值（0–1）", "number")}
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={!!testing}
+            onClick={() => void test("embedding")}
+          >
+            测试已保存的向量配置
+          </button>
+        </div>
+      </div>
+      <div className="setting-group">
+        <div className="group-header">
+          <h2 className="group-title">公开 MCP 工具</h2>
+          <p className="group-desc">
+            在 MCP
+            管理中配置服务器。仅开放白名单内且服务器声明为只读的工具；写入工具不向匿名访客开放。
+          </p>
+        </div>
+        <div className="group-content">
+          {field("mcp_enabled", "启用 MCP", "boolean")}
+          {field("mcp_allow_user_select", "允许访客选择服务器", "boolean")}
+          <label htmlFor="ai_public_mcp_tools">
+            工具白名单（服务器 ID → 工具名称数组）
+          </label>
+          <textarea
+            id="ai_public_mcp_tools"
+            className="settings-textarea"
+            rows={4}
+            value={
+              toolsDraft ??
+              JSON.stringify(settings.ai_public_mcp_tools || {}, null, 2)
+            }
+            placeholder={'{"1": ["search_articles"]}'}
+            onChange={(e) => {
+              setToolsDraft(e.target.value);
+              try {
+                const value = JSON.parse(e.target.value);
+                if (
+                  !value ||
+                  Array.isArray(value) ||
+                  typeof value !== "object" ||
+                  Object.entries(value).some(
+                    ([key, names]) =>
+                      !/^\d+$/.test(key) ||
+                      !Array.isArray(names) ||
+                      names.some((name) => typeof name !== "string"),
+                  )
+                )
+                  throw new Error();
+                onChange("ai_public_mcp_tools", value);
+                setToolsError("");
+              } catch {
+                onChange("ai_public_mcp_tools", e.target.value);
+                setToolsError(
+                  "请输入有效的服务器 ID 与工具名称数组；无效编辑不会保存。",
+                );
+              }
+            }}
+          />
+          {toolsError && <p role="alert">{toolsError}</p>}
+          <label htmlFor="mcp-test-server">待测试的服务器 ID</label>
+          <input
+            id="mcp-test-server"
+            type="number"
+            min={1}
+            className="settings-input"
+            value={serverId}
+            onChange={(e) => setServerId(e.target.value)}
+          />
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={!!testing || !serverId}
+            onClick={() => void test("mcp")}
+          >
+            检测已保存的服务器并列出工具
+          </button>
+        </div>
+      </div>
+      {(testing || result) && (
+        <pre role="status" style={{ whiteSpace: "pre-wrap" }}>
+          {testing ? "连接测试中…" : result}
+        </pre>
+      )}
+    </div>
+  );
+}

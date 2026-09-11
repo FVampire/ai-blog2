@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 
-import { SendIcon, SettingsIcon, StopIcon } from './Icons';
-import type { Command } from '../../../types/ai-chat';
+import { SendIcon, SettingsIcon, StopIcon } from "./Icons";
+import type { Command } from "../../../types/ai-chat";
 
 interface ChatInputProps {
   input: string;
@@ -43,7 +43,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   useEffect(() => {
     const el = inputRef.current;
     if (!el) return;
-    el.style.height = 'auto';
+    el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [input, inputRef]);
 
@@ -54,7 +54,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     <div className="ai-chat-input">
       <button
         type="button"
-        className={`ai-options-toggle ${hasActiveOptions ? 'active' : ''}`}
+        className={`ai-options-toggle ${hasActiveOptions ? "active" : ""}`}
         onClick={onToggleOptions}
         title="选项设置"
         aria-label="选项设置"
@@ -63,15 +63,25 @@ const ChatInput: React.FC<ChatInputProps> = ({
       </button>
 
       {showCommandHints && (
-        <div className="ai-command-hints">
+        <div
+          className="ai-command-hints"
+          id="ai-command-list"
+          role="listbox"
+          aria-label="可用命令"
+        >
           <div className="ai-command-hints-header">
             <span>可用命令</span>
-            <span className="ai-command-hints-shortcut">Tab 补全 · ↑↓ 选择 · Esc 关闭</span>
+            <span className="ai-command-hints-shortcut">
+              Tab 补全 · ↑↓ 选择 · Esc 关闭
+            </span>
           </div>
           {filteredCommands.map((cmd, index) => (
             <div
+              id={`ai-command-${index}`}
+              role="option"
+              aria-selected={index === selectedCommandIndex}
               key={cmd.name}
-              className={`ai-command-item ${index === selectedCommandIndex ? 'selected' : ''}`}
+              className={`ai-command-item ${index === selectedCommandIndex ? "selected" : ""}`}
               onClick={() => onAutoComplete(cmd)}
               onMouseEnter={() => onSetSelectedIndex(index)}
             >
@@ -89,8 +99,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onChange={onInputChange}
         onKeyDown={onKeyDown}
         placeholder="输入消息，Enter 发送"
-        disabled={busy}
+        maxLength={12000}
+        disabled={loading}
         aria-label="对话输入"
+        aria-controls={showCommandHints ? "ai-command-list" : undefined}
+        aria-activedescendant={
+          showCommandHints ? `ai-command-${selectedCommandIndex}` : undefined
+        }
       />
       {isStreaming ? (
         <button

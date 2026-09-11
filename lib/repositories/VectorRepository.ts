@@ -4,14 +4,14 @@
  * 注意: pgvector 操作使用 raw SQL，TypeORM 不原生支持向量类型
  */
 
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository } from "./BaseRepository";
 import {
   EmbeddingVector,
   formatVectorForSQL,
   getSearchWeights,
   getSimilarityThreshold,
-} from '../embedding';
-import { exposeMediaUrl } from '../media-url';
+} from "../embedding";
+import { exposeMediaUrl } from "../media-url";
 
 // 搜索结果接口
 export interface VectorSearchResult {
@@ -64,7 +64,7 @@ export class VectorRepository extends BaseRepository {
    */
   static async deleteVectors(postId: number): Promise<void> {
     const ds = await this.getDataSource();
-    await ds.query('DELETE FROM post_vectors WHERE post_id = $1', [postId]);
+    await ds.query("DELETE FROM post_vectors WHERE post_id = $1", [postId]);
   }
 
   /**
@@ -94,10 +94,10 @@ export class VectorRepository extends BaseRepository {
    */
   private static parseVector(vectorStr: string | number[]): number[] {
     if (Array.isArray(vectorStr)) return vectorStr;
-    if (typeof vectorStr === 'string') {
+    if (typeof vectorStr === "string") {
       return vectorStr
-        .replace(/[[\]]/g, '')
-        .split(',')
+        .replace(/[[\]]/g, "")
+        .split(",")
         .map((v) => parseFloat(v.trim()));
     }
     return [];
@@ -140,7 +140,7 @@ export class VectorRepository extends BaseRepository {
       FROM post_vectors pv
       JOIN posts p ON pv.post_id = p.id
       LEFT JOIN users u ON p.author_id = u.id
-      WHERE p.status = 'published'
+      WHERE p.status = 'published' AND pv.embedding_model = $8
       ORDER BY (
         COALESCE(1 - (pv.title_vector <=> $1::vector), 0) * $5 +
         COALESCE(1 - (pv.content_vector <=> $2::vector), 0) * $6 +
@@ -155,6 +155,7 @@ export class VectorRepository extends BaseRepository {
         weights.title,
         weights.content,
         weights.excerpt,
+        queryVector.model,
       ],
     );
 
@@ -185,7 +186,12 @@ export class VectorRepository extends BaseRepository {
         titleSimilarity: titleSim,
         contentSimilarity: contentSim,
         excerptSimilarity: excerptSim,
-        matchedSnippets: this.extractMatchedSnippets(row.title, row.excerpt, titleSim, excerptSim),
+        matchedSnippets: this.extractMatchedSnippets(
+          row.title,
+          row.excerpt,
+          titleSim,
+          excerptSim,
+        ),
       });
     }
 
@@ -211,7 +217,9 @@ export class VectorRepository extends BaseRepository {
   /**
    * 获取没有向量的文章列表（用于批量生成）
    */
-  static async getPostsWithoutVectors(limit: number = 100): Promise<
+  static async getPostsWithoutVectors(
+    limit: number = 100,
+  ): Promise<
     { id: number; title: string; content: string; excerpt: string }[]
   > {
     const ds = await this.getDataSource();
@@ -230,7 +238,10 @@ export class VectorRepository extends BaseRepository {
    */
   static async hasVectors(postId: number): Promise<boolean> {
     const ds = await this.getDataSource();
-    const rows = await ds.query('SELECT 1 FROM post_vectors WHERE post_id = $1', [postId]);
+    const rows = await ds.query(
+      "SELECT 1 FROM post_vectors WHERE post_id = $1",
+      [postId],
+    );
     return rows.length > 0;
   }
 
@@ -271,7 +282,7 @@ export class VectorRepository extends BaseRepository {
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      console.error('Batch save vectors error:', error);
+      console.error("Batch save vectors error:", error);
       throw error;
     } finally {
       await queryRunner.release();
@@ -292,7 +303,7 @@ export class VectorRepository extends BaseRepository {
     if (excerptSim > 0.5 && excerpt) {
       const maxLength = 150;
       if (excerpt.length > maxLength) {
-        snippets.push(excerpt.substring(0, maxLength) + '...');
+        snippets.push(excerpt.substring(0, maxLength) + "...");
       } else {
         snippets.push(excerpt);
       }

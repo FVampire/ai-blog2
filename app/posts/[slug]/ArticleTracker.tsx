@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
-import { useArticle } from '../../../contexts/ArticleContext';
+import { useArticle } from "../../../contexts/ArticleContext";
 
 interface ArticleTrackerProps {
   post: {
-    id: string;
+    id: number;
     title: string;
     slug: string;
     excerpt: string;
@@ -37,19 +37,21 @@ export default function ArticleTracker({ post }: ArticleTrackerProps) {
 
   useEffect(() => {
     if (post && post.id) {
-      fetch('/api/posts/track-view', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      fetch("/api/posts/track-view", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ postId: post.id }),
       })
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           if (data.success) {
-            console.log(`View tracked for post ${post.id}, total views: ${data.data.views}`);
+            console.log(
+              `View tracked for post ${post.id}, total views: ${data.data.views}`,
+            );
           }
         })
-        .catch(err => {
-          console.error('Failed to track view:', err);
+        .catch((err) => {
+          console.error("Failed to track view:", err);
         });
     }
   }, [post.id]);

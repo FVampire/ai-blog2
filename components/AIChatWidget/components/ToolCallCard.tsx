@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 interface ToolCall {
   id: string;
   name: string;
   description: string;
   arguments: Record<string, any>;
-  status: 'running' | 'success' | 'error';
+  status: "running" | "success" | "error";
   result?: string;
   error?: string;
   startTime?: string;
@@ -20,21 +20,21 @@ const ToolCallCard: React.FC<{ toolCall: ToolCall }> = ({ toolCall }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const statusIcon = {
-    running: '⏳',
-    success: '✅',
-    error: '❌'
+    running: "⏳",
+    success: "✅",
+    error: "❌",
   }[toolCall.status];
 
   const statusText = {
-    running: '执行中',
-    success: '已完成',
-    error: '失败'
+    running: "执行中",
+    success: "已完成",
+    error: "失败",
   }[toolCall.status];
 
   const statusColor = {
-    running: '#f59e0b',
-    success: '#10b981',
-    error: '#ef4444'
+    running: "#f59e0b",
+    success: "#10b981",
+    error: "#ef4444",
   }[toolCall.status];
 
   return (
@@ -43,15 +43,28 @@ const ToolCallCard: React.FC<{ toolCall: ToolCall }> = ({ toolCall }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => setIsExpanded(!isExpanded)}
+      role="button"
+      tabIndex={0}
+      aria-expanded={isExpanded}
+      aria-label={`${toolCall.name}：${statusText}`}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          setIsExpanded(!isExpanded);
+        }
+      }}
     >
       <div className="tool-call-main">
         <span className="tool-call-icon">{statusIcon}</span>
         <span className="tool-call-name">{toolCall.name}</span>
         <span className="tool-call-desc">{toolCall.description}</span>
-        <span className="tool-call-status-badge" style={{ background: `${statusColor}20`, color: statusColor }}>
+        <span
+          className="tool-call-status-badge"
+          style={{ background: `${statusColor}20`, color: statusColor }}
+        >
           {statusText}
         </span>
-        <span className="tool-call-expand-icon">{isExpanded ? '▼' : '▶'}</span>
+        <span className="tool-call-expand-icon">{isExpanded ? "▼" : "▶"}</span>
       </div>
 
       {/* 悬浮详情面板 */}
@@ -69,19 +82,22 @@ const ToolCallCard: React.FC<{ toolCall: ToolCall }> = ({ toolCall }) => {
           )}
           <div className="hover-panel-section">
             <div className="hover-panel-title">📥 输入参数</div>
-            <pre className="hover-panel-code">{JSON.stringify(toolCall.arguments, null, 2)}</pre>
+            <pre className="hover-panel-code">
+              {JSON.stringify(toolCall.arguments, null, 2)}
+            </pre>
           </div>
-          {toolCall.status === 'success' && toolCall.result && (
+          {toolCall.status === "success" && toolCall.result && (
             <div className="hover-panel-section">
               <div className="hover-panel-title">📤 输出结果</div>
               <pre className="hover-panel-code">
-                {typeof toolCall.result === 'string' && toolCall.result.length > 300
-                  ? toolCall.result.substring(0, 300) + '...'
+                {typeof toolCall.result === "string" &&
+                toolCall.result.length > 300
+                  ? toolCall.result.substring(0, 300) + "..."
                   : toolCall.result}
               </pre>
             </div>
           )}
-          {toolCall.status === 'error' && toolCall.error && (
+          {toolCall.status === "error" && toolCall.error && (
             <div className="hover-panel-section">
               <div className="hover-panel-title">❌ 错误信息</div>
               <pre className="hover-panel-code error">{toolCall.error}</pre>
@@ -105,19 +121,23 @@ const ToolCallCard: React.FC<{ toolCall: ToolCall }> = ({ toolCall }) => {
           )}
           <div className="expand-panel-section">
             <div className="expand-panel-title">📥 输入参数</div>
-            <pre className="expand-panel-code">{JSON.stringify(toolCall.arguments, null, 2)}</pre>
+            <pre className="expand-panel-code">
+              {JSON.stringify(toolCall.arguments, null, 2)}
+            </pre>
           </div>
-          {toolCall.status === 'success' && toolCall.result && (
+          {toolCall.status === "success" && toolCall.result && (
             <div className="expand-panel-section">
               <div className="expand-panel-title">📤 输出结果</div>
               <pre className="expand-panel-code">
-                {typeof toolCall.result === 'string' && toolCall.result.length > 1000
-                  ? toolCall.result.substring(0, 1000) + '\n... (结果过长，仅显示前1000字符)'
+                {typeof toolCall.result === "string" &&
+                toolCall.result.length > 1000
+                  ? toolCall.result.substring(0, 1000) +
+                    "\n... (结果过长，仅显示前1000字符)"
                   : toolCall.result}
               </pre>
             </div>
           )}
-          {toolCall.status === 'error' && toolCall.error && (
+          {toolCall.status === "error" && toolCall.error && (
             <div className="expand-panel-section">
               <div className="expand-panel-title">❌ 错误信息</div>
               <pre className="expand-panel-code error">{toolCall.error}</pre>
@@ -125,8 +145,9 @@ const ToolCallCard: React.FC<{ toolCall: ToolCall }> = ({ toolCall }) => {
           )}
           {toolCall.startTime && (
             <div className="tool-call-time">
-              开始时间: {new Date(toolCall.startTime).toLocaleString('zh-CN')}
-              {toolCall.endTime && ` | 结束时间: ${new Date(toolCall.endTime).toLocaleString('zh-CN')}`}
+              开始时间: {new Date(toolCall.startTime).toLocaleString("zh-CN")}
+              {toolCall.endTime &&
+                ` | 结束时间: ${new Date(toolCall.endTime).toLocaleString("zh-CN")}`}
             </div>
           )}
         </div>
