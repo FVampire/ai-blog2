@@ -1,6 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
+
+import styles from "./SocialSettings.module.css";
 
 interface SocialLink {
   platform: string;
@@ -13,111 +15,129 @@ interface SocialSettingsProps {
   onChange: (links: SocialLink[]) => void;
 }
 
-const SocialSettings: React.FC<SocialSettingsProps> = ({ initialLinks = [], onChange }) => {
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(initialLinks);
-  const [newSocialLink, setNewSocialLink] = useState<SocialLink>({ platform: "", name: "", url: "" });
+const emptyLink: SocialLink = { platform: "", name: "", url: "" };
+const fields = [
+  { key: "platform", label: "平台标识", placeholder: "例如 github" },
+  { key: "name", label: "显示名称", placeholder: "例如 GitHub" },
+  { key: "url", label: "链接地址", placeholder: "https://github.com/username" },
+] as const;
 
-  useEffect(() => {
-    if (initialLinks.length > 0) {
-      setSocialLinks(initialLinks);
-    }
-  }, [initialLinks]);
+export default function SocialSettings({
+  initialLinks = [],
+  onChange,
+}: SocialSettingsProps) {
+  const [newLink, setNewLink] = useState<SocialLink>(emptyLink);
+  const canAdd = fields.every(({ key }) => newLink[key].trim());
 
-  const handleAddSocialLink = () => {
-    if (newSocialLink.platform.trim() && newSocialLink.name.trim() && newSocialLink.url.trim()) {
-      const updated = [...socialLinks, { ...newSocialLink }];
-      setSocialLinks(updated);
-      onChange(updated);
-      setNewSocialLink({ platform: "", name: "", url: "" });
-    }
+  const addLink = () => {
+    if (!canAdd) return;
+    onChange([
+      ...initialLinks,
+      {
+        platform: newLink.platform.trim(),
+        name: newLink.name.trim(),
+        url: newLink.url.trim(),
+      },
+    ]);
+    setNewLink(emptyLink);
   };
 
-  const handleRemoveSocialLink = (index: number) => {
-    const updated = socialLinks.filter((_, i) => i !== index);
-    setSocialLinks(updated);
-    onChange(updated);
-  };
-
-  const handleUpdateSocialLink = (index: number, field: keyof SocialLink, value: string) => {
-    const updated = [...socialLinks];
-    updated[index] = { ...updated[index], [field]: value };
-    setSocialLinks(updated);
-    onChange(updated);
-  };
+  const renderFields = (
+    link: SocialLink,
+    update: (field: keyof SocialLink, value: string) => void,
+  ) =>
+    fields.map(({ key, label, placeholder }) => (
+      <label
+        key={key}
+        className={[styles.field, key === "url" ? styles.url : ""].join(" ")}
+      >
+        <span>{label}</span>
+        <input
+          type={key === "url" ? "url" : "text"}
+          value={link[key]}
+          onChange={(event) => update(key, event.target.value)}
+          placeholder={placeholder}
+          spellCheck={false}
+        />
+      </label>
+    ));
 
   return (
-    <div className="w-full">
-      <div className="mb-4">
-        {socialLinks.map((link, index) => (
+    <div className={styles.editor}>
+      <div className={styles.heading}>
+        <span>已添加 {initialLinks.length} 个链接</span>
+        <span>修改后点击页面顶部「保存设置」生效</span>
+      </div>
+      <div className={styles.list}>
+        {initialLinks.length === 0 && (
+          <p className={styles.empty}>
+            暂无社交链接，在下方添加你的第一个平台。
+          </p>
+        )}
+        {initialLinks.map((link, index) => (
           <div
+            className={styles.card}
             key={index}
-            className="flex flex-col md:flex-row gap-2 items-stretch md:items-center mb-2 p-2 bg-gray-50 rounded-md border border-gray-200"
+            role="group"
+            aria-label={"社交链接 " + (index + 1)}
           >
-            <input
-              type="text"
-              value={link.platform}
-              onChange={(e) => handleUpdateSocialLink(index, "platform", e.target.value)}
-              placeholder="平台标识 (如: github)"
-              className="flex-1 min-w-0 md:min-w-[100px] px-2.5 py-1.5 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-blue-500 transition-colors"
-            />
-            <input
-              type="text"
-              value={link.name}
-              onChange={(e) => handleUpdateSocialLink(index, "name", e.target.value)}
-              placeholder="显示名称 (如: GitHub)"
-              className="flex-1 min-w-0 md:min-w-[100px] px-2.5 py-1.5 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-blue-500 transition-colors"
-            />
-            <input
-              type="text"
-              value={link.url}
-              onChange={(e) => handleUpdateSocialLink(index, "url", e.target.value)}
-              placeholder="链接地址"
-              className="flex-[2] min-w-0 md:min-w-[200px] px-2.5 py-1.5 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-blue-500 transition-colors"
-            />
-            <button
-              type="button"
-              onClick={() => handleRemoveSocialLink(index)}
-              className="px-2.5 py-1.5 bg-red-100 text-red-600 rounded text-sm hover:bg-red-200 transition-colors"
-              title="删除"
-            >
-              ✕
-            </button>
+            <div className={styles.cardHeader}>
+              <strong>
+                <span className={styles.number}>
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                {link.name || "未命名链接"}
+              </strong>
+              <button
+                type="button"
+                className={styles.remove}
+                aria-label={
+                  "删除链接 " + (index + 1) + "：" + (link.name || "未命名链接")
+                }
+                onClick={() =>
+                  onChange(initialLinks.filter((_, i) => i !== index))
+                }
+              >
+                删除
+              </button>
+            </div>
+            <div className={styles.fields}>
+              {renderFields(link, (field, value) =>
+                onChange(
+                  initialLinks.map((item, i) =>
+                    i === index ? { ...item, [field]: value } : item,
+                  ),
+                ),
+              )}
+            </div>
           </div>
         ))}
       </div>
-      <div className="flex flex-col md:flex-row gap-2 items-stretch md:items-center p-3 bg-green-50 rounded-md border border-dashed border-green-300">
-        <input
-          type="text"
-          value={newSocialLink.platform}
-          onChange={(e) => setNewSocialLink({ ...newSocialLink, platform: e.target.value })}
-          placeholder="平台标识"
-          className="flex-1 min-w-0 md:min-w-[100px] px-2.5 py-1.5 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-blue-500 transition-colors"
-        />
-        <input
-          type="text"
-          value={newSocialLink.name}
-          onChange={(e) => setNewSocialLink({ ...newSocialLink, name: e.target.value })}
-          placeholder="显示名称"
-          className="flex-1 min-w-0 md:min-w-[100px] px-2.5 py-1.5 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-blue-500 transition-colors"
-        />
-        <input
-          type="text"
-          value={newSocialLink.url}
-          onChange={(e) => setNewSocialLink({ ...newSocialLink, url: e.target.value })}
-          placeholder="链接地址"
-          className="flex-[2] min-w-0 md:min-w-[200px] px-2.5 py-1.5 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-blue-500 transition-colors"
-        />
-        <button
-          type="button"
-          onClick={handleAddSocialLink}
-          className="px-4 py-1.5 bg-green-500 text-white rounded text-[13px] font-medium whitespace-nowrap hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-          disabled={!newSocialLink.platform.trim() || !newSocialLink.name.trim() || !newSocialLink.url.trim()}
-        >
-          添加
-        </button>
+      <div
+        className={[styles.card, styles.addCard].join(" ")}
+        role="group"
+        aria-label="添加社交链接"
+      >
+        <div className={styles.cardHeader}>
+          <strong>添加新链接</strong>
+          <span>填写平台、名称和完整地址</span>
+        </div>
+        <div className={styles.fields}>
+          {renderFields(newLink, (field, value) =>
+            setNewLink({ ...newLink, [field]: value }),
+          )}
+        </div>
+        <div className={styles.footer}>
+          <button
+            type="button"
+            className={styles.add}
+            onClick={addLink}
+            disabled={!canAdd}
+          >
+            ＋ 添加链接
+          </button>
+        </div>
       </div>
     </div>
   );
-};
-
-export default SocialSettings;
+}
