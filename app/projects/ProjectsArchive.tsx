@@ -21,7 +21,6 @@ const FEATURED = [
     description: "从自然美颜与智能换景，到静态和实时视频换装。",
     image: "/projects/wardrobe-lab/tryon-workspace.webp",
     tags: ["REV 0.1", "美颜换景", "视频换装"],
-    caption: "FIG. 2-1  wardrobe.jpg",
   },
   {
     href: "/projects/ai-garment-pattern-agent",
@@ -33,7 +32,6 @@ const FEATURED = [
     image:
       "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788622094556-626863194.webp",
     tags: ["对话改版", "2D / 3D", "Tech Pack"],
-    caption: "FIG. 2-2  seam.png",
   },
   {
     href: "/projects/moling",
@@ -44,7 +42,6 @@ const FEATURED = [
     description: "从大纲到可交付章节的写作工作台。",
     image: "/projects/moling/moling-project-overview-full-v5.png",
     tags: ["REV 0.5", "27 steps", "0 fail"],
-    caption: "FIG. 2-3  moling.png",
   },
   {
     href: "/projects/forgetting-tide",
@@ -55,7 +52,6 @@ const FEATURED = [
     description: "叙事构筑与记忆潮汐。",
     image: "/projects/forgetting-tide/hero.png",
     tags: ["REV 0.3", "Godot 4", "deckbuilding"],
-    caption: "FIG. 2-4  tide.png",
   },
   {
     href: "/projects/ai-interior-design",
@@ -66,7 +62,6 @@ const FEATURED = [
     description: "从户型导入、风格偏好到空间方案与3D预览，一套可体验的 AI 装修设计产品样例。",
     image: "/uploads/ai-interior-design/product/front-preview.webp",
     tags: ["静态产品原型", "全流程样例", "3D 交互"],
-    caption: "FIG. 2-5  qiju.webp",
   },
 ] as const;
 
@@ -120,7 +115,6 @@ export default function ProjectsArchive({ projects, settings }: Props) {
                 key={project.href}
               >
                 <figure>
-                  <span>{project.caption}</span>
                   <div>
                     <Image
                       src={project.image}
@@ -130,9 +124,6 @@ export default function ProjectsArchive({ projects, settings }: Props) {
                       sizes="420px"
                     />
                   </div>
-                  <figcaption>
-                    图 {project.caption.slice(5)} <i>8%</i>
-                  </figcaption>
                 </figure>
                 <div className={styles.recordCopy}>
                   <p>
@@ -156,7 +147,6 @@ export default function ProjectsArchive({ projects, settings }: Props) {
                 key={project.id}
               >
                 <figure>
-                  <span>FIG. DB-{project.id}</span>
                   <div>
                     {project.imageUrl ? (
                       <Image
@@ -170,9 +160,6 @@ export default function ProjectsArchive({ projects, settings }: Props) {
                       <b>{project.name.slice(0, 1)}</b>
                     )}
                   </div>
-                  <figcaption>
-                    图 project-{project.id} <i>8%</i>
-                  </figcaption>
                 </figure>
                 <div className={styles.recordCopy}>
                   <p>

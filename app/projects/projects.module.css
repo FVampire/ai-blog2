@@ -494,13 +494,9 @@
 }
 .record figure {
   margin: 10px;
-  padding: 0 6px 6px;
+  padding: 6px;
   border: 1px solid var(--v6-ink);
   font: 11px var(--font-mono);
-}
-.record figure > span {
-  display: block;
-  padding: 5px 3px;
 }
 .record figure > div {
   position: relative;
@@ -516,14 +512,6 @@
 .record figure b {
   font-size: 54px;
   font-weight: 400;
-}
-.record figcaption {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 3px 0;
-}
-.record figcaption i {
-  font-style: normal;
 }
 .recordCopy {
   display: flex;
