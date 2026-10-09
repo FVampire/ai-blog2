@@ -19,6 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/articles`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${base}/series`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${base}/projects`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${base}/projects/ai-interior-design`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/projects/wardrobe-lab`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/projects/ai-garment-pattern-agent`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${base}/projects/forgetting-tide`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },

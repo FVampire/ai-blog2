@@ -3,6 +3,7 @@ import { requireRoles, isAuthError } from "@/lib/auth-middleware-app";
 import { SettingsRepository } from "@/lib/repositories/SettingsRepository";
 import { mcpRepository } from "@/lib/repositories/MCPRepository";
 import { createChatModel } from "@/lib/ai/model";
+import { Moderation } from "@/lib/ai/moderation";
 import { createMCPClient } from "@/lib/ai/mcp";
 import { generateQueryEmbedding } from "@/lib/embedding";
 import { enforceRateLimit } from "@/lib/rate-limit-api";
@@ -14,7 +15,10 @@ export async function POST(request: NextRequest) {
   const limited = enforceRateLimit(request, "admin:ai:test", 6, 60000);
   if (limited) return limited;
   const input = await request.json().catch(() => null);
-  if (!input || !["model", "embedding", "mcp"].includes(input.kind))
+  if (
+    !input ||
+    !["model", "embedding", "mcp", "moderation"].includes(input.kind)
+  )
     return NextResponse.json(
       { success: false, message: "测试类型无效" },
       { status: 400 },
@@ -27,6 +31,13 @@ export async function POST(request: NextRequest) {
       const model = createChatModel({ ...settings, ai_max_tokens: 128 });
       await abortable(
         model.invoke([{ role: "user", content: "Reply OK." }], { signal }),
+        signal,
+      );
+    } else if (input.kind === "moderation") {
+      const settings = await SettingsRepository.getAISettings();
+      await Moderation.check(
+        settings,
+        [{ role: "user", content: "你好，请介绍一下这篇博客文章。" }],
         signal,
       );
     } else if (input.kind === "embedding")

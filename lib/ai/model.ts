@@ -1,7 +1,10 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 
-export function createChatModel(settings: Record<string, any>) {
+export function createChatModel(
+  settings: Record<string, any>,
+  options: { disableThinking?: boolean } = {},
+) {
   const provider = settings.ai_provider || "openai";
   const key = String(settings.ai_api_key || "").trim();
   const model = String(settings.ai_model || "").trim();
@@ -44,6 +47,9 @@ export function createChatModel(settings: Record<string, any>) {
   )
     throw new Error("服务商或兼容接口地址配置无效");
   return new ChatOpenAI({
+    ...(options.disableThinking && /^qwen3[.-]/i.test(model)
+      ? { modelKwargs: { enable_thinking: false } }
+      : {}),
     apiKey: key,
     model,
     maxTokens,

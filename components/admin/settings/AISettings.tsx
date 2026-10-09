@@ -151,6 +151,70 @@ export default function AISettings({ settings, onChange }: Props) {
       </div>
       <div className="setting-group">
         <div className="group-header">
+          <h2 className="group-title">访客配额与全站预算</h2>
+          <p className="group-desc">
+            配额由服务端统一执行，每日按北京时间零点重置。MCP
+            追加模型调用也计入全站频率和预算；失败、取消的请求仍计数。
+          </p>
+        </div>
+        <div className="group-content">
+          {field(
+            "ai_global_requests_per_minute",
+            "全站每分钟请求上限",
+            "number",
+            "默认 4 次，按滚动 60 秒计数，范围 1–10000。",
+          )}
+          {field(
+            "ai_anonymous_requests_per_day",
+            "匿名访客每日配额",
+            "number",
+            "默认 5 次，按可信来源 IP 统计对话请求；同一出口 IP 共享配额。范围 1–100000。",
+          )}
+          {field(
+            "ai_daily_request_budget",
+            "全站每日请求预算",
+            "number",
+            "0 表示关闭。启用后每天最多允许指定次数的模型请求，范围 0–10000000。不代表金额预算，也不包含后台测试、索引和 Embedding 请求。",
+          )}
+        </div>
+      </div>
+      <div className="setting-group">
+        <div className="group-header">
+          <h2 className="group-title">输入内容审查</h2>
+          <p className="group-desc">
+            先审查再回答，覆盖犯罪实施、色情、赌博、毒品和危险服务器操作；正常科普与安全运维允许讨论。检查失败时暂停回答，不会自动跳过。
+          </p>
+        </div>
+        <div className="group-content">
+          {field(
+            "ai_moderation_enabled",
+            "启用模型审查（默认开启）",
+            "boolean",
+          )}
+          {field(
+            "ai_moderation_model",
+            "审查模型",
+            "text",
+            "默认推荐 qwen3.5-flash，使用上方相同的服务商、API 地址和密钥；公司 API 必须支持此模型，否则请填写支持的快速模型名称。",
+          )}
+          {field(
+            "ai_moderation_timeout_seconds",
+            "审查超时（秒）",
+            "number",
+            "默认 15 秒，范围 3–60 秒。每次审查计入全站频率和每日预算，普通问答通常需要审查和回答共 2 次模型调用。",
+          )}
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={!!testing}
+            onClick={() => void test("moderation")}
+          >
+            测试已保存的审查模型
+          </button>
+        </div>
+      </div>
+      <div className="setting-group">
+        <div className="group-header">
           <h2 className="group-title">助手内容</h2>
         </div>
         <div className="group-content">

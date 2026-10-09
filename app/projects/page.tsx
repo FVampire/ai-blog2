@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 
 const SITE_NAME = '五月的火';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
-const STATIC_CASE_SLUGS = ['wardrobe-lab', 'ai-garment-pattern-agent', 'moling', 'forgetting-tide'] as const;
+const STATIC_CASE_SLUGS = ['wardrobe-lab', 'ai-garment-pattern-agent', 'moling', 'forgetting-tide', 'ai-interior-design'] as const;
 
 function buildMetadata(title: string, description: string): Metadata {
   const url = `${SITE_URL}/projects`;

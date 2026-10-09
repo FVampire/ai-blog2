@@ -57,6 +57,17 @@ const FEATURED = [
     tags: ["REV 0.3", "Godot 4", "deckbuilding"],
     caption: "FIG. 2-4  tide.png",
   },
+  {
+    href: "/projects/ai-interior-design",
+    path: "projects/ai-interior-design",
+    name: "栖居 · AI 装修设计",
+    kind: "ai/space",
+    year: "2026",
+    description: "从户型导入、风格偏好到空间方案与3D预览，一套可体验的 AI 装修设计产品样例。",
+    image: "/uploads/ai-interior-design/product/front-preview.webp",
+    tags: ["静态产品原型", "全流程样例", "3D 交互"],
+    caption: "FIG. 2-5  qiju.webp",
+  },
 ] as const;
 
 export default function ProjectsArchive({ projects, settings }: Props) {
@@ -80,6 +91,10 @@ export default function ProjectsArchive({ projects, settings }: Props) {
             </span>
             <span>
               <b>游戏与交互</b>
+              <i>1</i>
+            </span>
+            <span>
+              <b>空间设计</b>
               <i>1</i>
             </span>
           </nav>

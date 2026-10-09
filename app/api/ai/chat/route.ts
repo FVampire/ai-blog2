@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAgent } from "langchain";
+import { createAgent, createMiddleware } from "langchain";
 import { SettingsRepository } from "@/lib/repositories/SettingsRepository";
-import { checkRateLimit } from "@/lib/rate-limit-api";
 import { chatRequestSchema, textContent } from "@/lib/ai/protocol";
 import { createChatModel } from "@/lib/ai/model";
 import { buildChatContext } from "@/lib/ai/context";
 import { connectPublicMCP } from "@/lib/ai/mcp";
 import { abortable, requestScope } from "@/lib/ai/abort";
+import { AIUsage, AIQuotaError, visitorAddress } from "@/lib/ai/limits";
+import {
+  Moderation,
+  ModerationBlockedError,
+  ModerationUnavailableError,
+} from "@/lib/ai/moderation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,20 +20,7 @@ let totalActive = 0;
 
 export async function POST(request: NextRequest) {
   // Only trust forwarded addresses when the proxy overwrites them.
-  const ip =
-    process.env.TRUST_PROXY === "true"
-      ? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-        "unknown"
-      : "unknown";
-  const limit = checkRateLimit(`ai:chat:${ip}`, 10, 60000);
-  if (!limit.allowed)
-    return NextResponse.json(
-      { message: "请求过于频繁，请稍后再试" },
-      {
-        status: 429,
-        headers: { "Retry-After": String(limit.retryAfterSeconds) },
-      },
-    );
+  const ip = visitorAddress(request.headers);
   if ((active.get(ip) || 0) >= 2 || totalActive >= 8)
     return NextResponse.json(
       { message: "当前请求较多，请稍后重试" },
@@ -101,6 +93,33 @@ export async function POST(request: NextRequest) {
       { message: "当前请求较多，请稍后重试" },
       { status: 429 },
     );
+  // Reserve before retrieval/MCP/model work, including failed or cancelled attempts.
+  try {
+    request.signal.throwIfAborted();
+    await AIUsage.reserve(settings, ip);
+  } catch (error) {
+    return NextResponse.json(
+      {
+        message:
+          error instanceof AIQuotaError
+            ? error.message
+            : "暂时无法校验 AI 配额，请稍后再试",
+      },
+      {
+        status: error instanceof AIQuotaError ? 429 : 503,
+        headers: {
+          "Retry-After": String(
+            error instanceof AIQuotaError ? error.retryAfter : 10,
+          ),
+        },
+      },
+    );
+  }
+  if ((active.get(ip) || 0) >= 2 || totalActive >= 8)
+    return NextResponse.json(
+      { message: "当前请求较多，请稍后重试" },
+      { status: 429, headers: { "Retry-After": "10" } },
+    );
   active.set(ip, (active.get(ip) || 0) + 1);
   totalActive++;
   const abort = new AbortController();
@@ -116,6 +135,7 @@ export async function POST(request: NextRequest) {
   let outputLength = 0;
   let toolCalls = 0;
   let closed = false;
+  let blockedQuota: AIQuotaError | undefined;
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const emit = (event: Record<string, unknown>) => {
@@ -145,6 +165,14 @@ export async function POST(request: NextRequest) {
       try {
         abort.signal.throwIfAborted();
         emit({ type: "start" });
+        if (settings.ai_moderation_enabled !== false) {
+          stage = "moderation";
+          emit({ type: "status", text: "正在确认问题内容，请稍候" });
+          await AIUsage.reserve(settings, ip, false);
+          await Moderation.check(settings, input.messages, abort.signal);
+        }
+        abort.signal.throwIfAborted();
+        stage = "context";
         emit({
           type: "status",
           text: input.mode === "none" ? "准备回答" : "正在读取文章资料",
@@ -172,7 +200,27 @@ export async function POST(request: NextRequest) {
               ...input.messages,
             ]
           : input.messages;
-        const agent = createAgent({ model, systemPrompt, tools: mcp.tools });
+        const agent = createAgent({
+          model,
+          systemPrompt,
+          tools: mcp.tools,
+          middleware: [
+            createMiddleware({
+              name: "public-ai-quota",
+              wrapModelCall: async (call, handler) => {
+                abort.signal.throwIfAborted();
+                try {
+                  await AIUsage.reserve(settings, ip, false);
+                } catch (error) {
+                  if (error instanceof AIQuotaError) blockedQuota = error;
+                  throw error;
+                }
+                abort.signal.throwIfAborted();
+                return handler(call);
+              },
+            }),
+          ],
+        });
         emit({ type: "status", text: "正在生成回答" });
         stage = "model";
         for await (const event of agent.streamEvents(
@@ -198,13 +246,19 @@ export async function POST(request: NextRequest) {
         if (!outputLength) throw new Error("empty_response");
         outcome = "complete";
         emit({ type: "done" });
-      } catch {
+      } catch (error) {
         outcome = abort.signal.aborted ? "cancelled_or_timeout" : "error";
         emit({
           type: "error",
-          text: abort.signal.aborted
-            ? "请求已停止或超时，可重新尝试。"
-            : "回答未能完成，请重试或联系管理员检查模型、知识库和工具配置。",
+          text:
+            blockedQuota || error instanceof AIQuotaError
+              ? (blockedQuota || (error as AIQuotaError)).message
+              : error instanceof ModerationBlockedError ||
+                  error instanceof ModerationUnavailableError
+                ? error.message
+                : abort.signal.aborted
+                  ? "请求已停止或超时，可重新尝试。"
+                  : "回答未能完成，请重试或联系管理员检查模型、知识库和工具配置。",
         });
       } finally {
         clearInterval(heartbeat);
