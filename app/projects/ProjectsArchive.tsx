@@ -118,7 +118,7 @@ export default function ProjectsArchive({ projects, settings }: Props) {
                   <div>
                     <Image
                       src={project.image}
-                      unoptimized={project.image.startsWith("https://")}
+                      unoptimized={project.image.startsWith("https://") || project.image.startsWith("/uploads/")}
                       alt=""
                       fill
                       sizes="420px"
