@@ -6,6 +6,25 @@ BRANCH="${1:-${DEPLOY_BRANCH:-master}}"
 APP_DIR="${APP_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 LOG_PREFIX="[Deploy $(date '+%Y-%m-%d %H:%M:%S')]"
 
+# webhook 和 git hook 都以非登录 shell 调用本脚本，不会读取 ~/.bash_profile，
+# 因此在这里自行加载 nvm（node、pnpm）和 PNPM_HOME（pm2 等全局命令）。
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  # nvm.sh 与 set -eu 不兼容，加载期间临时关闭
+  set +eu
+  . "$NVM_DIR/nvm.sh"
+  set -eu
+fi
+export PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
+export PATH="$PNPM_HOME:$PATH"
+
+for cmd in node pnpm pm2; do
+  if ! command -v "$cmd" &> /dev/null; then
+    echo "$LOG_PREFIX ERROR: 找不到 $cmd，PATH=$PATH" >&2
+    exit 1
+  fi
+done
+
 echo "$LOG_PREFIX Deploying branch: $BRANCH in $APP_DIR"
 cd "$APP_DIR"
 
@@ -18,28 +37,16 @@ if [ "${SKIP_GIT_PULL:-}" != "1" ]; then
 fi
 
 echo "$LOG_PREFIX Installing dependencies..."
-if command -v pnpm &> /dev/null; then
-  pnpm install --frozen-lockfile
-else
-  npm install
-fi
+pnpm install --frozen-lockfile
 
 echo "$LOG_PREFIX Running migrations..."
 node scripts/migrate.mjs
 
 echo "$LOG_PREFIX Building..."
-if command -v pnpm &> /dev/null; then
-  pnpm build
-else
-  npm run build
-fi
+pnpm build
 
 echo "$LOG_PREFIX Restarting PM2..."
-if command -v pm2 &> /dev/null; then
-  pm2 restart ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
-  pm2 save
-else
-  echo "$LOG_PREFIX WARNING: pm2 not found. Build complete, restart manually."
-fi
+pm2 restart ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
+pm2 save
 
 echo "$LOG_PREFIX Deployment complete!"
