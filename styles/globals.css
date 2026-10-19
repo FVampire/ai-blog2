@@ -80,7 +80,7 @@
 
   /* Typography */
   --font-display: 'Instrument Serif', serif;
-  --font-body: 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
   --font-size-xs: 12px;
   --font-size-sm: 13px;
   --font-size-base: 14px;
@@ -102,7 +102,7 @@
   --bg-primary: #FFFFFF;
   --accent-color: #FF8C42;
   --font-heading: 'Instrument Serif', serif;
-  --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Mono', Consolas, Menlo, monospace;
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;

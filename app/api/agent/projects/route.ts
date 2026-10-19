@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     await recordAuditEvent({
       request,
-      user: { userId: DEFAULT_AUTHOR_ID, username: 'Agent', email: '', role: 'agent' },
+      user: { userId: DEFAULT_AUTHOR_ID, username: 'Agent' },
       action: 'agent.project.create',
       resourceType: 'project',
       resourceId: project.id,

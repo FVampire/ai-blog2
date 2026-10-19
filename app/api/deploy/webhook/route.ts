@@ -1,5 +1,6 @@
 import { requireDeployAuth } from '@/lib/auth-middleware-app';
 import { spawn } from 'child_process';
+import * as fs from 'fs';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -21,8 +22,17 @@ export async function POST(request: NextRequest) {
   const authResult = requireDeployAuth(request, body);
   if (authResult instanceof NextResponse) return authResult;
 
-  const deployScript = process.env.DEPLOY_SCRIPT || 'scripts/deploy.sh';
   const branch = resolveDeployBranch(body, process.env.DEPLOY_BRANCH || 'master');
+  // 首字符禁止为 '-',避免成为 git 的选项参数。
+  const BRANCH_PATTERN = /^[A-Za-z0-9._][A-Za-z0-9._/-]{0,99}$/;
+  if (!BRANCH_PATTERN.test(branch) || branch.includes('..')) {
+    return NextResponse.json(
+      { success: false, message: '分支名无效' },
+      { status: 400 }
+    );
+  }
+
+  const deployScript = process.env.DEPLOY_SCRIPT || 'scripts/deploy.sh';
   const logFile = `${process.cwd()}/deploy.log`;
 
   console.log(`[Deploy] Trigger async deployment for branch: ${branch}`);
@@ -30,19 +40,25 @@ export async function POST(request: NextRequest) {
   const appDir = process.cwd();
   const deployEnv = {
     ...process.env,
-    HOME: process.env.HOME || '/home/ubuntu',
     APP_DIR: appDir,
     DEPLOY_BRANCH: branch,
-    PATH: `/home/ubuntu/.nvm/versions/node/v21.5.0/bin:/home/ubuntu/.local/share/pnpm:/usr/bin:/bin:${process.env.PATH || ''}`,
+    // PATH 应由 deploy.sh 或 systemd/pm2 环境提供。
+    PATH: process.env.PATH || '',
     CI: 'true',
   };
 
-  const child = spawn('bash', ['-lc', `bash ${deployScript} ${branch} >> ${logFile} 2>&1`], {
-    cwd: appDir,
-    detached: true,
-    stdio: 'ignore',
-    env: deployEnv,
-  });
+  const fd = fs.openSync(logFile, 'a');
+  let child;
+  try {
+    child = spawn('bash', [deployScript, branch], {
+      cwd: appDir,
+      detached: true,
+      stdio: ['ignore', fd, fd],
+      env: deployEnv,
+    });
+  } finally {
+    fs.closeSync(fd);
+  }
   child.unref();
 
   return NextResponse.json({

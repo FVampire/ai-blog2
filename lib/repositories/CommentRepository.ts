@@ -8,9 +8,7 @@ interface CommentDTO {
   content: string;
   postId: number;
   postTitle?: string;
-  authorName: string;
-  authorEmail?: string;
-  status: 'pending' | 'approved' | 'rejected' | 'spam';
+  status: 'pending' | 'approved' | 'rejected';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,14 +27,13 @@ function toDTO(c: Comment, postTitle?: string): CommentDTO {
     content: c.content,
     postId: c.postId,
     postTitle,
-    authorName: c.authorName,
-    authorEmail: c.authorEmail,
     status: c.status,
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
   };
 }
 
+// 注意:当前没有调用方,公开评论走 app/api/posts/[id]/comments/route.ts 的原生 SQL。
 export class CommentRepository extends BaseRepository {
   /**
    * 获取所有评论
@@ -69,7 +66,7 @@ export class CommentRepository extends BaseRepository {
       .orderBy('c.created_at', 'DESC');
 
     if (search) {
-      qb.andWhere('(c.content ILIKE :search OR c.author_name ILIKE :search)', { search: `%${search}%` });
+      qb.andWhere('c.content ILIKE :search', { search: `%${search}%` });
     }
 
     if (status && status !== 'all') {
@@ -137,9 +134,10 @@ export class CommentRepository extends BaseRepository {
   static async createComment(data: {
     content: string;
     postId: number;
-    authorName: string;
-    authorEmail?: string;
-    status?: 'pending' | 'approved' | 'rejected' | 'spam';
+    visitorId: string;
+    ipAddress?: string;
+    city?: string;
+    status?: 'pending' | 'approved' | 'rejected';
   }): Promise<CommentDTO> {
     const ds = await this.getDataSource();
     const postRepo = ds.getRepository(Post);
@@ -154,12 +152,13 @@ export class CommentRepository extends BaseRepository {
     const comment = repo.create({
       content: data.content,
       postId: data.postId,
-      authorName: data.authorName,
-      authorEmail: data.authorEmail || undefined,
+      visitorId: data.visitorId,
+      ipAddress: data.ipAddress,
+      city: data.city,
       status: data.status || 'pending',
     });
 
-    const saved = await repo.save(comment) as Comment;
+    const saved = await repo.save<Comment>(comment);
     return toDTO(saved, post.title);
   }
 
@@ -168,7 +167,7 @@ export class CommentRepository extends BaseRepository {
    */
   static async updateComment(id: number, data: {
     content?: string;
-    status?: 'pending' | 'approved' | 'rejected' | 'spam';
+    status?: 'pending' | 'approved' | 'rejected';
   }): Promise<CommentDTO> {
     const repo = await this.getRepo(Comment);
     const comment = await repo.findOne({ where: { id }, relations: { post: true } });
@@ -204,7 +203,7 @@ export class CommentRepository extends BaseRepository {
   /**
    * 批量更新评论状态
    */
-  static async updateCommentsStatus(ids: number[], status: 'pending' | 'approved' | 'rejected' | 'spam'): Promise<number> {
+  static async updateCommentsStatus(ids: number[], status: 'pending' | 'approved' | 'rejected'): Promise<number> {
     if (ids.length === 0) return 0;
     const repo = await this.getRepo(Comment);
     const result = await repo.update({ id: In(ids) }, { status });
@@ -219,7 +218,6 @@ export class CommentRepository extends BaseRepository {
     pendingComments: number;
     approvedComments: number;
     rejectedComments: number;
-    spamComments: number;
   }> {
     const ds = await this.getDataSource();
     const result = await ds.query(`
@@ -227,8 +225,7 @@ export class CommentRepository extends BaseRepository {
         COUNT(*) as total_comments,
         COUNT(*) FILTER (WHERE status = 'pending') as pending_comments,
         COUNT(*) FILTER (WHERE status = 'approved') as approved_comments,
-        COUNT(*) FILTER (WHERE status = 'rejected') as rejected_comments,
-        COUNT(*) FILTER (WHERE status = 'spam') as spam_comments
+        COUNT(*) FILTER (WHERE status = 'rejected') as rejected_comments
       FROM comments
     `);
 
@@ -238,7 +235,6 @@ export class CommentRepository extends BaseRepository {
       pendingComments: parseInt(row.pending_comments),
       approvedComments: parseInt(row.approved_comments),
       rejectedComments: parseInt(row.rejected_comments),
-      spamComments: parseInt(row.spam_comments),
     };
   }
 

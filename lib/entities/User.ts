@@ -1,6 +1,10 @@
 import {
   Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn,
 } from 'typeorm';
+import type { UserRole, UserStatus } from '../user-roles';
+
+export type { UserRole, UserStatus } from '../user-roles';
+export { USER_ROLES, USER_STATUSES } from '../user-roles';
 
 @Entity('users')
 export class User {
@@ -17,10 +21,10 @@ export class User {
   password!: string;
 
   @Column({ type: 'varchar', length: 20, default: 'author' })
-  role!: 'admin' | 'editor' | 'author';
+  role!: UserRole;
 
   @Column({ type: 'varchar', length: 20, default: 'active' })
-  status!: 'active' | 'inactive';
+  status!: UserStatus;
 
   @Column({ name: 'avatar_url', type: 'varchar', length: 255, nullable: true })
   avatarUrl?: string;

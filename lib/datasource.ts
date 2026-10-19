@@ -14,16 +14,19 @@ import { Tag } from './entities/Tag';
 import { User } from './entities/User';
 import { getDatabaseSsl, sanitizeDatabaseUrl } from './pg-config';
 
-let dataSource: DataSource | null = null;
+const globalForDb = globalThis as typeof globalThis & {
+  __blogDataSource?: DataSource;
+  __blogDataSourceInit?: Promise<DataSource>;
+};
 
 export function getDataSource(): DataSource {
-  if (dataSource && dataSource.isInitialized) {
-    return dataSource;
+  if (globalForDb.__blogDataSource) {
+    return globalForDb.__blogDataSource;
   }
 
   const DATABASE_URL = process.env.DATABASE_URL || '';
 
-  dataSource = new DataSource({
+  globalForDb.__blogDataSource = new DataSource({
     type: 'postgres',
     url: sanitizeDatabaseUrl(DATABASE_URL),
     ssl: getDatabaseSsl(),
@@ -37,14 +40,22 @@ export function getDataSource(): DataSource {
     },
   });
 
-  return dataSource;
+  return globalForDb.__blogDataSource;
 }
 
-export async function initializeDatabase(): Promise<DataSource> {
-  const ds = getDataSource();
-  if (!ds.isInitialized) {
-    await ds.initialize();
-    console.log('✅ TypeORM DataSource initialized');
+export function initializeDatabase(): Promise<DataSource> {
+  if (!globalForDb.__blogDataSourceInit) {
+    const ds = getDataSource();
+    globalForDb.__blogDataSourceInit = (async () => {
+      if (!ds.isInitialized) {
+        await ds.initialize();
+        console.log('✅ TypeORM DataSource initialized');
+      }
+      return ds;
+    })().catch((error) => {
+      globalForDb.__blogDataSourceInit = undefined;
+      throw error;
+    });
   }
-  return ds;
+  return globalForDb.__blogDataSourceInit;
 }

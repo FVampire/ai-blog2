@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import type { UserRole } from './user-roles';
 
 // JWT Secret 安全加固：必须在环境变量中设置，禁止硬编码 fallback
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -16,7 +17,7 @@ export interface JWTPayload {
   userId: number;
   username: string;
   email: string;
-  role: string;
+  role: UserRole;
 }
 
 export const generateToken = (payload: JWTPayload): string => {

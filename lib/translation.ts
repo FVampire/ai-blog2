@@ -186,7 +186,7 @@ export function buildAliyunSignedParameters(
   accessKeyId: string,
   accessKeySecret: string,
   timestamp = new Date(),
-  nonce = randomUUID(),
+  nonce: string = randomUUID(),
 ): URLSearchParams {
   const params: Record<string, string> = {
     AccessKeyId: accessKeyId,

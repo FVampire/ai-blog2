@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 
 import { requireRoles, isAuthError } from '@/lib/auth-middleware-app';
 import { query } from '@/lib/db';
+import { USER_ROLES, USER_STATUSES } from '@/lib/user-roles';
 
 export async function GET(
   request: NextRequest,
@@ -73,6 +74,19 @@ export async function PUT(
     const body = await request.json();
     const { username, email, role, status, avatarUrl, bio, password } = body;
 
+    if (role !== undefined && !USER_ROLES.includes(role)) {
+      return NextResponse.json(
+        { success: false, message: '角色无效' },
+        { status: 400 }
+      );
+    }
+    if (status !== undefined && !USER_STATUSES.includes(status)) {
+      return NextResponse.json(
+        { success: false, message: '状态无效' },
+        { status: 400 }
+      );
+    }
+
     const updates: string[] = [];
     const values: any[] = [];
     let paramIndex = 1;
@@ -101,7 +115,7 @@ export async function PUT(
     values.push(id);
 
     const result = await query(
-      `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING id, username, email, role, status, avatar_url, bio, created_at, updated_at`,
       values
     );
 
@@ -136,7 +150,7 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    const result = await query('DELETE FROM users WHERE id = $1 RETURNING *', [id]);
+    const result = await query('DELETE FROM users WHERE id = $1 RETURNING id, username, email, role, status, avatar_url, bio, created_at, updated_at', [id]);
 
     if (result.rows.length === 0) {
       return NextResponse.json(

@@ -84,7 +84,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           onClick={() => onChange(value + '\n> 引用')}
           title="引用"
         >
-          "
+          &quot;
         </button>
         <button
           type="button"

@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { ADMIN_TOKEN_COOKIE } from './auth-cookie';
 import { verifyToken, JWTPayload } from './jwt';
+import { safeEqualString } from './safe-equal';
+import type { UserRole } from './user-roles';
 
 export interface AuthResult {
   user: JWTPayload;
@@ -37,7 +39,7 @@ export function requireAuth(request: NextRequest): AuthResult | NextResponse {
 /**
  * Require specific roles for an App Router route handler.
  */
-export function requireRoles(request: NextRequest, allowedRoles: string[]): AuthResult | NextResponse {
+export function requireRoles(request: NextRequest, allowedRoles: readonly UserRole[]): AuthResult | NextResponse {
   const result = requireAuth(request);
 
   if (result instanceof NextResponse) {
@@ -84,7 +86,7 @@ export function requireAgentAuth(request: NextRequest): true | NextResponse {
     providedKey = headerKey;
   }
 
-  if (!providedKey || providedKey !== agentKey) {
+  if (!providedKey || !safeEqualString(providedKey, agentKey)) {
     return NextResponse.json(
       { success: false, message: 'Agent API Key 无效' },
       { status: 401 }
@@ -106,7 +108,7 @@ function verifyGiteeSignature(secret: string, timestamp: string, token: string):
 
     const payload = `${timestamp}\n${secret}`;
     const sign = createHmac('sha256', secret).update(payload).digest('base64');
-    return token === sign;
+    return safeEqualString(token, sign);
   } catch {
     return false;
   }
@@ -136,11 +138,14 @@ export function requireDeployAuth(
 
   let authorized = false;
 
-  if (authHeader?.startsWith('Bearer ') && authHeader.substring(7) === deploySecret) {
+  if (authHeader?.startsWith('Bearer ') && safeEqualString(authHeader.substring(7), deploySecret)) {
     authorized = true;
-  } else if (headerSecret === deploySecret) {
+  } else if (headerSecret && safeEqualString(headerSecret, deploySecret)) {
     authorized = true;
-  } else if (giteeToken === deploySecret || bodyPassword === deploySecret) {
+  } else if (
+    (giteeToken && safeEqualString(giteeToken, deploySecret)) ||
+    (bodyPassword && safeEqualString(bodyPassword, deploySecret))
+  ) {
     // Gitee「密码」模式：明文密码在 X-Gitee-Token 或 JSON body.password
     authorized = true;
   } else if (

@@ -1,5 +1,6 @@
 import { In } from 'typeorm';
 
+import { query } from '../db';
 import { Post } from '../entities/Post';
 import { PostTag } from '../entities/PostTag';
 import { Tag } from '../entities/Tag';
@@ -418,8 +419,7 @@ export class PostRepository extends BaseRepository {
    * 增加文章浏览量
    */
   static async incrementViews(id: number): Promise<number> {
-    const ds = await this.getDataSource();
-    const rows = await ds.query(
+    const { rows } = await query(
       'UPDATE posts SET views = views + 1 WHERE id = $1 RETURNING views',
       [id]
     );

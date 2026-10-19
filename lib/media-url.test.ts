@@ -32,13 +32,13 @@ test('storeMediaUrl keeps a stable site-relative path', () => {
 test('publicMediaUrl uses COS_PUBLIC_BASE_URL when set', () => {
   const env = {
     COS_PUBLIC_BASE_URL: 'https://img.example.com/',
-  } as NodeJS.ProcessEnv;
+  } as unknown as NodeJS.ProcessEnv;
   assert.equal(publicMediaUrl('/uploads/cover.webp', env), 'https://img.example.com/uploads/cover.webp');
   assert.equal(exposeMediaUrl('/uploads/中文.webp', env), 'https://img.example.com/uploads/%E4%B8%AD%E6%96%87.webp');
 });
 
 test('rewriteMarkdownMediaUrls rewrites article images', () => {
-  const env = { COS_BUCKET: 'blog-1250000000', COS_REGION: 'ap-guangzhou' } as NodeJS.ProcessEnv;
+  const env = { COS_BUCKET: 'blog-1250000000', COS_REGION: 'ap-guangzhou' } as unknown as NodeJS.ProcessEnv;
   const markdown = '![cover](/uploads/a.png)\n<img src="/uploads/b.jpg">';
   const rewritten = rewriteMarkdownMediaUrls(markdown, env);
   assert.match(rewritten, /https:\/\/blog-1250000000\.cos\.ap-guangzhou\.myqcloud.com\/uploads\/a.png/);

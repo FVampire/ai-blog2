@@ -59,9 +59,9 @@ const FEATURED = [
     name: "栖居 · AI 装修设计",
     kind: "ai/space",
     year: "2026",
-    description: "从户型导入、风格偏好到空间方案与3D预览，一套可体验的 AI 装修设计产品样例。",
-    image: "/uploads/ai-interior-design/product/front-preview.webp",
-    tags: ["静态产品原型", "全流程样例", "3D 交互"],
+    description: "从户型识别、需求简报到方案生成，最终交付一个可以亲手探索的 3D 方案。",
+    image: "/projects/ai-interior-design/shots/01-home-hero.webp",
+    tags: ["三种风格", "生成过程", "3D 交付"],
   },
 ] as const;
 

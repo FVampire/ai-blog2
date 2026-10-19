@@ -12,6 +12,7 @@ export type FeishuEnv = {
   FEISHU_WEBHOOK_SECRET?: string;
   FEISHU_NOTIFY_COMMENTS?: string;
   SITE_URL?: string;
+  [key: string]: string | undefined;
 };
 
 export type FeishuSettings = {
@@ -75,7 +76,7 @@ export function buildFeishuSign(secret: string, timestamp: string): string {
 }
 
 export function escapeLarkMd(text: string): string {
-  return text.replace(/\\/g, '\\\\').replace(/([*_`\[\]~])/g, '\\$1');
+  return text.replace(/\\/g, '\\\\').replace(/([*_`[\]~])/g, '\\$1');
 }
 
 export function truncateText(text: string, max = COMMENT_CONTENT_LIMIT): string {

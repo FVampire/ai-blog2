@@ -5,10 +5,18 @@
 import 'reflect-metadata';
 import { initializeDatabase } from './datasource';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface QueryResult {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rows: any[];
   rowCount: number;
+}
+
+export function toQueryResult(result: { records?: unknown[]; affected?: number | null }): QueryResult {
+  const rows = Array.isArray(result.records) ? result.records : [];
+  return {
+    rows,
+    rowCount: typeof result.affected === 'number' ? result.affected : rows.length,
+  };
 }
 
 /**
@@ -18,12 +26,12 @@ interface QueryResult {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function query(text: string, params?: any[]): Promise<QueryResult> {
   const ds = await initializeDatabase();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rows: any[] = await ds.query(text, params);
-  return {
-    rows,
-    rowCount: Array.isArray(rows) ? rows.length : 0,
-  };
+  const runner = ds.createQueryRunner();
+  try {
+    return toQueryResult(await runner.query(text, params, true));
+  } finally {
+    await runner.release();
+  }
 }
 
 /**
@@ -36,16 +44,12 @@ export async function getClient() {
   await queryRunner.connect();
 
   return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async query(text: string, params?: any[]): Promise<QueryResult> {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rows: any[] = await queryRunner.query(text, params);
-      return {
-        rows,
-        rowCount: Array.isArray(rows) ? rows.length : 0,
-      };
+      return toQueryResult(await queryRunner.query(text, params, true));
     },
-    release() {
-      queryRunner.release();
+    async release() {
+      await queryRunner.release();
     },
   };
 }

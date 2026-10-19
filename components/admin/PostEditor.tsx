@@ -103,7 +103,7 @@ export default function PostEditor({ postId }: { postId?: string }) {
     return () => window.clearTimeout(timer);
   }, [dirty, draftKey, form]);
 
-  const wordCount = useMemo(() => form.content.replace(/[#*_>`~\[\]()-]/g, ' ').trim().split(/\s+/).filter(Boolean).length, [form.content]);
+  const wordCount = useMemo(() => form.content.replace(/[#*_>`~[\]()-]/g, ' ').trim().split(/\s+/).filter(Boolean).length, [form.content]);
   const set = <K extends keyof FormData>(key: K, value: FormData[K]) => setForm((current) => ({ ...current, [key]: value }));
   const generateSlug = (title: string) => title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-').replace(/^-+|-+$/g, '');
 

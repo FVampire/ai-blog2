@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { visitorAddress } from '@/lib/ai/limits';
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -31,11 +32,7 @@ function sweep(now: number): void {
 }
 
 export function getClientIp(request: NextRequest): string {
-  return (
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    request.headers.get('x-real-ip') ??
-    'unknown'
-  );
+  return visitorAddress(request.headers);
 }
 
 export function checkRateLimit(key: string, limit: number, windowMs: number): RateLimitResult {

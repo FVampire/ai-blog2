@@ -10,9 +10,9 @@ test('stripMarkdown removes fences, links and heading marks', () => {
 });
 
 test('siteBaseUrl strips trailing slashes', () => {
-  assert.equal(siteBaseUrl({ SITE_URL: 'https://blog.test/' } as NodeJS.ProcessEnv), 'https://blog.test');
+  assert.equal(siteBaseUrl({ SITE_URL: 'https://blog.test/' } as unknown as NodeJS.ProcessEnv), 'https://blog.test');
   assert.equal(
-    siteBaseUrl({ NEXT_PUBLIC_SITE_URL: 'https://public.test', SITE_URL: 'https://ignored.test' } as NodeJS.ProcessEnv),
+    siteBaseUrl({ NEXT_PUBLIC_SITE_URL: 'https://public.test', SITE_URL: 'https://ignored.test' } as unknown as NodeJS.ProcessEnv),
     'https://public.test',
   );
 });

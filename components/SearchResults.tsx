@@ -351,7 +351,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                     <span className="sr-snippet-label">匹配内容：</span>
                     {result.matchedSnippets.map((snippet, idx) => (
                       <p key={idx} className="sr-snippet-text">
-                        "<HighlightedText text={snippet} query={query} />"
+                        &quot;<HighlightedText text={snippet} query={query} />&quot;
                       </p>
                     ))}
                   </div>

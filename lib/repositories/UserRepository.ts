@@ -1,13 +1,14 @@
 import bcrypt from 'bcryptjs';
 import { BaseRepository } from './BaseRepository';
 import { User } from '../entities/User';
+import type { UserRole, UserStatus } from '../user-roles';
 
 interface UserDTO {
   id: number;
   username: string;
   email: string;
-  role: 'admin' | 'author' | 'user';
-  status: 'active' | 'inactive' | 'suspended';
+  role: UserRole;
+  status: UserStatus;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -116,8 +117,8 @@ export class UserRepository extends BaseRepository {
     username: string;
     email: string;
     password: string;
-    role?: 'admin' | 'author' | 'user';
-    status?: 'active' | 'inactive' | 'suspended';
+    role?: UserRole;
+    status?: UserStatus;
   }): Promise<UserDTO> {
     const repo = await this.getRepo(User);
 
@@ -139,11 +140,11 @@ export class UserRepository extends BaseRepository {
       username: data.username,
       email: data.email,
       password: hashedPassword,
-      role: data.role || 'user',
+      role: data.role || 'author',
       status: data.status || 'active',
     });
 
-    const saved = await repo.save(user);
+    const saved = await repo.save<User>(user);
     return toDTO(saved);
   }
 
@@ -154,8 +155,8 @@ export class UserRepository extends BaseRepository {
     username?: string;
     email?: string;
     password?: string;
-    role?: 'admin' | 'author' | 'user';
-    status?: 'active' | 'inactive' | 'suspended';
+    role?: UserRole;
+    status?: UserStatus;
   }): Promise<UserDTO> {
     const repo = await this.getRepo(User);
 

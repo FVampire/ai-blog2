@@ -117,7 +117,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <aside className="home-index-sidebar" aria-label="站点索引">
           <p className="index-label">INDEX</p>
           <nav>
-            <Link className="is-active" href="/articles">
+            <Link href="/articles">
               <span>文章</span>
               <b>{result.total}</b>
             </Link>

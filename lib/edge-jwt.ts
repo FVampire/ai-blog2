@@ -1,8 +1,11 @@
+import type { UserRole } from './user-roles';
+import { safeEqualBytes } from './safe-equal';
+
 export interface EdgeJWTPayload {
   userId: number;
   username: string;
   email: string;
-  role: string;
+  role: UserRole;
   exp?: number;
   nbf?: number;
 }
@@ -12,15 +15,6 @@ function decodeBase64Url(value: string): Uint8Array {
   const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
   const binary = atob(padded);
   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
-}
-
-function safeEqual(left: Uint8Array, right: Uint8Array): boolean {
-  if (left.length !== right.length) return false;
-  let result = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    result |= left[index] ^ right[index];
-  }
-  return result === 0;
 }
 
 /** Edge-runtime compatible verification for the HS256 token issued by lib/jwt.ts. */
@@ -50,7 +44,7 @@ export async function verifyEdgeToken(
         new TextEncoder().encode(`${encodedHeader}.${encodedPayload}`),
       ),
     );
-    if (!safeEqual(signature, decodeBase64Url(encodedSignature))) return null;
+    if (!safeEqualBytes(signature, decodeBase64Url(encodedSignature))) return null;
 
     const payload = JSON.parse(
       new TextDecoder().decode(decodeBase64Url(encodedPayload)),

@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     await recordAuditEvent({
       request,
-      user: { userId: DEFAULT_AUTHOR_ID, username: 'Agent', email: '', role: 'agent' },
+      user: { userId: DEFAULT_AUTHOR_ID, username: 'Agent' },
       action: 'agent.post.publish',
       resourceType: 'post',
       resourceId: result.post.id,
@@ -108,7 +108,7 @@ export async function PUT(request: NextRequest) {
     await SeriesRepository.ensureForLinkedPost(post.id);
     await recordAuditEvent({
       request,
-      user: { userId: DEFAULT_AUTHOR_ID, username: 'Agent', email: '', role: 'agent' },
+      user: { userId: DEFAULT_AUTHOR_ID, username: 'Agent' },
       action: 'agent.post.relate',
       resourceType: 'post',
       resourceId: post.id,

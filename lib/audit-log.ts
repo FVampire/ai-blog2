@@ -1,11 +1,16 @@
 import { NextRequest } from 'next/server';
 
 import { query } from './db';
-import { JWTPayload } from './jwt';
+import { visitorAddress } from '@/lib/ai/limits';
+
+export interface AuditActor {
+  userId: number;
+  username: string;
+}
 
 interface AuditEvent {
   request: NextRequest;
-  user: JWTPayload;
+  user: AuditActor;
   action: string;
   resourceType: string;
   resourceId?: string | number;
@@ -15,10 +20,8 @@ interface AuditEvent {
 /** Audit failures are reported server-side but never roll back an already completed action. */
 export async function recordAuditEvent(event: AuditEvent): Promise<void> {
   try {
-    const forwardedFor = event.request.headers.get('x-forwarded-for');
-    const ipAddress = forwardedFor?.split(',')[0]?.trim()
-      || event.request.headers.get('x-real-ip')
-      || null;
+    const address = visitorAddress(event.request.headers);
+    const ipAddress = address === 'unknown' ? null : address;
 
     await query(
       `INSERT INTO audit_logs

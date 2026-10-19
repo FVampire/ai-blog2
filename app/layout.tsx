@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 
 import "../styles/globals.css";
 import "../styles/notebook-v6.css";
-import "../styles/admin.css";
-import "../styles/media-library.css";
 import { Providers } from "./providers";
 
 const SITE_NAME = "五月的火";

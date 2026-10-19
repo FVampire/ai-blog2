@@ -135,7 +135,7 @@ export class SeriesRepository extends BaseRepository {
           status: current.status as SeriesPost['status'],
           publishedAt: (current.published_at as Date | null) || null,
         });
-        const nextId = current.next_post_id == null ? null : Number(current.next_post_id);
+        const nextId: number | null = current.next_post_id == null ? null : Number(current.next_post_id);
         current = nextId ? byId.get(nextId) : undefined;
       }
     };

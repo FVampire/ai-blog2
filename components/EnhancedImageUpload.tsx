@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useState, useRef, ChangeEvent, DragEvent } from 'react';
 
+import '../styles/media-library.css';
+
 import { authJson, authUpload } from './admin/authFetch';
 import { toast } from './admin/Toast';
 
