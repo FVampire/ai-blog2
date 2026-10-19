@@ -8,7 +8,7 @@ import {
   mediaPathToUrl,
   normalizeMediaPath,
 } from '@/lib/media-library';
-import { getMediaStore, isCosConfigured } from '@/lib/storage';
+import { isCosConfigured } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -17,17 +17,7 @@ interface UploadRouteProps {
   params: Promise<{ path: string[] }>;
 }
 
-// Only these reviewed project files may contain executable content. User uploads
-// remain image-only; do not allow arbitrary HTML or JavaScript under /uploads.
-const PROJECT_FILES = new Set([
-  'uploads/ai-interior-design/product/index.html',
-  'uploads/ai-interior-design/product/product.css',
-  'uploads/ai-interior-design/product/product.js',
-  'uploads/ai-interior-design/demo/index.html',
-  'uploads/ai-interior-design/demo/app.js',
-  'uploads/ai-interior-design/demo/model-data.js',
-]);
-
+// /uploads only serves images; HTML or JavaScript must never be served from here.
 export async function GET(_request: Request, { params }: UploadRouteProps) {
   const { path: segments } = await params;
   if (!Array.isArray(segments) || segments.length === 0) {
@@ -37,8 +27,7 @@ export async function GET(_request: Request, { params }: UploadRouteProps) {
   try {
     const relativePath = normalizeMediaPath(['uploads', ...segments].join('/'));
     const extension = path.posix.extname(relativePath).toLowerCase();
-    const isProjectFile = PROJECT_FILES.has(relativePath);
-    if (!relativePath.startsWith('uploads/') || (!MEDIA_IMAGE_EXTENSIONS.includes(extension) && !isProjectFile)) {
+    if (!relativePath.startsWith('uploads/') || !MEDIA_IMAGE_EXTENSIONS.includes(extension)) {
       return new NextResponse(null, { status: 404 });
     }
     if (!isCosConfigured()) {
@@ -46,19 +35,6 @@ export async function GET(_request: Request, { params }: UploadRouteProps) {
         { success: false, message: '未配置腾讯云 COS' },
         { status: 503 },
       );
-    }
-    // Keep both iframe documents on the site origin so the model's postMessage
-    // navigation still works. Large scripts and images can load directly from COS.
-    if (isProjectFile && extension === '.html') {
-      const file = await getMediaStore().getObject(relativePath);
-      if (!file) return new NextResponse(null, { status: 404 });
-      return new NextResponse(new Uint8Array(file.body), {
-        headers: {
-          'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'no-cache',
-          'X-Content-Type-Options': 'nosniff',
-        },
-      });
     }
     return NextResponse.redirect(mediaPathToUrl(relativePath), 302);
   } catch (error) {
