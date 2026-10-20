@@ -3,7 +3,8 @@ import Link from 'next/link';
 
 import type { Metadata } from 'next';
 
-import { ClipStrip, FlowFilm, StudioEmbed } from './MoyunShowcase';
+import { FLOW_SHOTS } from './gallery-data';
+import { ClipStrip, FeatureGallery, FlowFilm, StudioEmbed } from './MoyunShowcase';
 import s from './moyun.module.css';
 import Footer from '../../../components/Footer';
 import Header from '../../../components/Header';
@@ -13,7 +14,7 @@ const SITE_NAME = '五月的火';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 const PAGE_TITLE = '墨韵 Moyun · 长篇 AI 创作工作台 - 五月的火';
 const PAGE_DESCRIPTION = '为长篇小说而生的桌面创作系统：全书级上下文、多模型竞选、流式正文、审稿修订与故事记忆同步，让五十万字始终属于同一个世界。';
-const PAGE_IMAGE = `${BASE}/shots/11-competition.webp`;
+const PAGE_IMAGE = `${BASE}/cover.webp`;
 
 export const metadata: Metadata = {
   title: { absolute: PAGE_TITLE },
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'article', title: PAGE_TITLE, description: PAGE_DESCRIPTION,
     url: `${SITE_URL}/projects/moling`, siteName: SITE_NAME, locale: 'zh_CN',
-    images: [{ url: PAGE_IMAGE, width: 1800, height: 1125, alt: '墨韵多模型竞选' }],
+    images: [{ url: PAGE_IMAGE, width: 1600, height: 1000, alt: '墨韵 Moyun' }],
   },
   twitter: { card: 'summary_large_image', title: PAGE_TITLE, description: PAGE_DESCRIPTION, images: [PAGE_IMAGE] },
 };
@@ -43,23 +44,7 @@ const pillars = [
   ['伏笔生命周期', '埋设、推进、回收三栏追踪 534 条伏笔，回收率与悬置时间一目了然。'],
 ];
 
-const gallery = [
-  ['01-library', '书斋', '作品、今日落笔与写作热力。'],
-  ['03-outline', '大纲工作台', '总纲、分卷、故事弧与章节卡片共用一条时间线。'],
-  ['05-relations', '人物关系', '以主角为中心展开的命运之网。'],
-  ['06-foreshadow', '伏笔看板', '埋设 → 推进 → 回收，回收率环形统计。'],
-  ['07-canon', 'Canon 状态中心', '实体当前状态与变更时间线。'],
-  ['08-tasks', '任务中心', '工作流运行记录与多模型调用统计。'],
-] as const;
 
-const portraits = [
-  ['liwen', '李稳', '主角 · 青竹宗弟子'],
-  ['xiaolie', '萧烈', '剑修 · 外门执事'],
-  ['suhongxiu', '苏红袖', '剑修 · 冷静敏锐'],
-  ['linmiaomiao', '林妙妙', '丹修 · 灵动直率'],
-  ['xuanjizi', '玄机子', '长老 · 深藏不露'],
-  ['zhoupu', '周朴', '同门 · 忠厚可靠'],
-] as const;
 
 export default function MoyunPage() {
   return (
@@ -101,55 +86,42 @@ export default function MoyunPage() {
           </div>
           <ClipStrip />
           <div className={s.compete}>
-            <figure>
-              <Image src={`${BASE}/shots/11-competition.webp`} alt="三个模型并行起笔并接受评审" width={1800} height={1125} sizes="(max-width: 900px) 100vw, 1240px" />
-            </figure>
-            <div>
+            <div className={s.competeCopy}>
               <h3>让好开头，自己胜出。</h3>
-              <p>三个模型基于同一份上下文各写一个开头。评审从连贯性、人物一致性、伏笔呼应、文风四个维度打分，并给出理由；胜出稿接续完成整章，落选稿留作素材。</p>
-              <p className={s.score}><b>97.3</b><span>本轮胜出 · 照夜</span></p>
+              <p>同一份上下文交给三个模型。它们首字时间、速度和写出的长度都不同；先写完的等待其他候选，全部完成后才进入评审。</p>
             </div>
-          </div>
-          <div className={s.pair}>
-            <figure><Image src={`${BASE}/shots/13-review.webp`} alt="审稿意见" width={1800} height={1125} sizes="(max-width: 900px) 100vw, 620px" /><figcaption>审稿：一致性检查给出修改意见</figcaption></figure>
-            <figure><Image src={`${BASE}/shots/15-memory.webp`} alt="记忆同步" width={1800} height={1125} sizes="(max-width: 900px) 100vw, 620px" /><figcaption>记忆同步：状态提案逐条确认</figcaption></figure>
+            <ol className={s.competeSteps}>
+              {([
+                ['stream', '各自起笔', '首字 0.6s / 1.4s / 2.3s，速度约 38 / 24 / 31 字每秒，长度 307 / 322 / 334 字。'],
+                ['wait', '等待全部完成', '先完成的候选进入等待，其余继续写到自然收尾。'],
+                ['review', '逐项评审', '连贯性、人物一致性、伏笔呼应、文风四项打分，评语引用原文。'],
+                ['winner', '胜出并接续', '照夜以 97.3 胜出；落选稿可展开全文，留作素材。'],
+              ] as const).map(([key, title, copy], i) => {
+                const shot = FLOW_SHOTS[key];
+                return (
+                  <li key={key}>
+                    <div><span>0{i + 1}</span><b>{title}</b><p>{copy}</p></div>
+                    <figure><Image src={`${BASE}/shots/${shot.shot}.webp`} alt={`多模型竞选：${title}`} width={shot.w} height={shot.h} sizes="(max-width: 900px) 100vw, 860px" /></figure>
+                  </li>
+                );
+              })}
+            </ol>
           </div>
         </section>
 
-        <section className={s.cast}>
-          <div className={s.heading}>
-            <span>03 · CHARACTERS</span>
-            <h2>纸上众生，各有来处。</h2>
-            <p>角色卡记录设定、出场与当前状态；生成时自动引用，保证称谓、关系与性格前后一致。</p>
-          </div>
-          <div className={s.portraits}>
-            {portraits.map(([id, name, role]) => (
-              <figure key={id}>
-                <Image src={`${BASE}/app/art/${id}.webp`} alt={`${name}立绘`} width={640} height={960} sizes="(max-width: 900px) 33vw, 200px" />
-                <figcaption><b>{name}</b><span>{role}</span></figcaption>
-              </figure>
-            ))}
-          </div>
-        </section>
 
         <section className={s.gallery}>
           <div className={s.heading}>
-            <span>04 · THE STUDIO</span>
+            <span>03 · THE STUDIO</span>
             <h2>一整套长篇写作的工作台。</h2>
+            <p>按功能分组浏览；每张图都可以点开看高清原图。</p>
           </div>
-          <div className={s.galleryGrid}>
-            {gallery.map(([id, title, copy]) => (
-              <figure key={id}>
-                <Image src={`${BASE}/shots/${id}.webp`} alt={`墨韵 · ${title}`} width={1800} height={1125} sizes="(max-width: 900px) 100vw, 620px" />
-                <figcaption><b>{title}</b>{copy}</figcaption>
-              </figure>
-            ))}
-          </div>
+          <FeatureGallery />
         </section>
 
         <section className={s.delivery}>
           <div className={s.heading}>
-            <span>05 · TRY IT</span>
+            <span>04 · TRY IT</span>
             <h2>亲手写下第 112 章。</h2>
             <p>下面就是工作台本身：可以播放、暂停、倍速，也可以跳到任意一步，看上下文、竞选与记忆同步如何衔接。</p>
           </div>

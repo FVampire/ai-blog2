@@ -1,17 +1,20 @@
 'use client';
 
 import Image from 'next/image';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
+import { GROUPS, type Shot } from './gallery-data';
 import s from './moyun.module.css';
 
 const BASE = '/projects/moling';
 
 const CLIPS = [
-  { id: 'outline', no: '02', title: '章节细纲', copy: '从章节目标出发，按场景节拍写出细纲，每一拍都标注要推进的人物与伏笔。' },
-  { id: 'competition', no: '03', title: '多模型竞选', copy: '三个模型并行起笔，按连贯性、人物一致性、伏笔呼应与文风打分，胜出者接续写完整章。' },
-  { id: 'writing', no: '04', title: '正文生成', copy: '胜出稿流式写入编辑器，侧栏实时标出引用到的人物与伏笔。' },
-  { id: 'memory', no: '06', title: '记忆同步', copy: '生成本章摘要，逐条确认人物、关系与物品的状态变更，伏笔进度随之推进。' },
+  { id: 'onboarding', title: '新建作品', copy: '选类型、引导式问答，三个方向里选一个，作品就此开始。' },
+  { id: 'outline', title: '章节细纲', copy: '从章节目标写出分场景细纲，每一拍都标注要推进的人物与伏笔。' },
+  { id: 'competition', title: '多模型竞选', copy: '三个模型各自起笔，速度、长度各不相同；全部写完后逐项评审，胜出者接续全章。' },
+  { id: 'writing', title: '正文生成', copy: '胜出稿流式写入编辑器，侧栏实时标出引用到的人物与伏笔。' },
+  { id: 'memory', title: '记忆同步', copy: '生成本章摘要，逐条确认人物、关系与物品的状态变更，伏笔进度随之推进。' },
+  { id: 'characters', title: '人物', copy: '角色卡、角色对话与按章节回溯的状态快照。' },
 ] as const;
 
 export function FlowFilm() {
@@ -35,7 +38,7 @@ export function FlowFilm() {
         <button type="button" className={s.filmPlay} onClick={() => void ref.current?.play()}>
           <span aria-hidden="true">▶</span>
           <b>播放完整流程</b>
-          <small>第 112 章 · 87 秒 · 上下文 → 细纲 → 竞选 → 正文 → 审稿 → 记忆</small>
+          <small>第 112 章 · 约 100 秒 · 上下文 → 细纲 → 竞选 → 正文 → 审稿 → 记忆</small>
         </button>
       )}
     </figure>
@@ -49,9 +52,9 @@ export function ClipStrip() {
   return (
     <div className={s.clips}>
       <div className={s.clipList} role="tablist" aria-label="流程片段">
-        {CLIPS.map((c) => (
+        {CLIPS.map((c, i) => (
           <button key={c.id} type="button" role="tab" aria-selected={c.id === active} onClick={() => setActive(c.id)}>
-            <span>{c.no}</span>
+            <span>{String(i + 1).padStart(2, '0')}</span>
             <b>{c.title}</b>
             <p>{c.copy}</p>
           </button>
@@ -76,6 +79,77 @@ export function ClipStrip() {
   );
 }
 
+function Lightbox({ shot, onClose, onStep }: { shot: Shot; onClose: () => void; onStep: (d: number) => void }) {
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') onStep(1);
+      if (e.key === 'ArrowLeft') onStep(-1);
+    };
+    window.addEventListener('keydown', key);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { window.removeEventListener('keydown', key); document.body.style.overflow = overflow; };
+  }, [onClose, onStep]);
+
+  return (
+    <div className={s.lightbox} role="dialog" aria-modal="true" aria-label={shot.title} onClick={onClose}>
+      <figure onClick={(e) => e.stopPropagation()}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`${BASE}/shots/full/${shot.shot}.webp`} alt={shot.title} />
+        <figcaption><b>{shot.title}</b>{shot.caption}<span>← → 切换 · Esc 关闭</span></figcaption>
+      </figure>
+      <button type="button" className={s.lightboxClose} onClick={onClose} aria-label="关闭">×</button>
+    </div>
+  );
+}
+
+export function FeatureGallery() {
+  const [group, setGroup] = useState(GROUPS[0].id);
+  const [index, setIndex] = useState(0);
+  const [zoom, setZoom] = useState(false);
+  const current = GROUPS.find((g) => g.id === group)!;
+  const shot = current.shots[index];
+  const step = (d: number) => setIndex((i) => (i + d + current.shots.length) % current.shots.length);
+
+  return (
+    <div className={s.features}>
+      <div className={s.featureTabs} role="tablist" aria-label="功能分组">
+        {GROUPS.map((g) => (
+          <button key={g.id} type="button" role="tab" aria-selected={g.id === group} onClick={() => { setGroup(g.id); setIndex(0); }}>
+            {g.label}<i>{g.shots.length}</i>
+          </button>
+        ))}
+      </div>
+      <p className={s.featureIntro}>{current.intro}</p>
+      <div className={s.featureBody}>
+        <ol className={s.featureList}>
+          {current.shots.map((item, i) => (
+            <li key={item.shot}>
+              <button type="button" aria-current={i === index} onClick={() => setIndex(i)}>
+                <b>{item.title}</b>
+                <span>{item.caption}</span>
+              </button>
+            </li>
+          ))}
+        </ol>
+        <figure className={s.featureStage}>
+          <button type="button" className={s.featureZoom} onClick={() => setZoom(true)} aria-label={`放大查看：${shot.title}`}>
+            <Image key={shot.shot} src={`${BASE}/shots/${shot.shot}.webp`} alt={shot.title} width={shot.w} height={shot.h} sizes="(max-width: 900px) 100vw, 900px" />
+            <span>点击查看高清原图 ↗</span>
+          </button>
+          <figcaption>
+            <button type="button" onClick={() => step(-1)} aria-label="上一张">←</button>
+            <span><b>{shot.title}</b>{index + 1} / {current.shots.length}</span>
+            <button type="button" onClick={() => step(1)} aria-label="下一张">→</button>
+          </figcaption>
+        </figure>
+      </div>
+      {zoom && <Lightbox shot={shot} onClose={() => setZoom(false)} onStep={step} />}
+    </div>
+  );
+}
+
 export function StudioEmbed() {
   const [started, setStarted] = useState(false);
 
@@ -90,7 +164,7 @@ export function StudioEmbed() {
           <iframe src={`${BASE}/app/index.html?embed=1`} title="墨韵长篇创作工作台" loading="lazy" />
         ) : (
           <>
-            <Image src={`${BASE}/shots/02-chapter.webp`} alt="墨韵章节工作台" fill sizes="(max-width: 900px) 100vw, 1300px" />
+            <Image src={`${BASE}/shots/writing.webp`} alt="墨韵章节工作台" fill sizes="(max-width: 900px) 100vw, 1300px" />
             <div className={s.embedStart}>
               <button type="button" onClick={() => setStarted(true)}>亲手写第 112 章 <b aria-hidden="true">↗</b></button>
               <small>可暂停、倍速、跳到任意步骤</small>

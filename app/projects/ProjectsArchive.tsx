@@ -19,7 +19,7 @@ const FEATURED = [
     kind: "appearance",
     year: "2026",
     description: "从一张照片到一整个衣橱：七种造型，始终是同一个你。",
-    image: "/projects/wardrobe-lab/shots/01-home-hero.webp",
+    image: "/projects/wardrobe-lab/cover.webp",
     tags: ["身份一致", "对齐对比", "画质修复"],
   },
   {
@@ -30,7 +30,7 @@ const FEATURED = [
     year: "2026",
     description: "从复杂款式理解到组合制版、几何校验与样衣交付的 AI 工程系统。",
     image:
-      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788622094556-626863194.webp",
+      "/projects/ai-garment-pattern-agent/cover.webp",
     tags: ["对话改版", "2D / 3D", "Tech Pack"],
   },
   {
@@ -40,7 +40,7 @@ const FEATURED = [
     kind: "workbench",
     year: "2026",
     description: "全书级上下文、多模型竞选与故事记忆，让一部长篇始终记得自己。",
-    image: "/projects/moling/shots/11-competition.webp",
+    image: "/projects/moling/cover.webp",
     tags: ["多模型竞选", "故事记忆", "51 万字"],
   },
   {
@@ -60,7 +60,7 @@ const FEATURED = [
     kind: "ai/space",
     year: "2026",
     description: "从户型识别、需求简报到方案生成，最终交付一个可以亲手探索的 3D 方案。",
-    image: "/projects/ai-interior-design/shots/01-home-hero.webp",
+    image: "/projects/ai-interior-design/cover.webp",
     tags: ["三种风格", "生成过程", "3D 交付"],
   },
 ] as const;
