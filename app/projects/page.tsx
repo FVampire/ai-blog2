@@ -96,7 +96,7 @@ export default async function ProjectsPage() {
 
         <div className={styles.projectIndexList} aria-label="项目索引">
           <Link className={styles.projectIndex} href="/projects/moling">
-            <span>01</span><b>墨灵 Moling</b><p>长篇 AI 工作台</p><p>产品 / 设计 / 智能系统</p><p>桌面产品案例</p><i>2026</i>
+            <span>01</span><b>墨韵 Moyun</b><p>长篇 AI 工作台</p><p>产品 / 设计 / 智能系统</p><p>桌面产品案例</p><i>2026</i>
           </Link>
           <Link className={styles.projectIndex} href="/projects/forgetting-tide">
             <span>02</span><b>遗忘潮汐</b><p>独立游戏设计</p><p>主创 / 企划 / 系统 / 音乐</p><p>完整产品案例</p><i>2026</i>
@@ -111,7 +111,7 @@ export default async function ProjectsPage() {
           <Link className={styles.projectCard} href="/projects/moling">
             <div className={styles.cover}>
               <Image
-                src="/projects/moling/moling-project-overview-full-v5.png"
+                src="/projects/moling/shots/11-competition.webp"
                 alt="墨灵真实三章创作流程，包含章节编辑、大纲工作台与任务中心"
                 fill
                 priority

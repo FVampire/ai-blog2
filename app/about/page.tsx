@@ -42,7 +42,7 @@ const CHAPTER_META = [
 ];
 
 const FEATURED_WORKS = [
-  { href: '/projects/moling', title: '墨灵 Moling' },
+  { href: '/projects/moling', title: '墨韵 Moyun' },
   { href: '/projects/forgetting-tide', title: '遗忘潮汐' },
 ];
 
