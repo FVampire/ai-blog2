@@ -9,12 +9,12 @@ import s from './moyun.module.css';
 const BASE = '/projects/moling';
 
 const CLIPS = [
-  { id: 'onboarding', title: '新建作品', copy: '选类型、引导式问答，三个方向里选一个，作品就此开始。' },
-  { id: 'outline', title: '章节细纲', copy: '从章节目标写出分场景细纲，每一拍都标注要推进的人物与伏笔。' },
+  { id: 'onboarding', title: '新建作品', copy: '聊几轮、点几个选项，作品蓝图逐步成形，生成可编辑的定盘提案。' },
+  { id: 'outline', title: '章节规划', copy: '读约束、定人物、排节拍、安排伏笔、一致性预检，再确认细纲。' },
   { id: 'competition', title: '多模型竞选', copy: '三个模型各自起笔，速度、长度各不相同；全部写完后逐项评审，胜出者接续全章。' },
   { id: 'writing', title: '正文生成', copy: '胜出稿流式写入编辑器，侧栏实时标出引用到的人物与伏笔。' },
   { id: 'memory', title: '记忆同步', copy: '生成本章摘要，逐条确认人物、关系与物品的状态变更，伏笔进度随之推进。' },
-  { id: 'characters', title: '人物', copy: '角色卡、角色对话与按章节回溯的状态快照。' },
+  { id: 'snapshots', title: '角色回溯', copy: '沿 111 章时间轴拖动，任选两章对比角色状态的变化与来源。' },
 ] as const;
 
 export function FlowFilm() {
@@ -38,7 +38,7 @@ export function FlowFilm() {
         <button type="button" className={s.filmPlay} onClick={() => void ref.current?.play()}>
           <span aria-hidden="true">▶</span>
           <b>播放完整流程</b>
-          <small>第 112 章 · 约 100 秒 · 上下文 → 细纲 → 竞选 → 正文 → 审稿 → 记忆</small>
+          <small>第 112 章 · 约 110 秒 · 上下文 → 规划 → 竞选 → 正文 → 审稿 → 记忆</small>
         </button>
       )}
     </figure>
@@ -164,7 +164,7 @@ export function StudioEmbed() {
           <iframe src={`${BASE}/app/index.html?embed=1`} title="墨韵长篇创作工作台" loading="lazy" />
         ) : (
           <>
-            <Image src={`${BASE}/shots/writing.webp`} alt="墨韵章节工作台" fill sizes="(max-width: 900px) 100vw, 1300px" />
+            <Image src={`${BASE}/video/moyun-flow-poster.webp`} alt="墨韵章节工作台" fill sizes="(max-width: 900px) 100vw, 1300px" />
             <div className={s.embedStart}>
               <button type="button" onClick={() => setStarted(true)}>亲手写第 112 章 <b aria-hidden="true">↗</b></button>
               <small>可暂停、倍速、跳到任意步骤</small>

@@ -82,7 +82,7 @@ export default function MoyunPage() {
           <div className={s.heading}>
             <span>02 · ONE CHAPTER, SIX STEPS</span>
             <h2>从章节目标，到世界记住这一章。</h2>
-            <p>以第 112 章《此桶概不赊账》为例：上下文装配、细纲、多模型竞选、正文、审稿修订、记忆同步，一气呵成。</p>
+            <p>以第 112 章《此桶概不赊账》为例：上下文装配、章节规划、多模型竞选、正文、审稿修订、记忆同步，一气呵成。</p>
           </div>
           <ClipStrip />
           <div className={s.compete}>
