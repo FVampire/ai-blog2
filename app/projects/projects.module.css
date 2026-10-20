@@ -493,6 +493,8 @@
   border-color: var(--v6-accent);
 }
 .record figure {
+  display: flex;
+  align-self: center;
   margin: 10px;
   padding: 6px;
   border: 1px solid var(--v6-ink);
@@ -500,7 +502,8 @@
 }
 .record figure > div {
   position: relative;
-  min-height: 210px;
+  flex: 1;
+  aspect-ratio: 16 / 10;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -571,6 +574,6 @@
     grid-template-columns: 1fr;
   }
   .record figure > div {
-    min-height: 190px;
+    aspect-ratio: 16 / 10;
   }
 }
