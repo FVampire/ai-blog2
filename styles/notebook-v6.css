@@ -245,6 +245,7 @@ body::before {
 .home-index-main {
   padding: 30px;
   min-width: 0;
+  container-type: inline-size;
 }
 .home-index-main > h1 {
   margin: 17px 0 5px;
@@ -276,6 +277,14 @@ body::before {
 }
 .home-feature-image img {
   object-fit: cover;
+}
+@container (max-width: 600px) {
+  .home-feature {
+    grid-template-columns: 1fr;
+  }
+  .home-feature-image {
+    min-height: 220px;
+  }
 }
 .home-feature-placeholder {
   display: grid;
@@ -741,7 +750,7 @@ body::before {
   padding: 48px 0 70px;
 }
 .article-page .content-wrapper {
-  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 280px) minmax(0, calc(42 * 16px));
   gap: clamp(32px, 4vw, 64px);
   width: 100%;
   justify-content: center;
@@ -879,6 +888,23 @@ body::before {
   border-radius: 5px;
   background: #202220;
 }
+.article-page .markdown-preview table th {
+  background: var(--v6-soft);
+  color: var(--v6-ink);
+}
+.article-page .markdown-preview table th,
+.article-page .markdown-preview table td {
+  border-color: var(--v6-line);
+}
+.article-page .markdown-preview hr {
+  border-top-color: var(--v6-line);
+}
+.article-page .markdown-preview :not(pre) > code {
+  background: var(--v6-soft);
+  color: var(--v6-accent);
+  border: 1px solid var(--v6-line);
+  font-family: var(--font-mono);
+}
 .article-page .toc-card,
 .article-page .sidebar > .card {
   padding: 12px 0;
@@ -1011,8 +1037,18 @@ body::before {
   width: 48px;
   height: 48px;
   background: var(--v6-ink);
+  color: var(--v6-paper);
   border-radius: 4px;
   box-shadow: var(--v6-shadow);
+}
+.back-to-top:hover {
+  background: var(--v6-accent);
+  color: var(--v6-paper);
+  box-shadow: var(--v6-shadow);
+  transform: none;
+}
+.back-to-top:active {
+  transform: none;
 }
 
 /* Keep widget tokens on the same selectors as AIChatWidget.css. */
