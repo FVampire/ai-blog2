@@ -37,9 +37,9 @@ const STATIC_PROJECTS = [
   {
     slug: "wardrobe-lab",
     href: "/projects/wardrobe-lab",
-    name: "Wardrobe Lab",
+    name: "Wardrobe Studio",
     meta: "appearance · 2026",
-    image: "/projects/wardrobe-lab/tryon-workspace.webp",
+    image: "/projects/wardrobe-lab/cover.webp",
   },
   {
     slug: "ai-garment-pattern-agent",
@@ -47,14 +47,14 @@ const STATIC_PROJECTS = [
     name: "AI 服装打版 Agent",
     meta: "agent/cad · 2026",
     image:
-      "https://blog-1304232496.cos.ap-shanghai.myqcloud.com/uploads/1788622094556-626863194.webp",
+      "/projects/ai-garment-pattern-agent/cover.webp",
   },
   {
     slug: "moling",
     href: "/projects/moling",
-    name: "墨灵 Moling",
+    name: "墨韵 Moyun",
     meta: "workbench · 2026",
-    image: "/projects/moling/moling-project-overview-full-v5.png",
+    image: "/projects/moling/cover.webp",
   },
   {
     slug: "forgetting-tide",

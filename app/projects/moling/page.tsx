@@ -3,17 +3,18 @@ import Link from 'next/link';
 
 import type { Metadata } from 'next';
 
-import styles from './moling.module.css';
-import PipelinePlayer from './PipelinePlayer';
-import ShowcaseSwitch from './ShowcaseSwitch';
+import { FLOW_SHOTS } from './gallery-data';
+import { ClipStrip, FeatureGallery, FlowFilm, StudioEmbed } from './MoyunShowcase';
+import s from './moyun.module.css';
 import Footer from '../../../components/Footer';
 import Header from '../../../components/Header';
 
-const PAGE_TITLE = '墨灵 Moling · 长篇 AI 创作工作台 - 五月的火';
-const PAGE_DESCRIPTION = '为长篇小说而生的桌面创作系统。墨灵持续维护角色、设定、伏笔与章节状态，让每一次生成都建立在完整故事上下文之上。';
+const BASE = '/projects/moling';
 const SITE_NAME = '五月的火';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
-const PAGE_IMAGE = '/projects/moling/moling-project-overview-full-v5.png';
+const PAGE_TITLE = '墨韵 Moyun · 长篇 AI 创作工作台 - 五月的火';
+const PAGE_DESCRIPTION = '为长篇小说而生的桌面创作系统：全书级上下文、多模型竞选、流式正文、审稿修订与故事记忆同步，让五十万字始终属于同一个世界。';
+const PAGE_IMAGE = `${BASE}/cover.webp`;
 
 export const metadata: Metadata = {
   title: { absolute: PAGE_TITLE },
@@ -22,136 +23,120 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'article', title: PAGE_TITLE, description: PAGE_DESCRIPTION,
     url: `${SITE_URL}/projects/moling`, siteName: SITE_NAME, locale: 'zh_CN',
-    images: [{ url: PAGE_IMAGE, width: 1600, height: 1000, alt: '墨灵长篇 AI 创作工作台' }],
+    images: [{ url: PAGE_IMAGE, width: 1600, height: 1000, alt: '墨韵 Moyun' }],
   },
   twitter: { card: 'summary_large_image', title: PAGE_TITLE, description: PAGE_DESCRIPTION, images: [PAGE_IMAGE] },
 };
 
-const valueCards = [
-  ['01', '全书级上下文', '从章节目标出发，自动选取真正相关的人物、事实、伏笔与前文章节。'],
-  ['02', '情节持续规划', '总纲、分卷、故事弧与章节 Slot 互相连接，局部调整不惊动整本书。'],
-  ['03', '角色与世界状态', '称谓、关系、位置和事件结果随定稿更新，世界始终处在正确的此刻。'],
-  ['04', '审稿与局部修订', '一致性检查、多路候选与精准改写在同一章内完成，不破坏已经成立的部分。'],
+const facts = [
+  ['111', '章节'],
+  ['51 万', '正文字数'],
+  ['534', '伏笔档案'],
+  ['2,737', 'Canon 事件'],
+  ['1,053', '故事实体'],
+  ['98', '次工作流运行'],
 ];
 
-const architecture = ['创作界面', '桌面运行时', '智能创作引擎', '本地故事数据库'];
+const pillars = [
+  ['全书级上下文', '每一章动笔前，从五十万字里检索真正相关的人物、伏笔与前情，在 token 预算内装配成本章上下文。'],
+  ['多模型竞选', '同一份上下文交给多个模型并行起笔，按连贯性、人物一致性、伏笔呼应与文风评审，择优续写。'],
+  ['故事记忆', '定稿后抽取人物位置、关系与物品变化，逐条确认写回 Canon，世界始终停在正确的此刻。'],
+  ['伏笔生命周期', '埋设、推进、回收三栏追踪 534 条伏笔，回收率与悬置时间一目了然。'],
+];
 
-const runFacts = [
-  ['03', '连续生成章节', '第 9–11 章'],
-  ['27', '流程步骤记录', '24 成功 · 3 自动跳过'],
-  ['14,000', '三章正文总字数', '4,291 · 4,911 · 4,798'],
-  ['0', '失败工作流', '三章全部定稿'],
-] as const;
 
-export default function MolingPage() {
+
+export default function MoyunPage() {
   return (
-    <div className={styles.shell}>
+    <div className={s.shell}>
       <Header />
-      <main className={styles.page}>
-        <section className={styles.hero} id="hero">
-          <div className={styles.heroAtmosphere} aria-hidden="true" />
-          <div className={styles.heroTopline}>
-            <div><Link href="/">首页</Link><i>/</i><Link href="/projects">项目</Link><i>/</i><span>墨灵 Moling</span></div>
+      <main className={s.page}>
+        <section className={s.hero}>
+          <div className={s.topline}>
+            <div><Link href="/">首页</Link><i>/</i><Link href="/projects">项目</Link><i>/</i><span>墨韵</span></div>
             <span>LONGFORM AI STUDIO · 2026</span>
           </div>
-          <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}>AI NOVEL WORKBENCH · DESKTOP PRODUCT</p>
-            <h1><span>墨灵</span> <i>Moling</i></h1>
+          <div className={s.heroCopy}>
+            <p className={s.eyebrow}>AI NOVEL WORKBENCH · DESKTOP PRODUCT</p>
+            <h1><span>墨韵</span><i>Moyun</i></h1>
             <h2>让一部长篇，<br />始终记得自己。</h2>
-            <p>为长篇小说而生的 AI 创作工作台。</p>
+            <p>为长篇小说而生的 AI 创作工作台。写出一段文字并不难，难的是让五十万字始终属于同一个世界。</p>
           </div>
-          <figure className={styles.heroWindow}>
-            <Image
-              src="/projects/moling/moling-project-overview-full-v5.png"
-              alt="墨灵真实项目总览，十一章章节树与三章连续运行状态完整可读"
-              fill
-              priority
-              sizes="(max-width: 760px) 100vw, 1260px"
-            />
-              <figcaption>REAL RUN · CHAPTER 09—11 · PROJECT OVERVIEW</figcaption>
-          </figure>
-          <ul className={styles.heroTags} aria-label="产品能力">
-            <li>长篇记忆</li><li>故事规划</li><li>智能审稿</li><li>本地创作</li>
-          </ul>
+          <FlowFilm />
+          <dl className={s.facts}>
+            {facts.map(([value, label]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+          </dl>
         </section>
 
-        <div className={styles.caseBody}>
-          <section className={styles.valueSection} id="overview">
-            <div className={styles.sectionIntro}>
-              <span>01 · WHY MOLING</span>
-              <h2>写出一段文字并不难。<br />难的是让数十万字始终属于同一个世界。</h2>
-              <p>墨灵持续维护角色、关系、设定、伏笔、事件和章节状态，让每一次 AI 协作都建立在完整故事上下文之上。</p>
-            </div>
-            <div className={styles.valueGrid}>
-              {valueCards.map(([index, title, copy]) => <article key={title}><span>{index}</span><h3>{title}</h3><p>{copy}</p></article>)}
-            </div>
-          </section>
+        <section className={s.pillars}>
+          <div className={s.heading}>
+            <span>01 · WHY MOYUN</span>
+            <h2>故事不是一次生成的输入，<br />而是一套持续演进的状态。</h2>
+          </div>
+          <div className={s.pillarGrid}>
+            {pillars.map(([title, copy], i) => <article key={title}><span>0{i + 1}</span><h3>{title}</h3><p>{copy}</p></article>)}
+          </div>
+        </section>
 
-          <section className={styles.studioSection} id="studio">
-            <div className={styles.sectionHeading}>
-              <div><span>02</span><p>CHAPTER STUDIO</p></div>
-              <h2>一章之内，完成从目标到定稿的全部工作。</h2>
-              <p>根据章节目标生成正文，引用人物、伏笔和前文事实；经过审稿、局部重写与多路竞态选择后，再把定稿同步回故事状态。</p>
+        <section className={s.flow}>
+          <div className={s.heading}>
+            <span>02 · ONE CHAPTER, SIX STEPS</span>
+            <h2>从章节目标，到世界记住这一章。</h2>
+            <p>以第 112 章《此桶概不赊账》为例：上下文装配、细纲、多模型竞选、正文、审稿修订、记忆同步，一气呵成。</p>
+          </div>
+          <ClipStrip />
+          <div className={s.compete}>
+            <div className={s.competeCopy}>
+              <h3>让好开头，自己胜出。</h3>
+              <p>同一份上下文交给三个模型。它们首字时间、速度和写出的长度都不同；先写完的等待其他候选，全部完成后才进入评审。</p>
             </div>
-            <figure className={styles.studioVisual}>
-              <Image
-                src="/projects/moling/moling-chapter-studio-full-v5.png"
-                alt="墨灵真实章节工作台，显示 11 章项目、正文编辑器与 AI 协作面板"
-                fill
-                sizes="(max-width: 760px) 100vw, 1220px"
-              />
-              <figcaption>真实应用全屏截图 · 正文、章节树与协作面板完整可读</figcaption>
-            </figure>
-            <div className={styles.studioNotes}>
-              <article><b>真实三章</b><p>基于现有长篇项目连续生成第 9、10、11 章，不是为展示页拼出的空壳数据。</p></article>
-              <article><b>完整界面</b><p>章节树、正文、行号、完成状态与协作面板整屏展示，不再只露出产品的一小角。</p></article>
-              <article><b>内容可读</b><p>真实正文、章节标题、细纲和任务记录全部保留，只在构图、光影与剪辑层面精修。</p></article>
-            </div>
-            <div className={styles.realRunStrip} aria-label="真实三章运行数据">
-              {runFacts.map(([value, label, detail]) => <article key={label}><strong>{value}</strong><b>{label}</b><span>{detail}</span></article>)}
-            </div>
-          </section>
+            <ol className={s.competeSteps}>
+              {([
+                ['stream', '各自起笔', '首字 0.6s / 1.4s / 2.3s，速度约 38 / 24 / 31 字每秒，长度 307 / 322 / 334 字。'],
+                ['wait', '等待全部完成', '先完成的候选进入等待，其余继续写到自然收尾。'],
+                ['review', '逐项评审', '连贯性、人物一致性、伏笔呼应、文风四项打分，评语引用原文。'],
+                ['winner', '胜出并接续', '照夜以 97.3 胜出；落选稿可展开全文，留作素材。'],
+              ] as const).map(([key, title, copy], i) => {
+                const shot = FLOW_SHOTS[key];
+                return (
+                  <li key={key}>
+                    <div><span>0{i + 1}</span><b>{title}</b><p>{copy}</p></div>
+                    <figure><Image src={`${BASE}/shots/${shot.shot}.webp`} alt={`多模型竞选：${title}`} width={shot.w} height={shot.h} sizes="(max-width: 900px) 100vw, 860px" /></figure>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </section>
 
-          <section className={styles.systemSection} id="systems">
-            <div className={styles.sectionHeading}>
-              <div><span>03</span><p>LONGFORM SYSTEM</p></div>
-              <h2>规划、人物与 Canon，<br />共享同一个故事现在时。</h2>
-              <p>故事不是一次生成的输入，而是一套持续演进、相互校验的项目状态。</p>
-            </div>
-            <ShowcaseSwitch />
-          </section>
 
-          <section className={styles.pipelineSection} id="pipeline">
-            <div className={styles.sectionHeading}>
-              <div><span>04</span><p>CREATIVE PIPELINE</p></div>
-              <h2>从章节目标，到世界记住这一章。</h2>
-              <p>27.5 秒完整回放从创建《南岸无灯》项目开始，依次展示章节目标、AI 细纲、多模型竞态、正文逐字写入、审稿修订与故事记忆同步。正文使用预先筛选的优胜稿按阅读速度回放，节奏可控，过程清楚。</p>
-            </div>
-            <PipelinePlayer />
-          </section>
+        <section className={s.gallery}>
+          <div className={s.heading}>
+            <span>03 · THE STUDIO</span>
+            <h2>一整套长篇写作的工作台。</h2>
+            <p>按功能分组浏览；每张图都可以点开看高清原图。</p>
+          </div>
+          <FeatureGallery />
+        </section>
 
-          <section className={styles.foundationSection} id="foundation">
-            <div className={styles.foundationCopy}>
-              <span>05 · LOCAL CREATIVE FOUNDATION</span>
-              <h2>创作内容留在本地，<br />工具只负责让它更可靠。</h2>
-              <p>桌面应用、本地项目与本地故事数据库组成稳定底座。自动保存、版本历史、恢复和完整导出，让长篇创作不依赖一次在线会话。</p>
-              <ul><li>本地项目与 SQLite 故事数据库</li><li>多模型配置、任务分工与竞态选择</li><li>自动保存、版本历史与完整导出</li><li>写作内容始终由用户掌控</li></ul>
-            </div>
-            <div className={styles.architecture} aria-label="墨灵产品架构">
-              {architecture.map((item, index) => <div key={item}><span>0{index + 1}</span><b>{item}</b>{index < architecture.length - 1 && <i aria-hidden="true">→</i>}</div>)}
-              <div className={styles.techTags}><span>Tauri</span><span>Next.js</span><span>Rust</span><span>Python</span><span>SQLite</span></div>
-            </div>
-          </section>
+        <section className={s.delivery}>
+          <div className={s.heading}>
+            <span>04 · TRY IT</span>
+            <h2>亲手写下第 112 章。</h2>
+            <p>下面就是工作台本身：可以播放、暂停、倍速，也可以跳到任意一步，看上下文、竞选与记忆同步如何衔接。</p>
+          </div>
+          <StudioEmbed />
+        </section>
 
-          <section className={styles.closingSection} id="closing">
-            <div className={styles.closingGlow} aria-hidden="true" />
-            <span>MOLING · LONGFORM AI WORKBENCH</span>
-            <p>从第一句话，<br />到最后一个伏笔回响。</p>
-            <h2>墨灵陪伴的不是一次生成，<br />而是一整个故事成为它自己的过程。</h2>
-            <div className={styles.closingBrand}><b>墨灵</b><i>Moling</i></div>
-          </section>
+        <section className={s.closing}>
+          <span>MOYUN · LONGFORM AI STUDIO</span>
+          <p>从第一句话，到最后一个伏笔回响。</p>
+          <h2>墨韵陪伴的不是一次生成，<br />而是一整个故事成为它自己的过程。</h2>
+        </section>
 
-          <div className={styles.backLink}><Link href="/projects">← 返回项目归档</Link><span>END OF CASE STUDY · 2026</span></div>
+        <div className={s.backLink}>
+          <Link href="/projects">← 返回项目归档</Link>
+          <span>交互原型 · 示例数据 · 统计数字来自作者真实写作项目</span>
         </div>
       </main>
       <Footer />
