@@ -15,12 +15,12 @@ const FEATURED = [
   {
     href: "/projects/wardrobe-lab",
     path: "projects/wardrobe-lab",
-    name: "Wardrobe Lab",
+    name: "Wardrobe Studio",
     kind: "appearance",
     year: "2026",
-    description: "从自然美颜与智能换景，到静态和实时视频换装。",
-    image: "/projects/wardrobe-lab/tryon-workspace.webp",
-    tags: ["REV 0.1", "美颜换景", "视频换装"],
+    description: "从一张照片到一整个衣橱：七种造型，始终是同一个你。",
+    image: "/projects/wardrobe-lab/shots/01-home-hero.webp",
+    tags: ["身份一致", "对齐对比", "画质修复"],
   },
   {
     href: "/projects/ai-garment-pattern-agent",
@@ -36,12 +36,12 @@ const FEATURED = [
   {
     href: "/projects/moling",
     path: "projects/moling",
-    name: "墨灵 Moling",
+    name: "墨韵 Moyun",
     kind: "workbench",
     year: "2026",
-    description: "从大纲到可交付章节的写作工作台。",
-    image: "/projects/moling/moling-project-overview-full-v5.png",
-    tags: ["REV 0.5", "27 steps", "0 fail"],
+    description: "全书级上下文、多模型竞选与故事记忆，让一部长篇始终记得自己。",
+    image: "/projects/moling/shots/11-competition.webp",
+    tags: ["多模型竞选", "故事记忆", "51 万字"],
   },
   {
     href: "/projects/forgetting-tide",
