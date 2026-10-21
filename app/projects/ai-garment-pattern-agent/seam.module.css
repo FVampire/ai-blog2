@@ -16,7 +16,6 @@
 .page h1, .page h2, .page h3, .page p, .page dl, .page dd, .page figure { margin: 0; }
 
 .hero, .pillars, .flow, 
-.hero, .pillars, .flow, .garments, .gallery, .delivery { padding: 104px max(28px, calc((100vw - 1320px) / 2)); }
 .hero { padding-top: 48px; padding-bottom: 72px; background: radial-gradient(circle at 80% 0%, #fbfcf8, transparent 45%), linear-gradient(180deg, #e9ede4, var(--sm-paper)); }
 .topline { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 56px; color: var(--sm-muted); font-size: 11px; letter-spacing: .12em; }
 .topline > div { display: flex; gap: 10px; }
@@ -134,7 +133,6 @@
 .backLink a { color: var(--sm-cinnabar); text-decoration: none; }
 
 @media (max-width: 900px) {
-  .hero, .pillars, .flow, .garments, .gallery, .delivery { padding: 72px 16px; }
   .hero, .pillars, .flow, 
   .hero { padding-top: 32px; }
   .topline > span { display: none; }
@@ -155,14 +153,7 @@
   .backLink { flex-direction: column; padding: 24px 16px; }
 }
 
-.garments { background: var(--sm-card); border-top: 1px solid var(--sm-line); }
-.garmentGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-.garmentGrid figure { overflow: hidden; border: 1px solid var(--sm-line); border-radius: 8px; background: white; }
-.garmentGrid img { display: block; width: 100%; height: auto; padding: 10px; }
-.garmentGrid figcaption { padding: 10px 14px; border-top: 1px solid var(--sm-line); color: var(--sm-muted); font-size: 13px; }
 @media (max-width: 900px) {
-  .hero, .pillars, .flow, .garments, .gallery, .delivery { padding: 72px 16px; }
-  .garmentGrid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .featureBody { grid-template-columns: 1fr; gap: 16px; }
   .featureStage { position: static; order: -1; }
   .featureList button span { display: none; }

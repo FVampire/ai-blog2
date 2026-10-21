@@ -15,6 +15,7 @@ const CLIPS = [
   { id: 'writing', title: '正文生成', copy: '胜出稿流式写入编辑器，侧栏实时标出引用到的人物与伏笔。' },
   { id: 'memory', title: '记忆同步', copy: '生成本章摘要，逐条确认人物、关系与物品的状态变更，伏笔进度随之推进。' },
   { id: 'snapshots', title: '角色回溯', copy: '沿 111 章时间轴拖动，任选两章对比角色状态的变化与来源。' },
+  { id: 'inspiration', title: '灵感速记', copy: '写作或阅读时按下快捷键，速记窗随时弹出，记完回到便签板。' },
 ] as const;
 
 export function FlowFilm() {

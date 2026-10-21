@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 };
 
 const facts = [
-  ['17', '品类真实制版'],
+  ['6', '类部件结构理解'],
   ['25', '衬衫裁片'],
   ['12 / 12', '缝长配对通过'],
   ['141', '刀口与工艺标记'],
@@ -39,17 +39,10 @@ const facts = [
 const pillars = [
   ['把款式理解成结构', '参考图、自然语言与尺寸表共同形成 StyleGraph：部件、层次、对称与装配关系都成为可继续操作的信息。'],
   ['组合出复杂版型', '以基础原型为起点，按依赖组合领、门襟、袖克夫、口袋与过肩，每一步都有工具、参数与原因。'],
-  ['让精度有据可查', '曲线、裁片、缝长与刀口交给确定性几何内核；每组缝线都有 A/B 长度、允许吃势与公差。'],
+  ['让精度有据可查', '曲线、裁片、缝长与刀口由确定性几何计算生成；每组缝线都有 A/B 长度、允许吃势与公差。'],
   ['一次修改传到全局', '用参数差异发起改版，自动定位受影响的裁片与 POM，未受影响的几何保持锁定。'],
 ];
 
-const garments = [
-  ['01-tshirt', '基础短袖 T 恤'], ['02-long-tshirt', '长袖 T 恤'], ['03-polo', 'Polo 衫'], ['04-shirt', '男式长袖衬衫'],
-  ['05-short-shirt', '短袖衬衫'], ['06-womens-shirt', '女式合体衬衫'], ['07-pocket-shirt', '贴袋圆领角衬衫'], ['08-pleat-shirt', '后背工字褶衬衫'],
-  ['09-sweatshirt', '套头卫衣'], ['10-raglan', '插肩袖卫衣'], ['11-zip-hoodie', '拉链连帽卫衣'], ['12-skirt', '直身半裙'],
-  ['13-circle-skirt', '圆摆裙'], ['14-straight-trousers', '直筒裤'], ['15-casual-trousers', '休闲裤'], ['16-dress', '基础针织连衣裙'],
-  ['17-jacket', '毛领腰带夹克'],
-] as const;
 
 export default function SeamPage() {
   return (
@@ -92,25 +85,9 @@ export default function SeamPage() {
           <ClipStrip />
         </section>
 
-        <section className={s.garments}>
-          <div className={s.heading}>
-            <span>03 · REAL OUTPUT</span>
-            <h2>17 个品类，都是几何内核真实生成的纸样。</h2>
-            <p>每个品类都输出净样、毛样、刀口、量线与布纹，并附带缝长校验与工艺包；下方缩略图直接由导出的 SVG 渲染。</p>
-          </div>
-          <div className={s.garmentGrid}>
-            {garments.map(([id, name]) => (
-              <figure key={id}>
-                <Image src={`${BASE}/studio/patterns/${id}.webp`} alt={`${name}纸样`} width={640} height={400} sizes="(max-width: 900px) 50vw, 300px" />
-                <figcaption>{name}</figcaption>
-              </figure>
-            ))}
-          </div>
-        </section>
-
         <section className={s.gallery}>
           <div className={s.heading}>
-            <span>04 · THE STUDIO</span>
+            <span>03 · THE STUDIO</span>
             <h2>一个工作台，贯穿研发全程。</h2>
             <p>点击图片可查看高清原图。</p>
           </div>
@@ -119,7 +96,7 @@ export default function SeamPage() {
 
         <section className={s.delivery}>
           <div className={s.heading}>
-            <span>05 · TRY IT</span>
+            <span>04 · TRY IT</span>
             <h2>亲手走一遍研发流程。</h2>
             <p>下面就是工作台本身：可以运行完整流程，也可以逐页查看纸样、校验、改版与工艺包。</p>
           </div>
@@ -133,7 +110,7 @@ export default function SeamPage() {
 
         <div className={s.backLink}>
           <Link href="/projects">← 返回项目归档</Link>
-          <span>交互原型 · 纸样、缝长与工艺包来自几何内核真实输出 · 试衣与样衣实测为示例数据</span>
+          <span>交互原型 · 示例项目数据</span>
         </div>
       </main>
       <Footer />
