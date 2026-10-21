@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import type { Metadata } from 'next';
 
+import Motion from './Motion';
 import s from './wardrobe.module.css';
 import { LookViewerEmbed, QualityCompare } from './WardrobeShowcase';
 import Footer from '../../../components/Footer';
@@ -66,7 +67,7 @@ export default function WardrobeLabPage() {
           <dl className={s.heroMeta}>
             <div><dt>角色</dt><dd>产品设计 / 交互 / 视觉 / 前端</dd></div>
             <div><dt>形态</dt><dd>Web 产品原型 + 造型查看器</dd></div>
-            <div><dt>样例</dt><dd>1 位人物 · 7 套造型 · 4 种场景</dd></div>
+            <div><dt>样例</dt><dd>7 套静态造型 · 5 段视频换装 · 4 种场景</dd></div>
             <div><dt>技术</dt><dd>图像生成与编辑 · Vite · TypeScript</dd></div>
           </dl>
         </section>
@@ -140,9 +141,18 @@ export default function WardrobeLabPage() {
           </div>
         </section>
 
+        <section className={s.motionSection}>
+          <div className={s.heading}>
+            <span className={s.label}>05 · MOTION</span>
+            <h2>不止静态照片，视频里也能换。</h2>
+            <p>同一段动作，切换不同服装。各条视频保持同步播放，切换时从相同的时间点接上，动作不会跳。</p>
+          </div>
+          <Motion />
+        </section>
+
         <section className={s.qualitySection}>
           <div className={s.heading}>
-            <span className={s.label}>05 · QUALITY</span>
+            <span className={s.label}>06 · QUALITY</span>
             <h2>照片不完美，也能开始。</h2>
             <p>低光、低对比和低分辨率的照片会先经过修复，再进入换装流程。</p>
           </div>
@@ -151,7 +161,7 @@ export default function WardrobeLabPage() {
 
         <section className={s.delivery}>
           <div className={s.heading}>
-            <span className={s.label}>06 · DELIVERABLE</span>
+            <span className={s.label}>07 · DELIVERABLE</span>
             <h2>交付的，是一个可以亲手比较的造型册。</h2>
             <p>造型查看器把七套造型与原图放在同一个对齐画框里，拖动、切换、比较。</p>
           </div>
@@ -165,7 +175,7 @@ export default function WardrobeLabPage() {
 
         <div className={s.backLink}>
           <Link href="/projects">← 返回项目归档</Link>
-          <span>交互原型 · 示例数据 · 人物与服装图像由 AI 生成</span>
+          <span>交互原型 · 示例数据 · 静态造型图像由 AI 生成</span>
         </div>
       </main>
       <Footer />

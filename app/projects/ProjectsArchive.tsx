@@ -18,9 +18,9 @@ const FEATURED = [
     name: "Wardrobe Studio",
     kind: "appearance",
     year: "2026",
-    description: "从一张照片到一整个衣橱：七种造型，始终是同一个你。",
+    description: "从照片到视频的 AI 换装：七种造型、五段动态换装，始终是同一个你。",
     image: "/projects/wardrobe-lab/cover.webp",
-    tags: ["身份一致", "对齐对比", "画质修复"],
+    tags: ["身份一致", "视频换装", "画质修复"],
   },
   {
     href: "/projects/ai-garment-pattern-agent",

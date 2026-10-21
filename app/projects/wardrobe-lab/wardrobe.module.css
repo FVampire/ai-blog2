@@ -15,7 +15,7 @@
 .page ul { padding: 0; list-style: none; }
 .label { color: var(--wd-red); font-size: 11px; font-weight: 600; letter-spacing: .2em; }
 
-.hero, .problem, .identity, .flow, .wardrobe, .qualitySection, .delivery { padding: 104px max(28px, calc((100vw - 1320px) / 2)); }
+.hero, .problem, .identity, .flow, .wardrobe, .motionSection, .qualitySection, .delivery { padding: 104px max(28px, calc((100vw - 1320px) / 2)); }
 .hero { padding-top: 48px; padding-bottom: 72px; }
 .topline { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 56px; color: var(--wd-muted); font-size: 11px; letter-spacing: .12em; }
 .topline > div { display: flex; gap: 10px; }
@@ -123,4 +123,40 @@
   .stepReverse .stepCopy { order: 0; }
   .viewerStage { aspect-ratio: auto; height: 78vh; min-height: 460px; }
   .backLink { flex-direction: column; padding: 24px 16px; }
+}
+
+/* Motion try-on: stacked looping tracks that stay mounted so switching never reloads. */
+.motionSection { background: var(--wd-ink); color: #f3efe8; }
+.motionSection .heading p { color: #b9b1a6; }
+.motionSection .label { color: #d79580; }
+.motion { overflow: hidden; border: 1px solid #ffffff1f; background: #11100f; }
+.motionScreen { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #1c1a18; }
+.motionScreen video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.motionScreen video.motionTrackActive, .motionScreen video.motionTrackHidden { position: absolute; inset: 0; transition: opacity .25s; }
+.motionTrackActive { opacity: 1; }
+.motionTrackHidden { opacity: 0; pointer-events: none; }
+.motionHud { position: absolute; top: 20px; left: 22px; right: 22px; display: flex; justify-content: space-between; gap: 10px; font: 11px ui-monospace, monospace; letter-spacing: .12em; text-shadow: 0 1px 4px #000; }
+.motionHud span { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; background: #11100fa8; }
+.motionHud i { width: 7px; height: 7px; border-radius: 50%; background: #e0563c; box-shadow: 0 0 0 4px #e0563c33; }
+.motionBottom { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: center; padding: 70px 24px 20px; background: linear-gradient(transparent, #11100fcc); }
+.motionBottom > b { font: 400 24px var(--wd-serif); }
+.motionBottom small { margin-left: 10px; color: #c9c2b8; font: 11px ui-monospace, monospace; letter-spacing: .12em; }
+.motionBottom button { width: 44px; height: 44px; border: 1px solid #ffffff80; border-radius: 50%; background: #11100fb3; color: white; cursor: pointer; }
+.videoProgress { height: 2px; background: #ffffff1f; }
+.videoProgress i { display: block; height: 100%; background: #e0563c; }
+.motionControls { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; }
+.motionControls > div { display: flex; flex-wrap: wrap; gap: 10px; min-width: 0; }
+.motionControls > div > button { display: flex; align-items: center; gap: 10px; padding: 5px 14px 5px 5px; border: 1px solid #ffffff26; background: #1f1d1b; color: #e9e3da; font: inherit; font-size: 13px; cursor: pointer; }
+.motionControls > div > button[aria-pressed="true"] { border-color: #e0563c; color: #f2a08c; }
+.motionControls img { width: 38px; height: 42px; object-fit: cover; }
+.outlineButton { padding: 10px 16px; border: 1px solid #ffffff40; background: none; color: #e9e3da; font: inherit; font-size: 13px; white-space: nowrap; cursor: pointer; }
+.videoError { position: absolute; top: 50%; left: 0; right: 0; padding: 15px; background: #11100fcc; text-align: center; }
+@media (max-width: 900px) {
+  .motionSection { padding: 72px 16px; }
+  .motionHud { top: 12px; left: 12px; right: 12px; font-size: 9px; }
+  .motionBottom { padding: 40px 14px 12px; }
+  .motionBottom > b { font-size: 18px; }
+  .motionControls { flex-direction: column; align-items: stretch; padding: 12px; }
+  .motionControls > div { flex-wrap: nowrap; overflow-x: auto; }
+  .motionControls > div > button { flex: none; }
 }
