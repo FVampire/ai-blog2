@@ -111,7 +111,7 @@ function Lightbox({ shot, onClose, onStep }: { shot: Shot; onClose: () => void; 
     <div className={s.lightbox} role="dialog" aria-modal="true" aria-label={shot.title} onClick={onClose}>
       <figure onClick={(e) => e.stopPropagation()}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`${BASE}/shots/full/${shot.shot}.webp`} alt={shot.title} />
+        <img src={`${BASE}/shots-r3/full/${shot.shot}.webp`} alt={shot.title} />
         <figcaption><b>{shot.title}</b>{shot.caption}<span>← → 切换 · Esc 关闭</span></figcaption>
       </figure>
       <button type="button" className={s.lightboxClose} onClick={onClose} aria-label="关闭">×</button>
@@ -139,7 +139,7 @@ export function FeatureGallery() {
       </ol>
       <figure className={s.featureStage}>
         <button type="button" className={s.featureZoom} onClick={() => setZoom(true)} aria-label={`放大查看：${shot.title}`}>
-          <Image key={shot.shot} src={`${BASE}/shots/${shot.shot}.webp`} alt={shot.title} width={W} height={H} sizes="(max-width: 900px) 100vw, 900px" />
+          <Image key={shot.shot} src={`${BASE}/shots-r3/${shot.shot}.webp`} alt={shot.title} width={W} height={H} sizes="(max-width: 900px) 100vw, 900px" />
           <span>点击查看高清原图 ↗</span>
         </button>
         <figcaption>

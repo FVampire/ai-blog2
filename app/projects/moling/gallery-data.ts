@@ -1,5 +1,6 @@
-// Curated Moyun feature gallery. `shot` is a file in /projects/moling/shots (1240w) and
-// /projects/moling/shots/full (2400w); sizes are the 1240w intrinsic dimensions.
+// Bump the shots-rN directory whenever screenshots change: same URLs are served stale from image caches.
+// Curated Moyun feature gallery. `shot` is a file in /projects/moling/shots-r6 (1240w) and
+// /projects/moling/shots-r6/full (2400w); sizes are the 1240w intrinsic dimensions.
 export type Shot = { shot: string; w: number; h: number; title: string; caption: string };
 export type Group = { id: string; label: string; intro: string; shots: Shot[] };
 
