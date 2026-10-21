@@ -101,7 +101,7 @@ export default function MoyunPage() {
                 return (
                   <li key={key}>
                     <div><span>0{i + 1}</span><b>{title}</b><p>{copy}</p></div>
-                    <figure><Image src={`${BASE}/shots/${shot.shot}.webp`} alt={`多模型竞选：${title}`} width={shot.w} height={shot.h} sizes="(max-width: 900px) 100vw, 860px" /></figure>
+                    <figure><Image src={`${BASE}/shots-r6/${shot.shot}.webp`} alt={`多模型竞选：${title}`} width={shot.w} height={shot.h} sizes="(max-width: 900px) 100vw, 860px" /></figure>
                   </li>
                 );
               })}
