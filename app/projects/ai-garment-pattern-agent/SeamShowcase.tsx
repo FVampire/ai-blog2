@@ -45,8 +45,8 @@ export function FlowFilm() {
     <figure className={s.film}>
       <video
         ref={ref}
-        src={`${BASE}/video/seam-workflow.mp4`}
-        poster={`${BASE}/video/seam-workflow.webp`}
+        src={`${BASE}/video-r2/seam-workflow.mp4`}
+        poster={`${BASE}/video-r2/seam-workflow.webp`}
         width={1600}
         height={1000}
         preload="none"
@@ -83,8 +83,8 @@ export function ClipStrip() {
       <figure className={s.clipStage}>
         <video
           key={clip.id}
-          src={`${BASE}/video/${clip.id}.mp4`}
-          poster={`${BASE}/video/${clip.id}.webp`}
+          src={`${BASE}/video-r2/${clip.id}.mp4`}
+          poster={`${BASE}/video-r2/${clip.id}.webp`}
           width={1600}
           height={1000}
           autoPlay
@@ -172,7 +172,7 @@ export function StudioEmbed() {
           <iframe src={`${BASE}/app/index.html?embed=1`} title="SEAM 服装研发工作台" loading="lazy" />
         ) : (
           <>
-            <Image src={`${BASE}/video/seam-workflow.webp`} alt="SEAM 服装研发工作台" fill sizes="(max-width: 900px) 100vw, 1300px" />
+            <Image src={`${BASE}/video-r2/seam-workflow.webp`} alt="SEAM 服装研发工作台" fill sizes="(max-width: 900px) 100vw, 1300px" />
             <div className={s.embedStart}>
               <button type="button" onClick={() => setStarted(true)}>打开研发工作台 <b aria-hidden="true">↗</b></button>
               <small>可运行完整流程，也可以编辑纸样并导出 DXF</small>
