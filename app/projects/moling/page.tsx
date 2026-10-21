@@ -4,12 +4,14 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 import { FLOW_SHOTS } from './gallery-data';
-import { ClipStrip, FeatureGallery, FlowFilm, StudioEmbed } from './MoyunShowcase';
 import s from './moyun.module.css';
+import { ClipStrip, FeatureGallery, FlowFilm, StudioEmbed } from './MoyunShowcase';
 import Footer from '../../../components/Footer';
 import Header from '../../../components/Header';
+import { projectMedia } from '../media';
 
 const BASE = '/projects/moling';
+const MEDIA = projectMedia(BASE);
 const SITE_NAME = '五月的火';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 const PAGE_TITLE = '墨韵 Moyun · 长篇 AI 创作工作台 - 五月的火';
@@ -101,7 +103,7 @@ export default function MoyunPage() {
                 return (
                   <li key={key}>
                     <div><span>0{i + 1}</span><b>{title}</b><p>{copy}</p></div>
-                    <figure><Image src={`${BASE}/shots-r6/${shot.shot}.webp`} alt={`多模型竞选：${title}`} width={shot.w} height={shot.h} sizes="(max-width: 900px) 100vw, 860px" /></figure>
+                    <figure><Image unoptimized src={`${MEDIA}/shots-r6/${shot.shot}.webp`} alt={`多模型竞选：${title}`} width={shot.w} height={shot.h} sizes="(max-width: 900px) 100vw, 860px" /></figure>
                   </li>
                 );
               })}

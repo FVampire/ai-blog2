@@ -1,11 +1,14 @@
 'use client';
 
-import Image from 'next/image';
 import { useState } from 'react';
 
+import Image from 'next/image';
+
 import s from './wardrobe.module.css';
+import { projectMedia } from '../media';
 
 const BASE = '/projects/wardrobe-lab';
+const MEDIA = projectMedia(BASE);
 
 const PAIRS = [
   { id: '01-lowlight', label: '低光照', note: '提亮暗部，保留皮肤与面料质感。' },
@@ -27,9 +30,9 @@ export function QualityCompare() {
         <span>{current.note}</span>
       </div>
       <div className={s.compare}>
-        <Image src={`${BASE}/media/quality/${pair}-after.webp`} alt={`${current.label}修复后`} fill sizes="(max-width: 900px) 100vw, 760px" />
+        <Image unoptimized src={`${MEDIA}/media/quality/${pair}-after.webp`} alt={`${current.label}修复后`} fill sizes="(max-width: 900px) 100vw, 760px" />
         <div className={s.compareLeft} style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}>
-          <Image src={`${BASE}/media/quality/${pair}-before.webp`} alt={`${current.label}原图`} fill sizes="(max-width: 900px) 100vw, 760px" />
+          <Image unoptimized src={`${MEDIA}/media/quality/${pair}-before.webp`} alt={`${current.label}原图`} fill sizes="(max-width: 900px) 100vw, 760px" />
         </div>
         <span className={s.compareHandle} style={{ left: `${split}%` }} aria-hidden="true" />
         <span className={s.tagLeft}>原图</span>
@@ -54,7 +57,7 @@ export function LookViewerEmbed() {
           <iframe src={`${BASE}/viewer/index.html?embed=1`} title="Wardrobe Studio 造型查看器" loading="lazy" />
         ) : (
           <>
-            <Image src={`${BASE}/shots/08-viewer.webp`} alt="造型查看器：同一个人，七种造型" fill sizes="(max-width: 900px) 100vw, 1300px" />
+            <Image unoptimized src={`${MEDIA}/shots/08-viewer.webp`} alt="造型查看器：同一个人，七种造型" fill sizes="(max-width: 900px) 100vw, 1300px" />
             <div className={s.viewerStart}>
               <button type="button" onClick={() => setStarted(true)}>亲手试试七种造型 <b aria-hidden="true">↗</b></button>
               <small>拖动对比 · 键盘 ← → 切换 · 手机可横滑</small>

@@ -8,13 +8,15 @@ import s from './wardrobe.module.css';
 import { LookViewerEmbed, QualityCompare } from './WardrobeShowcase';
 import Footer from '../../../components/Footer';
 import Header from '../../../components/Header';
+import { projectMedia } from '../media';
 
 const BASE = '/projects/wardrobe-lab';
+const MEDIA = projectMedia(BASE);
 const SITE_NAME = '五月的火';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 const PAGE_TITLE = 'Wardrobe Studio · 万千造型，始终是你 - 五月的火';
 const PAGE_DESCRIPTION = '一个 AI 换装产品：从一张人物照片出发，选择服装、生成造型，并在前后对比中确认“还是你”。';
-const PAGE_IMAGE = `${BASE}/shots/01-home-hero.webp`;
+const PAGE_IMAGE = `${MEDIA}/shots/01-home-hero.webp`;
 
 export const metadata: Metadata = {
   title: { absolute: PAGE_TITLE },
@@ -90,7 +92,7 @@ export default function WardrobeLabPage() {
             {looks.map((id, i) => (
               <figure key={id}>
                 <Image src={`${BASE}/assets/looks/${id}.webp`} alt={`造型：${lookNames[i]}`} width={1024} height={1365} sizes="(max-width: 900px) 25vw, 160px" />
-                <Image className={s.face} src={`${BASE}/media/faces/${id}.webp`} alt={`${lookNames[i]}面部特写`} width={300} height={300} sizes="(max-width: 900px) 25vw, 160px" />
+                <Image unoptimized className={s.face} src={`${MEDIA}/media/faces/${id}.webp`} alt={`${lookNames[i]}面部特写`} width={300} height={300} sizes="(max-width: 900px) 25vw, 160px" />
                 <figcaption>{lookNames[i]}</figcaption>
               </figure>
             ))}
@@ -111,7 +113,7 @@ export default function WardrobeLabPage() {
                 <ul>{step.points.map((point) => <li key={point}>{point}</li>)}</ul>
               </div>
               <figure className={s.stepShot}>
-                <Image src={`${BASE}/shots/${step.shot}.webp`} alt={`换装工作台 · ${step.title}`} width={step.size[0]} height={step.size[1]} sizes="(max-width: 900px) 100vw, 820px" />
+                <Image unoptimized src={`${MEDIA}/shots/${step.shot}.webp`} alt={`换装工作台 · ${step.title}`} width={step.size[0]} height={step.size[1]} sizes="(max-width: 900px) 100vw, 820px" />
               </figure>
             </article>
           ))}
@@ -126,7 +128,7 @@ export default function WardrobeLabPage() {
           <div className={s.items}>
             {looks.slice(1).map((id, i) => (
               <figure key={id}>
-                <Image src={`${BASE}/media/items/${id}.webp`} alt={`单品：${lookNames[i + 1]}`} width={700} height={700} sizes="(max-width: 900px) 33vw, 170px" />
+                <Image unoptimized src={`${MEDIA}/media/items/${id}.webp`} alt={`单品：${lookNames[i + 1]}`} width={700} height={700} sizes="(max-width: 900px) 33vw, 170px" />
                 <figcaption>{lookNames[i + 1]}</figcaption>
               </figure>
             ))}
@@ -134,7 +136,7 @@ export default function WardrobeLabPage() {
           <div className={s.scenes}>
             {[['studio', '暖调影棚'], ['living', '客厅'], ['street', '街头']].map(([id, name]) => (
               <figure key={id}>
-                <Image src={`${BASE}/media/scenes/${id}.webp`} alt={`驼色大衣 · ${name}`} width={1024} height={1365} sizes="(max-width: 900px) 33vw, 420px" />
+                <Image unoptimized src={`${MEDIA}/media/scenes/${id}.webp`} alt={`驼色大衣 · ${name}`} width={1024} height={1365} sizes="(max-width: 900px) 33vw, 420px" />
                 <figcaption>驼色大衣 · {name}</figcaption>
               </figure>
             ))}

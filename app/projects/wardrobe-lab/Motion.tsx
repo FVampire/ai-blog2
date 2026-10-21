@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import s from "./wardrobe.module.css";
+import { projectMedia } from "../media";
 
 const motionLooks = [
   { name: "原始", id: "base" },
@@ -13,7 +14,7 @@ const motionLooks = [
   { name: "盔甲", id: "01" },
 ];
 const motionPath = (id: string, extension = "mp4") =>
-  `/projects/wardrobe-lab/lucy/${id}.${extension}`;
+  projectMedia(`/projects/wardrobe-lab/lucy/${id}.${extension}`);
 
 export default function Motion({ live = false }: { live?: boolean }) {
   const [mobile, setMobile] = useState(true);

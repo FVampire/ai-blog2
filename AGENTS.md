@@ -15,6 +15,15 @@ Agent 生成的文章、图片、一次性发布脚本和运行状态统一放�
 └── publish-state.json     # 文章 ID、URL 和执行状态
 ```
 
+## 项目案例素材
+
+`/projects/*` 案例页的视频、截图和渲染图存放在 COS，页面通过 `app/projects/media.ts` 的 `projectMedia()` 引用，目录清单在 `scripts/project-media-dirs.mjs`（与 `.gitignore` 保持一致），不进入 Git。
+
+- 更新素材时新建带版本号的目录（如 `shots-r7`、`video-r4`），不要覆盖同名文件：COS 对象设置了一年 `immutable` 缓存。
+- 本地放好文件后运行 `node scripts/upload-project-media-to-cos.mjs`（先加 `--dry-run` 预览；已存在且大小相同的对象会跳过）。
+- 可交互嵌入页（`app/`、`viewer/`、`assets/`）仍放在 `public/`：它们是需要同源的 HTML，COS 默认域名会强制下载 HTML。
+- 本地离线开发可设 `PROJECT_MEDIA_LOCAL=1`，改为读取 `public/`。
+
 ## 安全边界
 
 - 密钥只从 `.env` 或进程环境变量读取，不得写入文章、脚本、状态文件或日志。

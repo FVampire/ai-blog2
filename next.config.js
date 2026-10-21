@@ -1,6 +1,18 @@
+function cosPublicOrigin() {
+  const explicit = (process.env.COS_PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
+  if (explicit) return explicit;
+  const bucket = (process.env.COS_BUCKET || '').trim();
+  const region = (process.env.COS_REGION || '').trim();
+  return bucket && region ? `https://${bucket}.cos.${region}.myqcloud.com` : '';
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  env: {
+    // Case-study media lives on COS (scripts/upload-project-media-to-cos.mjs); empty means public/.
+    NEXT_PUBLIC_PROJECT_MEDIA_ORIGIN: process.env.PROJECT_MEDIA_LOCAL === '1' ? '' : cosPublicOrigin(),
+  },
   eslint: {
     ignoreDuringBuilds: false,
   },

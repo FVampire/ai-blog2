@@ -68,3 +68,15 @@ coverage/
 
 # Local artifacts produced by Codex/Agent publishing workflows
 /.agent-generated/
+
+# Case-study media is served from COS (scripts/project-media-dirs.mjs); local copies are the upload source.
+/public/projects/ai-interior-design/shots/
+/public/projects/ai-interior-design/renders/
+/public/projects/ai-interior-design/moodboard/
+/public/projects/wardrobe-lab/shots/
+/public/projects/wardrobe-lab/media/
+/public/projects/wardrobe-lab/lucy/
+/public/projects/moling/shots-r6/
+/public/projects/moling/video/
+/public/projects/ai-garment-pattern-agent/studio/shots-r5/
+/public/projects/ai-garment-pattern-agent/studio/video-r3/

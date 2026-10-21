@@ -1,11 +1,14 @@
 'use client';
 
-import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
+import Image from 'next/image';
+
 import s from './seam.module.css';
+import { projectMedia } from '../media';
 
 const BASE = '/projects/ai-garment-pattern-agent/studio';
+const MEDIA = projectMedia(BASE);
 
 type Shot = { shot: string; title: string; caption: string };
 const W = 1240;
@@ -47,8 +50,8 @@ export function FlowFilm() {
     <figure className={s.film}>
       <video
         ref={ref}
-        src={`${BASE}/video-r3/seam-workflow.mp4`}
-        poster={`${BASE}/video-r3/seam-workflow.webp`}
+        src={`${MEDIA}/video-r3/seam-workflow.mp4`}
+        poster={`${MEDIA}/video-r3/seam-workflow.webp`}
         width={1600}
         height={1000}
         preload="none"
@@ -85,8 +88,8 @@ export function ClipStrip() {
       <figure className={s.clipStage}>
         <video
           key={clip.id}
-          src={`${BASE}/video-r3/${clip.id}.mp4`}
-          poster={`${BASE}/video-r3/${clip.id}.webp`}
+          src={`${MEDIA}/video-r3/${clip.id}.mp4`}
+          poster={`${MEDIA}/video-r3/${clip.id}.webp`}
           width={1600}
           height={1000}
           autoPlay
@@ -118,7 +121,7 @@ function Lightbox({ shot, onClose, onStep }: { shot: Shot; onClose: () => void; 
     <div className={s.lightbox} role="dialog" aria-modal="true" aria-label={shot.title} onClick={onClose}>
       <figure onClick={(e) => e.stopPropagation()}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`${BASE}/shots-r5/full/${shot.shot}.webp`} alt={shot.title} />
+        <img src={`${MEDIA}/shots-r5/full/${shot.shot}.webp`} alt={shot.title} />
         <figcaption><b>{shot.title}</b>{shot.caption}<span>← → 切换 · Esc 关闭</span></figcaption>
       </figure>
       <button type="button" className={s.lightboxClose} onClick={onClose} aria-label="关闭">×</button>
@@ -146,7 +149,7 @@ export function FeatureGallery() {
       </ol>
       <figure className={s.featureStage}>
         <button type="button" className={s.featureZoom} onClick={() => setZoom(true)} aria-label={`放大查看：${shot.title}`}>
-          <Image key={shot.shot} src={`${BASE}/shots-r5/${shot.shot}.webp`} alt={shot.title} width={W} height={shot.shot === 'pattern-export' ? 774 : H} sizes="(max-width: 900px) 100vw, 900px" />
+          <Image unoptimized key={shot.shot} src={`${MEDIA}/shots-r5/${shot.shot}.webp`} alt={shot.title} width={W} height={shot.shot === 'pattern-export' ? 774 : H} sizes="(max-width: 900px) 100vw, 900px" />
           <span>点击查看高清原图 ↗</span>
         </button>
         <figcaption>
@@ -174,7 +177,7 @@ export function StudioEmbed() {
           <iframe src={`${BASE}/app/index.html?embed=1`} title="SEAM 服装研发工作台" loading="lazy" />
         ) : (
           <>
-            <Image src={`${BASE}/video-r3/seam-workflow.webp`} alt="SEAM 服装研发工作台" fill sizes="(max-width: 900px) 100vw, 1300px" />
+            <Image unoptimized src={`${MEDIA}/video-r3/seam-workflow.webp`} alt="SEAM 服装研发工作台" fill sizes="(max-width: 900px) 100vw, 1300px" />
             <div className={s.embedStart}>
               <button type="button" onClick={() => setStarted(true)}>打开研发工作台 <b aria-hidden="true">↗</b></button>
               <small>可运行完整流程，也可以编辑纸样并导出 DXF</small>

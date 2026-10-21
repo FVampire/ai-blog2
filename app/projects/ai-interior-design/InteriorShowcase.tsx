@@ -1,11 +1,14 @@
 'use client';
 
-import Image from 'next/image';
 import { useState } from 'react';
 
+import Image from 'next/image';
+
 import s from './interior.module.css';
+import { projectMedia } from '../media';
 
 const BASE = '/projects/ai-interior-design';
+const MEDIA = projectMedia(BASE);
 
 const STYLES = [
   { id: 'natural', label: '自然木色', words: '胡桃木 · 鼠尾草绿 · 象牙白' },
@@ -42,9 +45,9 @@ export function StyleCompare() {
         </label>
       </div>
       <div className={s.compare}>
-        <Image src={`${BASE}/renders/${right}/${view}.webp`} alt={`${STYLES.find((x) => x.id === right)?.label}风格效果图`} fill sizes="(max-width: 900px) 100vw, 1200px" />
+        <Image unoptimized src={`${MEDIA}/renders/${right}/${view}.webp`} alt={`${STYLES.find((x) => x.id === right)?.label}风格效果图`} fill sizes="(max-width: 900px) 100vw, 1200px" />
         <div className={s.compareLeft} style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}>
-          <Image src={`${BASE}/renders/${left}/${view}.webp`} alt={`${STYLES.find((x) => x.id === left)?.label}风格效果图`} fill sizes="(max-width: 900px) 100vw, 1200px" />
+          <Image unoptimized src={`${MEDIA}/renders/${left}/${view}.webp`} alt={`${STYLES.find((x) => x.id === left)?.label}风格效果图`} fill sizes="(max-width: 900px) 100vw, 1200px" />
         </div>
         <span className={s.compareHandle} style={{ left: `${split}%` }} aria-hidden="true">↔</span>
         <span className={s.compareTagLeft}>{STYLES.find((x) => x.id === left)?.label}</span>
@@ -54,7 +57,7 @@ export function StyleCompare() {
       <div className={s.moodboards}>
         {STYLES.map((style) => (
           <figure key={style.id}>
-            <Image src={`${BASE}/moodboard/${style.id}.webp`} alt={`${style.label}材质板`} width={1200} height={900} sizes="(max-width: 900px) 33vw, 380px" />
+            <Image unoptimized src={`${MEDIA}/moodboard/${style.id}.webp`} alt={`${style.label}材质板`} width={1200} height={900} sizes="(max-width: 900px) 33vw, 380px" />
             <figcaption><b>{style.label}</b><span>{style.words}</span></figcaption>
           </figure>
         ))}
@@ -78,7 +81,7 @@ export function ViewerEmbed() {
           <iframe src={src} title="栖居 3D 方案查看器" allow="fullscreen" loading="lazy" />
         ) : (
           <>
-            <Image src={`${BASE}/shots/11-viewer-overview.webp`} alt="栖居 3D 方案查看器全屋总览" fill sizes="(max-width: 900px) 100vw, 1300px" />
+            <Image unoptimized src={`${MEDIA}/shots/11-viewer-overview.webp`} alt="栖居 3D 方案查看器全屋总览" fill sizes="(max-width: 900px) 100vw, 1300px" />
             <div className={s.viewerStart}>
               <button type="button" onClick={() => setStarted(true)}>进入 3D 方案 <b aria-hidden="true">↗</b></button>
               <small>模型约 4.3 MB · 三种风格 · 13 个空间 · 日夜切换</small>

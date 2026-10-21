@@ -7,13 +7,15 @@ import s from './interior.module.css';
 import { StyleCompare, ViewerEmbed } from './InteriorShowcase';
 import Footer from '../../../components/Footer';
 import Header from '../../../components/Header';
+import { projectMedia } from '../media';
 
 const BASE = '/projects/ai-interior-design';
+const MEDIA = projectMedia(BASE);
 const SITE_NAME = '五月的火';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 const PAGE_TITLE = '栖居 · AI 装修设计 - 五月的火';
 const PAGE_DESCRIPTION = '从户型识别、需求简报、方案生成到可交互的 3D 交付：栖居把装修沟通从一张效果图，变成一个可以走进去的家。';
-const PAGE_IMAGE = `${BASE}/shots/01-home-hero.webp`;
+const PAGE_IMAGE = `${MEDIA}/shots/01-home-hero.webp`;
 
 export const metadata: Metadata = {
   title: { absolute: PAGE_TITLE },
@@ -129,7 +131,7 @@ export default function InteriorDesignPage() {
                 <ul>{step.points.map((point) => <li key={point}>{point}</li>)}</ul>
               </div>
               <figure className={s.stepShot}>
-                <Image src={`${BASE}/shots/${step.shot}.webp`} alt={`栖居设计工作台 · ${step.title}`} width={step.ratio[0]} height={step.ratio[1]} sizes="(max-width: 900px) 100vw, 820px" />
+                <Image unoptimized src={`${MEDIA}/shots/${step.shot}.webp`} alt={`栖居设计工作台 · ${step.title}`} width={step.ratio[0]} height={step.ratio[1]} sizes="(max-width: 900px) 100vw, 820px" />
               </figure>
             </article>
           ))}
@@ -144,12 +146,12 @@ export default function InteriorDesignPage() {
           <div className={s.processRow}>
             {processFrames.map(([file, title, note], index) => (
               <figure key={file}>
-                <Image src={`${BASE}/renders/${file}.webp`} alt={`生成过程 ${title}`} width={1800} height={1350} sizes="(max-width: 900px) 50vw, 330px" />
+                <Image unoptimized src={`${MEDIA}/renders/${file}.webp`} alt={`生成过程 ${title}`} width={1800} height={1350} sizes="(max-width: 900px) 50vw, 330px" />
                 <figcaption><span>0{index + 1}</span><b>{title}</b>{note}</figcaption>
               </figure>
             ))}
             <figure>
-              <Image src={`${BASE}/renders/natural/01-overview.webp`} alt="生成过程 最终渲染" width={1800} height={1350} sizes="(max-width: 900px) 50vw, 330px" />
+              <Image unoptimized src={`${MEDIA}/renders/natural/01-overview.webp`} alt="生成过程 最终渲染" width={1800} height={1350} sizes="(max-width: 900px) 50vw, 330px" />
               <figcaption><span>04</span><b>出图</b>布光与 Cycles 渲染</figcaption>
             </figure>
           </div>
@@ -172,9 +174,9 @@ export default function InteriorDesignPage() {
           </div>
           <ViewerEmbed />
           <div className={s.deliveryGrid}>
-            <figure><Image src={`${BASE}/shots/08-project-header.webp`} alt="方案详情页：全屋总览与俯视平面" width={1800} height={1125} sizes="(max-width: 900px) 100vw, 420px" /><figcaption>方案详情 · 总览与平面</figcaption></figure>
-            <figure><Image src={`${BASE}/shots/10-project-details.webp`} alt="方案详情页：面积表与材质清单" width={1800} height={1188} sizes="(max-width: 900px) 100vw, 420px" /><figcaption>面积表 · 材质与软装清单</figcaption></figure>
-            <figure><Image src={`${BASE}/shots/13-viewer-gaming-night.webp`} alt="3D 方案：电竞房室内夜景" width={1800} height={1125} sizes="(max-width: 900px) 100vw, 420px" /><figcaption>3D 室内视角 · 电竞房夜景</figcaption></figure>
+            <figure><Image unoptimized src={`${MEDIA}/shots/08-project-header.webp`} alt="方案详情页：全屋总览与俯视平面" width={1800} height={1125} sizes="(max-width: 900px) 100vw, 420px" /><figcaption>方案详情 · 总览与平面</figcaption></figure>
+            <figure><Image unoptimized src={`${MEDIA}/shots/10-project-details.webp`} alt="方案详情页：面积表与材质清单" width={1800} height={1188} sizes="(max-width: 900px) 100vw, 420px" /><figcaption>面积表 · 材质与软装清单</figcaption></figure>
+            <figure><Image unoptimized src={`${MEDIA}/shots/13-viewer-gaming-night.webp`} alt="3D 方案：电竞房室内夜景" width={1800} height={1125} sizes="(max-width: 900px) 100vw, 420px" /><figcaption>3D 室内视角 · 电竞房夜景</figcaption></figure>
           </div>
         </section>
 

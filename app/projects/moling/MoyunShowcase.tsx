@@ -1,12 +1,15 @@
 'use client';
 
-import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
+
+import Image from 'next/image';
 
 import { GROUPS, type Shot } from './gallery-data';
 import s from './moyun.module.css';
+import { projectMedia } from '../media';
 
 const BASE = '/projects/moling';
+const MEDIA = projectMedia(BASE);
 
 const CLIPS = [
   { id: 'onboarding', title: '新建作品', copy: '聊几轮、点几个选项，作品蓝图逐步成形，生成可编辑的定盘提案。' },
@@ -26,8 +29,8 @@ export function FlowFilm() {
     <figure className={s.film}>
       <video
         ref={ref}
-        src={`${BASE}/video/moyun-flow.mp4`}
-        poster={`${BASE}/video/moyun-flow-poster.webp`}
+        src={`${MEDIA}/video/moyun-flow.mp4`}
+        poster={`${MEDIA}/video/moyun-flow-poster.webp`}
         width={1600}
         height={1000}
         preload="none"
@@ -64,8 +67,8 @@ export function ClipStrip() {
       <figure className={s.clipStage}>
         <video
           key={clip.id}
-          src={`${BASE}/video/clip-${clip.id}.mp4`}
-          poster={`${BASE}/video/clip-${clip.id}.webp`}
+          src={`${MEDIA}/video/clip-${clip.id}.mp4`}
+          poster={`${MEDIA}/video/clip-${clip.id}.webp`}
           width={1600}
           height={1000}
           autoPlay
@@ -97,7 +100,7 @@ function Lightbox({ shot, onClose, onStep }: { shot: Shot; onClose: () => void; 
     <div className={s.lightbox} role="dialog" aria-modal="true" aria-label={shot.title} onClick={onClose}>
       <figure onClick={(e) => e.stopPropagation()}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`${BASE}/shots-r6/full/${shot.shot}.webp`} alt={shot.title} />
+        <img src={`${MEDIA}/shots-r6/full/${shot.shot}.webp`} alt={shot.title} />
         <figcaption><b>{shot.title}</b>{shot.caption}<span>← → 切换 · Esc 关闭</span></figcaption>
       </figure>
       <button type="button" className={s.lightboxClose} onClick={onClose} aria-label="关闭">×</button>
@@ -136,7 +139,7 @@ export function FeatureGallery() {
         </ol>
         <figure className={s.featureStage}>
           <button type="button" className={s.featureZoom} onClick={() => setZoom(true)} aria-label={`放大查看：${shot.title}`}>
-            <Image key={shot.shot} src={`${BASE}/shots-r6/${shot.shot}.webp`} alt={shot.title} width={shot.w} height={shot.h} sizes="(max-width: 900px) 100vw, 900px" />
+            <Image unoptimized key={shot.shot} src={`${MEDIA}/shots-r6/${shot.shot}.webp`} alt={shot.title} width={shot.w} height={shot.h} sizes="(max-width: 900px) 100vw, 900px" />
             <span>点击查看高清原图 ↗</span>
           </button>
           <figcaption>
@@ -165,7 +168,7 @@ export function StudioEmbed() {
           <iframe src={`${BASE}/app/index.html?embed=1`} title="墨韵长篇创作工作台" loading="lazy" />
         ) : (
           <>
-            <Image src={`${BASE}/video/moyun-flow-poster.webp`} alt="墨韵章节工作台" fill sizes="(max-width: 900px) 100vw, 1300px" />
+            <Image unoptimized src={`${MEDIA}/video/moyun-flow-poster.webp`} alt="墨韵章节工作台" fill sizes="(max-width: 900px) 100vw, 1300px" />
             <div className={s.embedStart}>
               <button type="button" onClick={() => setStarted(true)}>亲手写第 112 章 <b aria-hidden="true">↗</b></button>
               <small>可暂停、倍速、跳到任意步骤</small>
